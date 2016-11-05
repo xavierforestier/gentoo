@@ -1,4 +1,4 @@
-To enable mxer debug edit file 
+To enable mixer debug edit file 
 <b>/usr/lib64/python3.5/site-packages/ffado/config.py</b>
 and set 
 <code>DEBUG_BYPASSDBUS = True</code>
