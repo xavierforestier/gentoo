@@ -1,0 +1,28 @@
+--- /var/tmp/portage/media-libs/libffado-2.3.9999/work/libffado-2.3.9999/libffado/60-ffado.rules	2016-11-05 18:16:27.746190010 +0100
++++ /var/tmp/portage/media-libs/libffado-2.3.9999/work/libffado-2.3.9999-abi_x86_64.amd64/libffado/60-ffado.rules	2016-11-05 18:28:28.290181971 +0100
+@@ -19,6 +19,8 @@
+ # Ego Systems Inc.
+ ATTR{vendor}=="0x000f1b", GROUP="audio", ENV{ID_FFADO}="1"
+ # Loud Technologies Inc.
++ATTR{vendor}=="0x001f11", GROUP="audio", ENV{ID_FFADO}="1"
++# Loud Technologies Inc.
+ ATTR{vendor}=="0x000ff2", GROUP="audio", ENV{ID_FFADO}="1"
+ # Stanton Magnetics,inc.
+ ATTR{vendor}=="0x001260", GROUP="audio", ENV{ID_FFADO}="1"
+--- /var/tmp/portage/media-libs/libffado-2.3.9999/work/libffado-2.3.9999/configuration	2016-11-05 18:16:28.451181197 +0100
++++ /var/tmp/portage/media-libs/libffado-2.3.9999/work/libffado-2.3.9999-abi_x86_64.amd64/configuration	2016-11-05 18:32:20.636277245 +0100
+@@ -54,6 +54,14 @@
+     vendorname  = "Loud Technologies Inc.";
+     modelname   = "Onyx-i";
+     driver      = "OXFORD";
++    mixer       = "MackieOnyx";
++},
++{ # entries provided by Holger Dehnhardt
++    vendorid    = 0x001f11;
++    modelid     = 0x023901;
++    vendorname  = "Loud Technologies Inc.";
++    modelname   = "Onyx-i";
++    driver      = "OXFORD";
+     xmit_transfer_delay = 11776;
+ },
+ { # IDs from Geoff Beasley.

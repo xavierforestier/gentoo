@@ -21,7 +21,7 @@ else
 	SRC_URI="http://www.ffado.org/files/${P}.tgz"
 	KEYWORDS="~amd64 ~ppc ~x86"
 fi
-PATCHES=(libffado-2.3.9999-fix-python-3.patch libffado-2.3.9999-libxml3.0.patch libffado-2.3.9999-fix-gcc_warning.patch libffado-2.3.9999-gcc_auto_ptr.patch)
+PATCHES=(libffado-2.3.9999-fix-python-3.patch libffado-2.3.9999-libxml3.0.patch libffado-2.3.9999-fix-gcc_warning.patch libffado-2.3.9999-gcc_auto_ptr.patch libffado-newdevices.patch)
 LICENSE="GPL-2"
 SLOT="0"
 IUSE="debug optimize qt4 qt5 expat +test-programs"
