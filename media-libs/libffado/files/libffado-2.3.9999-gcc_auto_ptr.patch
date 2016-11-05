@@ -1,0 +1,1248 @@
+diff -ru libffado-2.9999/src/bebob/bebob_avdevice.cpp new/src/bebob/bebob_avdevice.cpp
+--- libffado-2.9999/src/bebob/bebob_avdevice.cpp	2016-10-26 15:54:33.841344375 +0200
++++ new/src/bebob/bebob_avdevice.cpp	2016-10-26 16:12:39.394773090 +0200
+@@ -64,7 +64,7 @@
+ 
+ namespace BeBoB {
+ 
+-Device::Device( DeviceManager& d, std::auto_ptr< ConfigRom >( configRom ) )
++Device::Device( DeviceManager& d, std::shared_ptr< ConfigRom >( configRom ) )
+     : GenericAVC::Device( d, configRom )
+     , m_last_discovery_config_id ( 0xFFFFFFFFFFFFFFFFLLU )
+     , m_Mixer ( 0 )
+@@ -130,7 +130,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     unsigned int vendorId = configRom->getNodeVendorId();
+     unsigned int modelId = configRom->getModelId();
+diff -ru libffado-2.9999/src/bebob/bebob_avdevice.h new/src/bebob/bebob_avdevice.h
+--- libffado-2.9999/src/bebob/bebob_avdevice.h	2016-10-26 15:54:33.643346850 +0200
++++ new/src/bebob/bebob_avdevice.h	2016-10-26 16:12:39.395773077 +0200
+@@ -60,7 +60,7 @@
+ 
+ class Device : public GenericAVC::Device {
+ public:
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     static bool probe( Util::Configuration&, ConfigRom& configRom, bool generic = false );
+@@ -68,7 +68,7 @@
+     virtual bool saveCache();
+     virtual bool discover();
+ 
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+ 
+     virtual AVC::Subunit* createSubunit(AVC::Unit& unit,
+                                         AVC::ESubunitType type,
+diff -ru libffado-2.9999/src/bebob/bebob_dl_mgr.cpp new/src/bebob/bebob_dl_mgr.cpp
+--- libffado-2.9999/src/bebob/bebob_dl_mgr.cpp	2016-10-26 15:54:33.645346825 +0200
++++ new/src/bebob/bebob_dl_mgr.cpp	2016-10-26 16:12:39.396773065 +0200
+@@ -241,7 +241,7 @@
+     using namespace std;
+ 
+     printf( "parse BCD file\n" );
+-    std::auto_ptr<BCD> bcd = std::auto_ptr<BCD>( new BCD( filename ) );
++    std::shared_ptr<BCD> bcd = std::shared_ptr<BCD>( new BCD( filename ) );
+     if ( !bcd.get() ) {
+         debugError( "downloadFirmware: Could not open or parse BCD '%s'\n",
+                     filename.c_str() );
+@@ -304,7 +304,7 @@
+     using namespace std;
+ 
+     printf( "parse BCD file\n" );
+-    std::auto_ptr<BCD> bcd = std::auto_ptr<BCD>( new BCD( filename ) );
++    std::shared_ptr<BCD> bcd = std::shared_ptr<BCD>( new BCD( filename ) );
+     if ( !bcd.get() ) {
+         debugError( "downloadCnE: Could not open or parse BCD '%s'\n",
+                     filename.c_str() );
+diff -ru libffado-2.9999/src/bebob/edirol/edirol_fa101.cpp new/src/bebob/edirol/edirol_fa101.cpp
+--- libffado-2.9999/src/bebob/edirol/edirol_fa101.cpp	2016-10-26 15:54:33.646346813 +0200
++++ new/src/bebob/edirol/edirol_fa101.cpp	2016-10-26 16:12:39.419772777 +0200
+@@ -27,7 +27,7 @@
+ namespace Edirol {
+ 
+ EdirolFa101Device::EdirolFa101Device( DeviceManager& d,
+-                                      std::auto_ptr<ConfigRom>( configRom ))
++                                      std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created BeBoB::Edirol::EdirolFa101Device (NodeID %d)\n",
+diff -ru libffado-2.9999/src/bebob/edirol/edirol_fa101.h new/src/bebob/edirol/edirol_fa101.h
+--- libffado-2.9999/src/bebob/edirol/edirol_fa101.h	2016-10-26 15:54:33.646346813 +0200
++++ new/src/bebob/edirol/edirol_fa101.h	2016-10-26 16:12:39.419772777 +0200
+@@ -32,7 +32,7 @@
+ class EdirolFa101Device : public BeBoB::Device {
+ public:
+     EdirolFa101Device( DeviceManager& d,
+-                       std::auto_ptr<ConfigRom>( configRom ));
++                       std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~EdirolFa101Device();
+ 
+     virtual ClockSourceVector getSupportedClockSources();
+diff -ru libffado-2.9999/src/bebob/edirol/edirol_fa66.cpp new/src/bebob/edirol/edirol_fa66.cpp
+--- libffado-2.9999/src/bebob/edirol/edirol_fa66.cpp	2016-10-26 15:54:33.646346813 +0200
++++ new/src/bebob/edirol/edirol_fa66.cpp	2016-10-26 16:12:39.420772764 +0200
+@@ -27,7 +27,7 @@
+ namespace Edirol {
+ 
+ EdirolFa66Device::EdirolFa66Device( DeviceManager& d,
+-                                      std::auto_ptr<ConfigRom>( configRom ))
++                                      std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created BeBoB::Edirol::EdirolFa66Device (NodeID %d)\n",
+diff -ru libffado-2.9999/src/bebob/edirol/edirol_fa66.h new/src/bebob/edirol/edirol_fa66.h
+--- libffado-2.9999/src/bebob/edirol/edirol_fa66.h	2016-10-26 15:54:33.647346800 +0200
++++ new/src/bebob/edirol/edirol_fa66.h	2016-10-26 16:12:39.420772764 +0200
+@@ -32,7 +32,7 @@
+ class EdirolFa66Device : public BeBoB::Device {
+ public:
+     EdirolFa66Device( DeviceManager& d,
+-                       std::auto_ptr<ConfigRom>( configRom ));
++                       std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~EdirolFa66Device();
+ 
+     virtual ClockSourceVector getSupportedClockSources();
+diff -ru libffado-2.9999/src/bebob/esi/quatafire610.cpp new/src/bebob/esi/quatafire610.cpp
+--- libffado-2.9999/src/bebob/esi/quatafire610.cpp	2016-10-26 15:54:33.647346800 +0200
++++ new/src/bebob/esi/quatafire610.cpp	2016-10-26 16:12:39.421772752 +0200
+@@ -28,7 +28,7 @@
+ namespace BeBoB {
+ namespace ESI {
+ 
+-QuataFireDevice::QuataFireDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++QuataFireDevice::QuataFireDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( d, configRom)
+ {
+     m_fixed_clocksource.type = FFADODevice::eCT_Auto;
+diff -ru libffado-2.9999/src/bebob/esi/quatafire610.h new/src/bebob/esi/quatafire610.h
+--- libffado-2.9999/src/bebob/esi/quatafire610.h	2016-10-26 15:54:33.647346800 +0200
++++ new/src/bebob/esi/quatafire610.h	2016-10-26 16:12:39.421772752 +0200
+@@ -33,7 +33,7 @@
+ class QuataFireDevice : public BeBoB::Device {
+ 
+ public:
+-    QuataFireDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    QuataFireDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~QuataFireDevice();
+ 
+     // override these since the quatafire does not support
+diff -ru libffado-2.9999/src/bebob/focusrite/focusrite_generic.cpp new/src/bebob/focusrite/focusrite_generic.cpp
+--- libffado-2.9999/src/bebob/focusrite/focusrite_generic.cpp	2016-10-26 15:54:33.841344375 +0200
++++ new/src/bebob/focusrite/focusrite_generic.cpp	2016-10-26 16:12:39.422772739 +0200
+@@ -29,7 +29,7 @@
+ namespace BeBoB {
+ namespace Focusrite {
+ 
+-FocusriteDevice::FocusriteDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++FocusriteDevice::FocusriteDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( d, configRom)
+     , m_cmd_time_interval( 0 )
+     , m_earliest_next_cmd_time( 0 )
+diff -ru libffado-2.9999/src/bebob/focusrite/focusrite_generic.h new/src/bebob/focusrite/focusrite_generic.h
+--- libffado-2.9999/src/bebob/focusrite/focusrite_generic.h	2016-10-26 15:54:33.648346788 +0200
++++ new/src/bebob/focusrite/focusrite_generic.h	2016-10-26 16:12:39.423772727 +0200
+@@ -226,7 +226,7 @@
+ 
+ class FocusriteDevice : public BeBoB::Device {
+ public:
+-    FocusriteDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    FocusriteDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~FocusriteDevice() {};
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/bebob/focusrite/focusrite_saffire.cpp new/src/bebob/focusrite/focusrite_saffire.cpp
+--- libffado-2.9999/src/bebob/focusrite/focusrite_saffire.cpp	2016-10-26 15:54:33.841344375 +0200
++++ new/src/bebob/focusrite/focusrite_saffire.cpp	2016-10-26 16:12:39.424772714 +0200
+@@ -29,7 +29,7 @@
+ namespace BeBoB {
+ namespace Focusrite {
+ 
+-SaffireDevice::SaffireDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++SaffireDevice::SaffireDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : FocusriteDevice( d, configRom)
+     , m_MixerContainer( NULL )
+ {
+diff -ru libffado-2.9999/src/bebob/focusrite/focusrite_saffire.h new/src/bebob/focusrite/focusrite_saffire.h
+--- libffado-2.9999/src/bebob/focusrite/focusrite_saffire.h	2016-10-26 15:54:33.648346788 +0200
++++ new/src/bebob/focusrite/focusrite_saffire.h	2016-10-26 16:12:39.425772702 +0200
+@@ -269,7 +269,7 @@
+ 
+ class SaffireDevice : public FocusriteDevice {
+ public:
+-    SaffireDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    SaffireDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~SaffireDevice() {};
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/bebob/focusrite/focusrite_saffirepro.cpp new/src/bebob/focusrite/focusrite_saffirepro.cpp
+--- libffado-2.9999/src/bebob/focusrite/focusrite_saffirepro.cpp	2016-10-26 15:54:33.648346788 +0200
++++ new/src/bebob/focusrite/focusrite_saffirepro.cpp	2016-10-26 16:12:39.427772677 +0200
+@@ -33,7 +33,7 @@
+ namespace BeBoB {
+ namespace Focusrite {
+ 
+-SaffireProDevice::SaffireProDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++SaffireProDevice::SaffireProDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : FocusriteDevice( d, configRom )
+     , m_MixerContainer( NULL )
+     , m_ControlContainer( NULL )
+diff -ru libffado-2.9999/src/bebob/focusrite/focusrite_saffirepro.h new/src/bebob/focusrite/focusrite_saffirepro.h
+--- libffado-2.9999/src/bebob/focusrite/focusrite_saffirepro.h	2016-10-26 15:54:33.649346775 +0200
++++ new/src/bebob/focusrite/focusrite_saffirepro.h	2016-10-26 16:12:39.428772664 +0200
+@@ -356,7 +356,7 @@
+ friend class SaffireProDeviceNameControl;
+ 
+ public:
+-    SaffireProDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    SaffireProDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~SaffireProDevice();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/bebob/mackie/onyxmixer.cpp new/src/bebob/mackie/onyxmixer.cpp
+--- libffado-2.9999/src/bebob/mackie/onyxmixer.cpp	2016-10-26 15:54:33.649346775 +0200
++++ new/src/bebob/mackie/onyxmixer.cpp	2016-10-26 16:12:39.429772652 +0200
+@@ -28,7 +28,7 @@
+ namespace BeBoB {
+ namespace Mackie {
+ 
+-OnyxMixerDevice::OnyxMixerDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++OnyxMixerDevice::OnyxMixerDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( d, configRom)
+ {
+     m_fixed_clocksource.type = FFADODevice::eCT_Internal;
+diff -ru libffado-2.9999/src/bebob/mackie/onyxmixer.h new/src/bebob/mackie/onyxmixer.h
+--- libffado-2.9999/src/bebob/mackie/onyxmixer.h	2016-10-26 15:54:33.649346775 +0200
++++ new/src/bebob/mackie/onyxmixer.h	2016-10-26 16:12:39.429772652 +0200
+@@ -33,7 +33,7 @@
+ class OnyxMixerDevice : public BeBoB::Device {
+ 
+ public:
+-    OnyxMixerDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    OnyxMixerDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~OnyxMixerDevice();
+ 
+     // override these since the mackie does not report
+diff -ru libffado-2.9999/src/bebob/maudio/normal_avdevice.cpp new/src/bebob/maudio/normal_avdevice.cpp
+--- libffado-2.9999/src/bebob/maudio/normal_avdevice.cpp	2016-10-26 15:54:33.650346763 +0200
++++ new/src/bebob/maudio/normal_avdevice.cpp	2016-10-26 16:12:39.430772639 +0200
+@@ -28,7 +28,7 @@
+ namespace MAudio {
+ namespace Normal {
+ 
+-Device::Device(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ),
++Device::Device(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ),
+                            unsigned int modelId)
+     : BeBoB::Device( d, configRom)
+ {
+diff -ru libffado-2.9999/src/bebob/maudio/normal_avdevice.h new/src/bebob/maudio/normal_avdevice.h
+--- libffado-2.9999/src/bebob/maudio/normal_avdevice.h	2016-10-26 15:54:33.650346763 +0200
++++ new/src/bebob/maudio/normal_avdevice.h	2016-10-26 16:12:39.431772627 +0200
+@@ -42,7 +42,7 @@
+ 
+ class Device : public BeBoB::Device {
+ public:
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ),
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ),
+                   unsigned int modelId);
+     virtual ~Device();
+ 
+diff -ru libffado-2.9999/src/bebob/maudio/special_avdevice.cpp new/src/bebob/maudio/special_avdevice.cpp
+--- libffado-2.9999/src/bebob/maudio/special_avdevice.cpp	2016-10-26 15:54:33.650346763 +0200
++++ new/src/bebob/maudio/special_avdevice.cpp	2016-10-26 16:12:39.431772627 +0200
+@@ -35,7 +35,7 @@
+ namespace MAudio {
+ namespace Special {
+ 
+-Device::Device(DeviceManager& d, std::auto_ptr<ConfigRom>(configRom))
++Device::Device(DeviceManager& d, std::shared_ptr<ConfigRom>(configRom))
+     : BeBoB::Device(d, configRom)
+ {
+     is1814 = (getConfigRom().getModelId() == 0x00010071);
+diff -ru libffado-2.9999/src/bebob/maudio/special_avdevice.h new/src/bebob/maudio/special_avdevice.h
+--- libffado-2.9999/src/bebob/maudio/special_avdevice.h	2016-10-26 15:54:33.650346763 +0200
++++ new/src/bebob/maudio/special_avdevice.h	2016-10-26 16:12:39.432772614 +0200
+@@ -140,7 +140,7 @@
+ class Device : public BeBoB::Device
+ {
+ public:
+-    Device(DeviceManager& d, std::auto_ptr<ConfigRom>(configRom));
++    Device(DeviceManager& d, std::shared_ptr<ConfigRom>(configRom));
+     virtual ~Device() {};
+     virtual void showDevice();
+ 
+diff -ru libffado-2.9999/src/bebob/presonus/firebox_avdevice.cpp new/src/bebob/presonus/firebox_avdevice.cpp
+--- libffado-2.9999/src/bebob/presonus/firebox_avdevice.cpp	2016-10-26 15:54:33.651346750 +0200
++++ new/src/bebob/presonus/firebox_avdevice.cpp	2016-10-26 16:12:39.432772614 +0200
+@@ -28,7 +28,7 @@
+ namespace Presonus {
+ namespace Firebox {
+ 
+-Device::Device(DeviceManager& d, std::auto_ptr<ConfigRom>(configRom))
++Device::Device(DeviceManager& d, std::shared_ptr<ConfigRom>(configRom))
+     : BeBoB::Device( d, configRom)
+ {
+     m_intl_clksrc.type = FFADODevice::eCT_Internal;
+diff -ru libffado-2.9999/src/bebob/presonus/firebox_avdevice.h new/src/bebob/presonus/firebox_avdevice.h
+--- libffado-2.9999/src/bebob/presonus/firebox_avdevice.h	2016-10-26 15:54:33.651346750 +0200
++++ new/src/bebob/presonus/firebox_avdevice.h	2016-10-26 16:12:39.433772602 +0200
+@@ -35,7 +35,7 @@
+ 
+ class Device : public BeBoB::Device {
+ public:
+-	Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++	Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/bebob/presonus/inspire1394_avdevice.cpp new/src/bebob/presonus/inspire1394_avdevice.cpp
+--- libffado-2.9999/src/bebob/presonus/inspire1394_avdevice.cpp	2016-10-26 15:54:33.651346750 +0200
++++ new/src/bebob/presonus/inspire1394_avdevice.cpp	2016-10-26 16:12:39.434772589 +0200
+@@ -104,7 +104,7 @@
+     return val;
+ }
+ 
+-Device::Device(DeviceManager& d, std::auto_ptr<ConfigRom>(configRom))
++Device::Device(DeviceManager& d, std::shared_ptr<ConfigRom>(configRom))
+     : BeBoB::Device( d, configRom )
+ {
+     addSpecificControls();
+diff -ru libffado-2.9999/src/bebob/presonus/inspire1394_avdevice.h new/src/bebob/presonus/inspire1394_avdevice.h
+--- libffado-2.9999/src/bebob/presonus/inspire1394_avdevice.h	2016-10-26 15:54:33.651346750 +0200
++++ new/src/bebob/presonus/inspire1394_avdevice.h	2016-10-26 16:12:39.434772589 +0200
+@@ -44,7 +44,7 @@
+ 
+ class Device : public BeBoB::Device {
+ public:
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/bebob/template/vendor_device.cpp new/src/bebob/template/vendor_device.cpp
+--- libffado-2.9999/src/bebob/template/vendor_device.cpp	2016-10-26 15:54:33.651346750 +0200
++++ new/src/bebob/template/vendor_device.cpp	2016-10-26 16:12:39.435772577 +0200
+@@ -27,7 +27,7 @@
+ namespace __Vendor__ {
+ 
+ VendorDevice::VendorDevice( Ieee1394Service& ieee1394Service,
+-                            std::auto_ptr<ConfigRom>( configRom ))
++                            std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( ieee1394Service, configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created BeBoB::__Vendor__::VendorDevice (NodeID %d)\n",
+diff -ru libffado-2.9999/src/bebob/template/vendor_device.h new/src/bebob/template/vendor_device.h
+--- libffado-2.9999/src/bebob/template/vendor_device.h	2016-10-26 15:54:33.652346738 +0200
++++ new/src/bebob/template/vendor_device.h	2016-10-26 16:12:39.435772577 +0200
+@@ -34,7 +34,7 @@
+ class VendorDevice : public BeBoB::Device {
+ public:
+     VendorDevice( Ieee1394Service& ieee1394Service,
+-              std::auto_ptr<ConfigRom>( configRom ));
++              std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~VendorDevice();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/bebob/terratec/terratec_device.cpp new/src/bebob/terratec/terratec_device.cpp
+--- libffado-2.9999/src/bebob/terratec/terratec_device.cpp	2016-10-26 15:54:33.652346738 +0200
++++ new/src/bebob/terratec/terratec_device.cpp	2016-10-26 16:12:39.436772564 +0200
+@@ -28,7 +28,7 @@
+ namespace BeBoB {
+ namespace Terratec {
+ 
+-Phase88Device::Phase88Device(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Phase88Device::Phase88Device(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( d, configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created BeBoB::Terratec::Phase88Device (NodeID %d)\n",
+diff -ru libffado-2.9999/src/bebob/terratec/terratec_device.h new/src/bebob/terratec/terratec_device.h
+--- libffado-2.9999/src/bebob/terratec/terratec_device.h	2016-10-26 15:54:33.652346738 +0200
++++ new/src/bebob/terratec/terratec_device.h	2016-10-26 16:12:39.436772564 +0200
+@@ -33,7 +33,7 @@
+ 
+ class Phase88Device : public BeBoB::Device {
+ public:
+-    Phase88Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    Phase88Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Phase88Device();
+ 
+     virtual bool discover();
+diff -ru libffado-2.9999/src/bebob/yamaha/yamaha_avdevice.cpp new/src/bebob/yamaha/yamaha_avdevice.cpp
+--- libffado-2.9999/src/bebob/yamaha/yamaha_avdevice.cpp	2016-10-26 15:54:33.652346738 +0200
++++ new/src/bebob/yamaha/yamaha_avdevice.cpp	2016-10-26 16:12:39.437772552 +0200
+@@ -28,7 +28,7 @@
+ namespace BeBoB {
+ namespace Yamaha {
+ 
+-GoDevice::GoDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++GoDevice::GoDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : BeBoB::Device( d, configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created BeBoB::Yamaha::GoDevice (NodeID %d)\n",
+diff -ru libffado-2.9999/src/bebob/yamaha/yamaha_avdevice.h new/src/bebob/yamaha/yamaha_avdevice.h
+--- libffado-2.9999/src/bebob/yamaha/yamaha_avdevice.h	2016-10-26 15:54:33.653346725 +0200
++++ new/src/bebob/yamaha/yamaha_avdevice.h	2016-10-26 16:12:39.438772539 +0200
+@@ -34,7 +34,7 @@
+ 
+ class GoDevice : public BeBoB::Device {
+ public:
+-    GoDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    GoDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~GoDevice();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/bounce/bounce_avdevice.cpp new/src/bounce/bounce_avdevice.cpp
+--- libffado-2.9999/src/bounce/bounce_avdevice.cpp	2016-10-26 15:54:33.653346725 +0200
++++ new/src/bounce/bounce_avdevice.cpp	2016-10-26 16:12:39.397773052 +0200
+@@ -42,7 +42,7 @@
+ 
+ namespace Bounce {
+ 
+-Device::Device( DeviceManager& d, std::auto_ptr< ConfigRom >( configRom ) )
++Device::Device( DeviceManager& d, std::shared_ptr< ConfigRom >( configRom ) )
+     : FFADODevice( d, configRom )
+     , m_samplerate (44100)
+     , m_Notifier ( NULL )
+@@ -74,7 +74,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     return new Device(d, configRom );
+ }
+diff -ru libffado-2.9999/src/bounce/bounce_avdevice.h new/src/bounce/bounce_avdevice.h
+--- libffado-2.9999/src/bounce/bounce_avdevice.h	2016-10-26 15:54:33.653346725 +0200
++++ new/src/bounce/bounce_avdevice.h	2016-10-26 16:12:39.398773040 +0200
+@@ -64,11 +64,11 @@
+ private:
+     class BounceNotifier;
+ public:
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     static bool probe( Util::Configuration&, ConfigRom& configRom, bool generic = false );
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual bool discover();
+ 
+     virtual bool setSamplingFrequency( int samplingFrequency );
+diff -ru libffado-2.9999/src/bounce/bounce_slave_avdevice.cpp new/src/bounce/bounce_slave_avdevice.cpp
+--- libffado-2.9999/src/bounce/bounce_slave_avdevice.cpp	2016-10-26 15:54:33.653346725 +0200
++++ new/src/bounce/bounce_slave_avdevice.cpp	2016-10-26 16:12:39.399773027 +0200
+@@ -37,7 +37,7 @@
+ 
+ namespace Bounce {
+ 
+-SlaveDevice::SlaveDevice( DeviceManager& d, std::auto_ptr< ConfigRom >( configRom ) )
++SlaveDevice::SlaveDevice( DeviceManager& d, std::shared_ptr< ConfigRom >( configRom ) )
+     : Device( d, configRom )
+ {
+     addOption(Util::OptionContainer::Option("isoTimeoutSecs",(int64_t)120));
+@@ -55,7 +55,7 @@
+ }
+ 
+ FFADODevice *
+-SlaveDevice::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++SlaveDevice::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     return new SlaveDevice(d, configRom );
+ }
+diff -ru libffado-2.9999/src/bounce/bounce_slave_avdevice.h new/src/bounce/bounce_slave_avdevice.h
+--- libffado-2.9999/src/bounce/bounce_slave_avdevice.h	2016-10-26 15:54:33.654346713 +0200
++++ new/src/bounce/bounce_slave_avdevice.h	2016-10-26 16:12:39.400773015 +0200
+@@ -44,11 +44,11 @@
+     class BounceSlaveNotifier;
+ public:
+ 
+-    SlaveDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ) );
++    SlaveDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ) );
+     virtual ~SlaveDevice();
+ 
+     static bool probe( Util::Configuration&, ConfigRom& configRom, bool generic = false );
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+ 
+     bool discover();
+     bool prepare();
+diff -ru libffado-2.9999/src/devicemanager.cpp new/src/devicemanager.cpp
+--- libffado-2.9999/src/devicemanager.cpp	2016-10-26 15:54:33.642346863 +0200
++++ new/src/devicemanager.cpp	2016-10-26 16:12:39.383773227 +0200
+@@ -709,8 +709,8 @@
+         fb_nodeid_t nodeId = portService->getLocalNodeId();
+         debugOutput( DEBUG_LEVEL_VERBOSE, "Starting in slave mode on node %d...\n", nodeId );
+ 
+-        std::auto_ptr<ConfigRom> configRom =
+-            std::auto_ptr<ConfigRom>( new ConfigRom( *portService,
++        std::shared_ptr<ConfigRom> configRom =
++            std::shared_ptr<ConfigRom>( new ConfigRom( *portService,
+                                                      nodeId ) );
+         if ( !configRom->initialize() ) {
+             // \todo If a PHY on the bus is in power safe mode then
+@@ -1031,21 +1031,21 @@
+ #ifdef ENABLE_BEBOB
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying BeBoB...\n" );
+     if ( BeBoB::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return BeBoB::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return BeBoB::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+ #ifdef ENABLE_FIREWORKS
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying ECHO Audio FireWorks...\n" );
+     if ( FireWorks::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return FireWorks::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return FireWorks::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+ #ifdef ENABLE_OXFORD
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying Oxford FW90x...\n" );
+     if ( Oxford::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return Oxford::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return Oxford::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+@@ -1053,42 +1053,42 @@
+ #ifdef ENABLE_GENERICAVC
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying Generic AV/C...\n" );
+     if ( GenericAVC::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return GenericAVC::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return GenericAVC::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+ #ifdef ENABLE_MOTU
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying Motu...\n" );
+     if ( Motu::MotuDevice::probe( getConfiguration(), *configRom, generic ) ) {
+-        return Motu::MotuDevice::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return Motu::MotuDevice::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+ #ifdef ENABLE_DICE
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying Dice...\n" );
+     if ( Dice::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return Dice::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return Dice::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+ #ifdef ENABLE_METRIC_HALO
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying Metric Halo...\n" );
+     if ( MetricHalo::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return MetricHalo::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return MetricHalo::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+ #ifdef ENABLE_RME
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying RME...\n" );
+     if ( Rme::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return Rme::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return Rme::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+ #ifdef ENABLE_BOUNCE
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Trying Bounce...\n" );
+     if ( Bounce::Device::probe( getConfiguration(), *configRom, generic ) ) {
+-        return Bounce::Device::createDevice( *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return Bounce::Device::createDevice( *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+ 
+@@ -1119,11 +1119,11 @@
+ }
+ 
+ FFADODevice*
+-DeviceManager::getSlaveDriver( std::auto_ptr<ConfigRom>( configRom ) )
++DeviceManager::getSlaveDriver( std::shared_ptr<ConfigRom>( configRom ) )
+ {
+ #ifdef ENABLE_BOUNCE
+     if ( Bounce::SlaveDevice::probe( getConfiguration(), *configRom, false ) ) {
+-        return Bounce::SlaveDevice::createDevice(  *this, std::auto_ptr<ConfigRom>( configRom ) );
++        return Bounce::SlaveDevice::createDevice(  *this, std::shared_ptr<ConfigRom>( configRom ) );
+     }
+ #endif
+     return NULL;
+diff -ru libffado-2.9999/src/devicemanager.h new/src/devicemanager.h
+--- libffado-2.9999/src/devicemanager.h	2016-10-26 15:54:33.642346863 +0200
++++ new/src/devicemanager.h	2016-10-26 16:12:39.386773190 +0200
+@@ -148,7 +148,7 @@
+                                        int id, bool generic );
+     FFADODevice* getDriverForDevice( ConfigRom *configRom,
+                                      int id );
+-    FFADODevice* getSlaveDriver( std::auto_ptr<ConfigRom>( configRom ) );
++    FFADODevice* getSlaveDriver( std::shared_ptr<ConfigRom>( configRom ) );
+ 
+     void busresetHandler(Ieee1394Service &);
+ 
+diff -ru libffado-2.9999/src/dice/dice_avdevice.cpp new/src/dice/dice_avdevice.cpp
+--- libffado-2.9999/src/dice/dice_avdevice.cpp	2016-10-26 15:54:33.840344387 +0200
++++ new/src/dice/dice_avdevice.cpp	2016-10-26 16:12:39.401773002 +0200
+@@ -60,7 +60,7 @@
+ 
+ namespace Dice {
+ 
+-Device::Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : FFADODevice( d, configRom )
+     , m_eap( NULL )
+     , m_global_reg_offset (0xFFFFFFFFLU)
+@@ -125,7 +125,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     unsigned int vendorId = configRom->getNodeVendorId();
+     unsigned int modelId = configRom->getModelId();
+diff -ru libffado-2.9999/src/dice/dice_avdevice.h new/src/dice/dice_avdevice.h
+--- libffado-2.9999/src/dice/dice_avdevice.h	2016-10-26 15:54:33.655346700 +0200
++++ new/src/dice/dice_avdevice.h	2016-10-26 16:12:39.402772990 +0200
+@@ -68,12 +68,12 @@
+ 
+ public:
+     /// constructor
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     /// destructor
+     ~Device();
+ 
+     static bool probe( Util::Configuration& c, ConfigRom& configRom, bool generic = false );
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual bool discover();
+ 
+     static int getConfigurationId( );
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_56.cpp new/src/dice/focusrite/saffire_56.cpp
+--- libffado-2.9999/src/dice/focusrite/saffire_56.cpp	2016-10-26 15:54:33.657346675 +0200
++++ new/src/dice/focusrite/saffire_56.cpp	2016-10-26 16:12:39.438772539 +0200
+@@ -501,7 +501,7 @@
+   Device
+ */
+ Saffire56::Saffire56( DeviceManager& d,
+-                                        std::auto_ptr<ConfigRom>( configRom ))
++                                        std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Dice::Focusrite::Saffire56 (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_56.h new/src/dice/focusrite/saffire_56.h
+--- libffado-2.9999/src/dice/focusrite/saffire_56.h	2016-10-26 15:54:33.657346675 +0200
++++ new/src/dice/focusrite/saffire_56.h	2016-10-26 16:12:39.439772527 +0200
+@@ -89,7 +89,7 @@
+ class Saffire56 : public Dice::Device {
+ public:
+     Saffire56( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Saffire56();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro14.cpp new/src/dice/focusrite/saffire_pro14.cpp
+--- libffado-2.9999/src/dice/focusrite/saffire_pro14.cpp	2016-10-26 15:54:33.657346675 +0200
++++ new/src/dice/focusrite/saffire_pro14.cpp	2016-10-26 16:12:39.440772514 +0200
+@@ -355,7 +355,7 @@
+   Device
+ */
+ SaffirePro14::SaffirePro14( DeviceManager& d,
+-                                        std::auto_ptr<ConfigRom>( configRom ))
++                                        std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Dice::Focusrite::SaffirePro14 (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro14.h new/src/dice/focusrite/saffire_pro14.h
+--- libffado-2.9999/src/dice/focusrite/saffire_pro14.h	2016-10-26 15:54:33.657346675 +0200
++++ new/src/dice/focusrite/saffire_pro14.h	2016-10-26 16:12:39.441772502 +0200
+@@ -92,7 +92,7 @@
+ class SaffirePro14 : public Dice::Device {
+ public:
+     SaffirePro14( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~SaffirePro14();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro24.cpp new/src/dice/focusrite/saffire_pro24.cpp
+--- libffado-2.9999/src/dice/focusrite/saffire_pro24.cpp	2016-10-26 15:54:33.657346675 +0200
++++ new/src/dice/focusrite/saffire_pro24.cpp	2016-10-26 16:12:39.442772489 +0200
+@@ -407,7 +407,7 @@
+ }
+ 
+ SaffirePro24::SaffirePro24( DeviceManager& d,
+-                            std::auto_ptr<ConfigRom>( configRom ))
++                            std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device(d , configRom)
+ {
+     debugOutput(DEBUG_LEVEL_VERBOSE, "Created Dice::Focusrite::SaffirePro24 (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro24.h new/src/dice/focusrite/saffire_pro24.h
+--- libffado-2.9999/src/dice/focusrite/saffire_pro24.h	2016-10-26 15:54:33.658346663 +0200
++++ new/src/dice/focusrite/saffire_pro24.h	2016-10-26 16:12:39.443772477 +0200
+@@ -91,7 +91,7 @@
+ class SaffirePro24 : public Dice::Device {
+ public:
+     SaffirePro24( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     ~SaffirePro24();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro26.cpp new/src/dice/focusrite/saffire_pro26.cpp
+--- libffado-2.9999/src/dice/focusrite/saffire_pro26.cpp	2016-10-26 15:54:33.658346663 +0200
++++ new/src/dice/focusrite/saffire_pro26.cpp	2016-10-26 16:12:39.444772464 +0200
+@@ -357,7 +357,7 @@
+ }
+ 
+ SaffirePro26::SaffirePro26( DeviceManager& d,
+-                            std::auto_ptr<ConfigRom>( configRom ))
++                            std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device(d , configRom)
+ {
+     debugOutput(DEBUG_LEVEL_VERBOSE, "Created Dice::Focusrite::SaffirePro26 (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro26.h new/src/dice/focusrite/saffire_pro26.h
+--- libffado-2.9999/src/dice/focusrite/saffire_pro26.h	2016-10-26 15:54:33.658346663 +0200
++++ new/src/dice/focusrite/saffire_pro26.h	2016-10-26 16:12:39.444772464 +0200
+@@ -79,7 +79,7 @@
+ class SaffirePro26 : public Dice::Device {
+ public:
+     SaffirePro26( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     ~SaffirePro26();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro40.cpp new/src/dice/focusrite/saffire_pro40.cpp
+--- libffado-2.9999/src/dice/focusrite/saffire_pro40.cpp	2016-10-26 15:54:33.658346663 +0200
++++ new/src/dice/focusrite/saffire_pro40.cpp	2016-10-26 16:12:39.445772452 +0200
+@@ -478,7 +478,7 @@
+   Device
+ */
+ SaffirePro40::SaffirePro40( DeviceManager& d,
+-                                        std::auto_ptr<ConfigRom>( configRom ))
++                                        std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Dice::Focusrite::SaffirePro40 (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/focusrite/saffire_pro40.h new/src/dice/focusrite/saffire_pro40.h
+--- libffado-2.9999/src/dice/focusrite/saffire_pro40.h	2016-10-26 15:54:33.658346663 +0200
++++ new/src/dice/focusrite/saffire_pro40.h	2016-10-26 16:12:39.446772439 +0200
+@@ -84,7 +84,7 @@
+ class SaffirePro40 : public Dice::Device {
+ public:
+     SaffirePro40( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~SaffirePro40();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/maudio/profire_2626.cpp new/src/dice/maudio/profire_2626.cpp
+--- libffado-2.9999/src/dice/maudio/profire_2626.cpp	2016-10-26 15:54:33.659346650 +0200
++++ new/src/dice/maudio/profire_2626.cpp	2016-10-26 16:12:39.447772427 +0200
+@@ -362,7 +362,7 @@
+ /**
+   Device
+ */
+-Profire2626::Profire2626( DeviceManager& d, std::auto_ptr<ConfigRom>(configRom))
++Profire2626::Profire2626( DeviceManager& d, std::shared_ptr<ConfigRom>(configRom))
+     : Dice::Device( d, configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Dice::Maudio::Profire2626 (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/maudio/profire_2626.h new/src/dice/maudio/profire_2626.h
+--- libffado-2.9999/src/dice/maudio/profire_2626.h	2016-10-26 15:54:33.659346650 +0200
++++ new/src/dice/maudio/profire_2626.h	2016-10-26 16:12:39.447772427 +0200
+@@ -43,7 +43,7 @@
+ class Profire2626 : public Dice::Device {
+ public:
+     Profire2626( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Profire2626();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/presonus/firestudio_mobile.cpp new/src/dice/presonus/firestudio_mobile.cpp
+--- libffado-2.9999/src/dice/presonus/firestudio_mobile.cpp	2016-10-26 15:54:33.659346650 +0200
++++ new/src/dice/presonus/firestudio_mobile.cpp	2016-10-26 16:12:39.448772414 +0200
+@@ -153,7 +153,7 @@
+   Device
+ */
+ FirestudioMobile::FirestudioMobile( DeviceManager& d,
+-                                    std::auto_ptr<ConfigRom>( configRom ))
++                                    std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Dice::Presonus::FirestudioMobile (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/presonus/firestudio_mobile.h new/src/dice/presonus/firestudio_mobile.h
+--- libffado-2.9999/src/dice/presonus/firestudio_mobile.h	2016-10-26 15:54:33.659346650 +0200
++++ new/src/dice/presonus/firestudio_mobile.h	2016-10-26 16:12:39.448772414 +0200
+@@ -37,7 +37,7 @@
+ class FirestudioMobile : public Dice::Device {
+ public:
+     FirestudioMobile( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~FirestudioMobile();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/presonus/firestudio_project.cpp new/src/dice/presonus/firestudio_project.cpp
+--- libffado-2.9999/src/dice/presonus/firestudio_project.cpp	2016-10-26 15:54:33.659346650 +0200
++++ new/src/dice/presonus/firestudio_project.cpp	2016-10-26 16:12:39.449772402 +0200
+@@ -154,7 +154,7 @@
+   Device
+ */
+ FirestudioProject::FirestudioProject( DeviceManager& d,
+-                                    std::auto_ptr<ConfigRom>( configRom ))
++                                    std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Dice::Presonus::FirestudioProject (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/presonus/firestudio_project.h new/src/dice/presonus/firestudio_project.h
+--- libffado-2.9999/src/dice/presonus/firestudio_project.h	2016-10-26 15:54:33.659346650 +0200
++++ new/src/dice/presonus/firestudio_project.h	2016-10-26 16:12:39.450772389 +0200
+@@ -36,7 +36,7 @@
+ class FirestudioProject : public Dice::Device {
+ public:
+     FirestudioProject( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~FirestudioProject();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/dice/presonus/firestudio_tube.cpp new/src/dice/presonus/firestudio_tube.cpp
+--- libffado-2.9999/src/dice/presonus/firestudio_tube.cpp	2016-10-26 15:54:33.660346638 +0200
++++ new/src/dice/presonus/firestudio_tube.cpp	2016-10-26 16:12:39.450772389 +0200
+@@ -142,7 +142,7 @@
+   Device
+ */
+ FirestudioTube::FirestudioTube( DeviceManager& d,
+-                                    std::auto_ptr<ConfigRom>( configRom ))
++                                    std::shared_ptr<ConfigRom>( configRom ))
+     : Dice::Device( d , configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Dice::Presonus::FirestudioTube (NodeID %d)\n",
+diff -ru libffado-2.9999/src/dice/presonus/firestudio_tube.h new/src/dice/presonus/firestudio_tube.h
+--- libffado-2.9999/src/dice/presonus/firestudio_tube.h	2016-10-26 15:54:33.660346638 +0200
++++ new/src/dice/presonus/firestudio_tube.h	2016-10-26 16:12:39.451772377 +0200
+@@ -36,7 +36,7 @@
+ class FirestudioTube : public Dice::Device {
+ public:
+     FirestudioTube( DeviceManager& d,
+-                  std::auto_ptr<ConfigRom>( configRom ));
++                  std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~FirestudioTube();
+ 
+     bool discover();
+diff -ru libffado-2.9999/src/digidesign/digidesign_avdevice.cpp new/src/digidesign/digidesign_avdevice.cpp
+--- libffado-2.9999/src/digidesign/digidesign_avdevice.cpp	2016-10-26 15:54:33.660346638 +0200
++++ new/src/digidesign/digidesign_avdevice.cpp	2016-10-26 16:12:39.403772977 +0200
+@@ -51,7 +51,7 @@
+ namespace Digidesign {
+ 
+ Device::Device( DeviceManager& d,
+-                      std::auto_ptr<ConfigRom>( configRom ))
++                      std::shared_ptr<ConfigRom>( configRom ))
+     : FFADODevice( d, configRom )
+     , m_digidesign_model( DIGIDESIGN_MODEL_NONE )
+     , num_channels( 0 )
+@@ -124,7 +124,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     return new Device(d, configRom );
+ }
+diff -ru libffado-2.9999/src/digidesign/digidesign_avdevice.h new/src/digidesign/digidesign_avdevice.h
+--- libffado-2.9999/src/digidesign/digidesign_avdevice.h	2016-10-26 15:54:33.660346638 +0200
++++ new/src/digidesign/digidesign_avdevice.h	2016-10-26 16:12:39.404772965 +0200
+@@ -50,7 +50,7 @@
+ public:
+ 
+     Device( DeviceManager& d,
+-               std::auto_ptr<ConfigRom>( configRom ));
++               std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     virtual bool buildMixer();
+@@ -58,7 +58,7 @@
+ 
+     static bool probe( Util::Configuration& c, ConfigRom& configRom, bool generic = false );
+     static FFADODevice * createDevice( DeviceManager& d,
+-                                        std::auto_ptr<ConfigRom>( configRom ));
++                                        std::shared_ptr<ConfigRom>( configRom ));
+     static int getConfigurationId( );
+     virtual bool discover();
+ 
+diff -ru libffado-2.9999/src/ffadodevice.cpp new/src/ffadodevice.cpp
+--- libffado-2.9999/src/ffadodevice.cpp	2016-10-26 15:54:33.643346850 +0200
++++ new/src/ffadodevice.cpp	2016-10-26 16:12:39.388773165 +0200
+@@ -40,7 +40,7 @@
+ 
+ IMPL_DEBUG_MODULE( FFADODevice, FFADODevice, DEBUG_LEVEL_NORMAL );
+ 
+-FFADODevice::FFADODevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ) )
++FFADODevice::FFADODevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ) )
+     : Control::Container(&d)
+     , m_pConfigRom( configRom )
+     , m_pDeviceManager( d )
+@@ -99,7 +99,7 @@
+ }
+ 
+ FFADODevice *
+-FFADODevice::createDevice(std::auto_ptr<ConfigRom>( x ))
++FFADODevice::createDevice(std::shared_ptr<ConfigRom>( x ))
+ {
+     // re-implement this!!
+     assert(0);
+diff -ru libffado-2.9999/src/ffadodevice.h new/src/ffadodevice.h
+--- libffado-2.9999/src/ffadodevice.h	2016-10-26 15:54:33.643346850 +0200
++++ new/src/ffadodevice.h	2016-10-26 16:12:39.390773140 +0200
+@@ -60,7 +60,7 @@
+       public Control::Container
+ {
+ public:
+-    FFADODevice( DeviceManager&, std::auto_ptr< ConfigRom >( configRom ) );
++    FFADODevice( DeviceManager&, std::shared_ptr< ConfigRom >( configRom ) );
+ 
+     virtual ~FFADODevice();
+ 
+@@ -128,7 +128,7 @@
+      *
+      * @return a new instance of the AvDevice type, NULL when unsuccessful
+      */
+-    static FFADODevice * createDevice( std::auto_ptr<ConfigRom>( x ));
++    static FFADODevice * createDevice( std::shared_ptr<ConfigRom>( x ));
+ 
+     /**
+      * @brief This is called by the DeviceManager to discover & configure the device
+@@ -480,7 +480,7 @@
+     DeviceManager& getDeviceManager()
+         {return m_pDeviceManager;};
+ private:
+-    std::auto_ptr<ConfigRom>( m_pConfigRom );
++    std::shared_ptr<ConfigRom>( m_pConfigRom );
+     DeviceManager& m_pDeviceManager;
+     Control::Container* m_genericContainer;
+ protected:
+diff -ru libffado-2.9999/src/fireworks/audiofire/audiofire_device.cpp new/src/fireworks/audiofire/audiofire_device.cpp
+--- libffado-2.9999/src/fireworks/audiofire/audiofire_device.cpp	2016-10-26 15:54:33.662346613 +0200
++++ new/src/fireworks/audiofire/audiofire_device.cpp	2016-10-26 16:12:39.451772377 +0200
+@@ -29,7 +29,7 @@
+ namespace FireWorks {
+ namespace ECHO {
+ 
+-AudioFire::AudioFire( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++AudioFire::AudioFire( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : FireWorks::Device( d, configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created FireWorks::ECHO::AudioFire (NodeID %d)\n",
+diff -ru libffado-2.9999/src/fireworks/audiofire/audiofire_device.h new/src/fireworks/audiofire/audiofire_device.h
+--- libffado-2.9999/src/fireworks/audiofire/audiofire_device.h	2016-10-26 15:54:33.662346613 +0200
++++ new/src/fireworks/audiofire/audiofire_device.h	2016-10-26 16:12:39.452772364 +0200
+@@ -34,7 +34,7 @@
+ class AudioFire : public FireWorks::Device {
+ 
+ public:
+-    AudioFire( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    AudioFire( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~AudioFire();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/fireworks/fireworks_device.cpp new/src/fireworks/fireworks_device.cpp
+--- libffado-2.9999/src/fireworks/fireworks_device.cpp	2016-10-26 15:54:33.661346625 +0200
++++ new/src/fireworks/fireworks_device.cpp	2016-10-26 16:12:39.405772952 +0200
+@@ -49,7 +49,7 @@
+ // FireWorks is the platform used and developed by ECHO AUDIO
+ namespace FireWorks {
+ 
+-Device::Device(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::Device(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : GenericAVC::Device( d, configRom)
+     , m_poll_lock( new Util::PosixMutex("DEVPOLL") )
+     , m_efc_discovery_done ( false )
+@@ -182,7 +182,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     unsigned int vendorId = configRom->getNodeVendorId();
+ //     unsigned int modelId = configRom->getModelId();
+diff -ru libffado-2.9999/src/fireworks/fireworks_device.h new/src/fireworks/fireworks_device.h
+--- libffado-2.9999/src/fireworks/fireworks_device.h	2016-10-26 15:54:33.661346625 +0200
++++ new/src/fireworks/fireworks_device.h	2016-10-26 16:12:39.406772940 +0200
+@@ -49,11 +49,11 @@
+     friend class IOConfigControl;
+     
+ public:
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ) );
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ) );
+     virtual ~Device();
+     
+     static bool probe( Util::Configuration&, ConfigRom& configRom, bool generic = false );
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual bool discover();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/genericavc/avc_avdevice.cpp new/src/genericavc/avc_avdevice.cpp
+--- libffado-2.9999/src/genericavc/avc_avdevice.cpp	2016-10-26 15:54:33.665346575 +0200
++++ new/src/genericavc/avc_avdevice.cpp	2016-10-26 16:12:39.407772927 +0200
+@@ -51,7 +51,7 @@
+ 
+ IMPL_DEBUG_MODULE( Device, Device, DEBUG_LEVEL_NORMAL );
+ 
+-Device::Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : FFADODevice( d, configRom )
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created GenericAVC::Device (NodeID %d)\n",
+@@ -108,7 +108,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     unsigned int vendorId = configRom->getNodeVendorId();
+     unsigned int modelId = configRom->getModelId();
+diff -ru libffado-2.9999/src/genericavc/avc_avdevice.h new/src/genericavc/avc_avdevice.h
+--- libffado-2.9999/src/genericavc/avc_avdevice.h	2016-10-26 15:54:33.665346575 +0200
++++ new/src/genericavc/avc_avdevice.h	2016-10-26 16:12:39.409772902 +0200
+@@ -47,12 +47,12 @@
+ 
+ class Device : public FFADODevice, public AVC::Unit {
+ public:
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     static bool probe( Util::Configuration&, ConfigRom& configRom, bool generic = false );
+     virtual bool discover();
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+ 
+     virtual bool serialize( std::string basePath, Util::IOSerialize& ser ) const;
+     virtual bool deserialize( std::string basePath, Util::IODeserialize& deser );
+diff -ru libffado-2.9999/src/genericavc/stanton/scs.cpp new/src/genericavc/stanton/scs.cpp
+--- libffado-2.9999/src/genericavc/stanton/scs.cpp	2016-10-26 15:54:33.838344412 +0200
++++ new/src/genericavc/stanton/scs.cpp	2016-10-26 16:12:39.453772352 +0200
+@@ -33,7 +33,7 @@
+ namespace Stanton {
+ 
+ ScsDevice::ScsDevice( DeviceManager& d,
+-                      std::auto_ptr<ConfigRom>( configRom ))
++                      std::shared_ptr<ConfigRom>( configRom ))
+ : GenericAVC::Device( d , configRom)
+ , m_hss1394handler( NULL )
+ {
+diff -ru libffado-2.9999/src/genericavc/stanton/scs.h new/src/genericavc/stanton/scs.h
+--- libffado-2.9999/src/genericavc/stanton/scs.h	2016-10-26 15:54:33.666346563 +0200
++++ new/src/genericavc/stanton/scs.h	2016-10-26 16:12:39.453772352 +0200
+@@ -70,7 +70,7 @@
+ 
+ public:
+     ScsDevice( DeviceManager& d,
+-               std::auto_ptr<ConfigRom>( configRom ));
++               std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~ScsDevice();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/metrichalo/mh_avdevice.cpp new/src/metrichalo/mh_avdevice.cpp
+--- libffado-2.9999/src/metrichalo/mh_avdevice.cpp	2016-10-26 15:54:33.698346163 +0200
++++ new/src/metrichalo/mh_avdevice.cpp	2016-10-26 16:12:39.410772890 +0200
+@@ -46,7 +46,7 @@
+ namespace MetricHalo {
+ 
+ Device::Device( DeviceManager& d,
+-                        std::auto_ptr<ConfigRom>( configRom ))
++                        std::shared_ptr<ConfigRom>( configRom ))
+     : FFADODevice( d, configRom )
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created MetricHalo::Device (NodeID %d)\n",
+@@ -75,7 +75,7 @@
+ 
+ FFADODevice *
+ Device::createDevice( DeviceManager& d,
+-                          std::auto_ptr<ConfigRom>( configRom ))
++                          std::shared_ptr<ConfigRom>( configRom ))
+ {
+     return new Device(d, configRom );
+ }
+diff -ru libffado-2.9999/src/metrichalo/mh_avdevice.h new/src/metrichalo/mh_avdevice.h
+--- libffado-2.9999/src/metrichalo/mh_avdevice.h	2016-10-26 15:54:33.698346163 +0200
++++ new/src/metrichalo/mh_avdevice.h	2016-10-26 16:12:39.410772890 +0200
+@@ -40,12 +40,12 @@
+ class Device : public FFADODevice {
+ public:
+     Device( DeviceManager& d,
+-                std::auto_ptr<ConfigRom>( configRom ));
++                std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     static bool probe( Util::Configuration& c, ConfigRom& configRom, bool generic = false );
+     static FFADODevice * createDevice( DeviceManager& d,
+-                                       std::auto_ptr<ConfigRom>( configRom ));
++                                       std::shared_ptr<ConfigRom>( configRom ));
+     static int getConfigurationId();
+     virtual bool discover();
+ 
+diff -ru libffado-2.9999/src/motu/motu_avdevice.cpp new/src/motu/motu_avdevice.cpp
+--- libffado-2.9999/src/motu/motu_avdevice.cpp	2016-10-26 15:54:33.830344512 +0200
++++ new/src/motu/motu_avdevice.cpp	2016-10-26 16:12:39.412772865 +0200
+@@ -315,7 +315,7 @@
+     { PORTGROUPS(4PRE),          96000, },
+ };
+ 
+-MotuDevice::MotuDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++MotuDevice::MotuDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : FFADODevice( d, configRom )
+     , m_motu_model( MOTU_MODEL_NONE )
+     , m_iso_recv_channel ( -1 )
+@@ -382,7 +382,7 @@
+ }
+ 
+ FFADODevice *
+-MotuDevice::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++MotuDevice::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     return new MotuDevice(d, configRom);
+ }
+diff -ru libffado-2.9999/src/motu/motu_avdevice.h new/src/motu/motu_avdevice.h
+--- libffado-2.9999/src/motu/motu_avdevice.h	2016-10-26 15:54:33.699346150 +0200
++++ new/src/motu/motu_avdevice.h	2016-10-26 16:12:39.413772852 +0200
+@@ -380,14 +380,14 @@
+ class MotuDevice : public FFADODevice {
+ public:
+ 
+-    MotuDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ) );
++    MotuDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ) );
+     virtual ~MotuDevice();
+ 
+     virtual bool buildMixer();
+     virtual bool destroyMixer();
+ 
+     static bool probe( Util::Configuration&, ConfigRom& configRom, bool generic = false );
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     static int getConfigurationId( );
+     virtual bool discover();
+ 
+diff -ru libffado-2.9999/src/oxford/oxford_device.cpp new/src/oxford/oxford_device.cpp
+--- libffado-2.9999/src/oxford/oxford_device.cpp	2016-10-26 15:54:33.700346138 +0200
++++ new/src/oxford/oxford_device.cpp	2016-10-26 16:12:39.414772840 +0200
+@@ -44,7 +44,7 @@
+ 
+ namespace Oxford {
+ 
+-Device::Device(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::Device(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+     : GenericAVC::Device( d, configRom)
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, "Created Oxford::Device (NodeID %d)\n",
+@@ -120,7 +120,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     unsigned int vendorId = configRom->getNodeVendorId();
+ 
+diff -ru libffado-2.9999/src/oxford/oxford_device.h new/src/oxford/oxford_device.h
+--- libffado-2.9999/src/oxford/oxford_device.h	2016-10-26 15:54:33.701346125 +0200
++++ new/src/oxford/oxford_device.h	2016-10-26 16:12:39.415772827 +0200
+@@ -39,11 +39,11 @@
+ class Device : public GenericAVC::Device {
+ 
+ public:
+-    Device( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ) );
++    Device( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ) );
+     virtual ~Device();
+ 
+     static bool probe( Util::Configuration&, ConfigRom& configRom, bool generic = false );
+-    static FFADODevice * createDevice( DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ));
++    static FFADODevice * createDevice( DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ));
+     virtual bool discover();
+ 
+     virtual void showDevice();
+diff -ru libffado-2.9999/src/rme/rme_avdevice.cpp new/src/rme/rme_avdevice.cpp
+--- libffado-2.9999/src/rme/rme_avdevice.cpp	2016-10-26 15:54:33.828344537 +0200
++++ new/src/rme/rme_avdevice.cpp	2016-10-26 16:12:39.416772815 +0200
+@@ -78,7 +78,7 @@
+ }
+ 
+ Device::Device( DeviceManager& d,
+-                      std::auto_ptr<ConfigRom>( configRom ))
++                      std::shared_ptr<ConfigRom>( configRom ))
+     : FFADODevice( d, configRom )
+     , m_rme_model( RME_MODEL_NONE )
+     , settings( NULL )
+@@ -391,7 +391,7 @@
+ }
+ 
+ FFADODevice *
+-Device::createDevice(DeviceManager& d, std::auto_ptr<ConfigRom>( configRom ))
++Device::createDevice(DeviceManager& d, std::shared_ptr<ConfigRom>( configRom ))
+ {
+     return new Device(d, configRom );
+ }
+diff -ru libffado-2.9999/src/rme/rme_avdevice.h new/src/rme/rme_avdevice.h
+--- libffado-2.9999/src/rme/rme_avdevice.h	2016-10-26 15:54:33.702346113 +0200
++++ new/src/rme/rme_avdevice.h	2016-10-26 16:12:39.417772802 +0200
+@@ -58,7 +58,7 @@
+ public:
+ 
+     Device( DeviceManager& d,
+-               std::auto_ptr<ConfigRom>( configRom ));
++               std::shared_ptr<ConfigRom>( configRom ));
+     virtual ~Device();
+ 
+     virtual bool buildMixer();
+@@ -66,7 +66,7 @@
+ 
+     static bool probe( Util::Configuration& c, ConfigRom& configRom, bool generic = false );
+     static FFADODevice * createDevice( DeviceManager& d,
+-                                        std::auto_ptr<ConfigRom>( configRom ));
++                                        std::shared_ptr<ConfigRom>( configRom ));
+     static int getConfigurationId( );
+     virtual bool discover();
+ 
+diff -ru libffado-2.9999/support/firmware/fireworks-downloader.cpp new/support/firmware/fireworks-downloader.cpp
+--- libffado-2.9999/support/firmware/fireworks-downloader.cpp	2016-10-26 15:54:33.826344562 +0200
++++ new/support/firmware/fireworks-downloader.cpp	2016-10-26 16:12:39.418772790 +0200
+@@ -244,7 +244,7 @@
+     }
+ 
+     DeviceManager d = DeviceManager();
+-    Device *dev = new Device(d, std::auto_ptr<ConfigRom>(configRom) );
++    Device *dev = new Device(d, std::shared_ptr<ConfigRom>(configRom) );
+     if (dev == NULL) {
+         printMessage("Could not create FireWorks::Device\n");
+         delete configRom;
+diff -ru libffado-2.9999/tests/scan-devreg.cpp new/tests/scan-devreg.cpp
+--- libffado-2.9999/tests/scan-devreg.cpp	2016-10-26 15:54:33.731345750 +0200
++++ new/tests/scan-devreg.cpp	2016-10-26 16:12:39.392773115 +0200
+@@ -230,8 +230,8 @@
+           n2++;
+         }
+         for (fb_nodeid_t node = n1; node < n2; node++) {
+-            std::auto_ptr<ConfigRom> configRom =
+-                std::auto_ptr<ConfigRom>( new ConfigRom(*tmp1394, node));
++            std::shared_ptr<ConfigRom> configRom =
++                std::shared_ptr<ConfigRom>( new ConfigRom(*tmp1394, node));
+             if (!configRom->initialize()) {
+                 continue;
+             }

@@ -1,0 +1,761 @@
+--- support/tools/ffado_diag_helpers.py 2016-10-23 14:45:29.964462021 +0200
++++ support/tools/ffado_diag_helpers.py 2016-10-23 15:25:27.484488896 +0200
+@@ -21,7 +21,7 @@
+ import sys
+ 
+ import os
+-import commands
++import subprocess
+ import re
+ import logging
+ 
+@@ -63,7 +63,7 @@
+ def check_for_module_present(modulename):
+     log.info("Checking if module '%s' is present... " % modulename)
+     kver = get_kernel_version()
+-    (exitstatus, outtext) = commands.getstatusoutput("find \"/lib/modules/%s/\" -name '%s.ko' | grep '%s'" % \
++    (exitstatus, outtext) = subprocess.getstatusoutput("find \"/lib/modules/%s/\" -name '%s.ko' | grep '%s'" % \
+                                                      (kver, modulename, modulename) )
+     log.debug("find outputs: %s" % outtext)
+     if outtext == "":
+@@ -126,7 +126,7 @@
+         return False
+ 
+ def run_command(cmd):
+-    (exitstatus, outtext) = commands.getstatusoutput(cmd)
++    (exitstatus, outtext) = subprocess.getstatusoutput(cmd)
+     log.debug("%s outputs: %s" % (cmd, outtext))
+     return outtext
+ 
+@@ -162,7 +162,7 @@
+         if len(tmp) > 0:
+             tmp
+             cmd = lspci_cmd + " -vv -nn -s %s" % tmp[0]
+-            print run_command(cmd)
++            print( run_command(cmd) )
+ 
+ def get_juju_permissions():
+     return run_command('ls -lh /dev/fw*')
+--- support/tools/ffado-diag.in	2016-10-26 09:51:05.011992261 +0200
++++ support/tools/ffado-diag.in	2016-10-26 10:02:48.882192673 +0200
+@@ -53,11 +53,11 @@
+ ## main program
+ if __name__== '__main__':
+ 
+-    print welcome_msg
++    print(welcome_msg)
+ 
+     num_args = len(sys.argv)
+     if num_args not in [1,2]:
+-        print help
++        print(help)
+         sys.exit(0)
+ 
+     if num_args == 2:
+@@ -67,17 +67,17 @@
+         elif loglevel == 2:
+             logging.getLogger('diag').setLevel(logging.DEBUG)
+ 
+-    print "=== CHECK ==="
+-    print " Base system..."
++    print( "=== CHECK ===")
++    print( " Base system...")
+     
+     # check kernel
+     kernel_version = get_kernel_version()
+-    print "  kernel version............ " + str(kernel_version)
+-    kernel_is_preempt = get_kernel_preempt()
+-    print "    Preempt (low latency)... " + str(kernel_is_preempt)
++    print( "  kernel version............ " + str(kernel_version))
++    kernel_is_preempt = get_kernel_preempt()
++    print( "    Preempt (low latency)... " + str(kernel_is_preempt))
+     # Hint: The main parts of the rt patches are in mainline-kernels nowadays. Performance with stock kernels is sufficient...
+     kernel_is_rt_patched = get_kernel_rt_patched()
+-    print "    RT patched.............. " + str(kernel_is_rt_patched)
++    print( "    RT patched.............. " + str(kernel_is_rt_patched))
+ 
+     # check modules
+     oldstack_present = check_1394oldstack_present()
+@@ -89,91 +89,91 @@
+     newstack_active = check_1394newstack_active()
+     newstack_statically_linked = not check_1394newstack_loaded() and check_1394newstack_linked()
+     
+-    print "  old 1394 stack present.... " + str(oldstack_present)
+-    print "  old 1394 stack loaded..... " + str(oldstack_loaded)
+-    print "  old 1394 stack active..... " + str(oldstack_active)
+-    print "  new 1394 stack present.... " + str(newstack_present)
+-    print "  new 1394 stack loaded..... " + str(newstack_loaded)
+-    print "  new 1394 stack active..... " + str(newstack_active)
++    print( "  old 1394 stack present.... " + str(oldstack_present))
++    print( "  old 1394 stack loaded..... " + str(oldstack_loaded))
++    print( "  old 1394 stack active..... " + str(oldstack_active))
++    print( "  new 1394 stack present.... " + str(newstack_present))
++    print( "  new 1394 stack loaded..... " + str(newstack_loaded))
++    print( "  new 1394 stack active..... " + str(newstack_active))
+     
+     # check /dev/raw1394 node presence
+     devnode_present = check_1394oldstack_devnode_present()
+-    print "  /dev/raw1394 node present. " + str(devnode_present)
++    print( "  /dev/raw1394 node present. " + str(devnode_present))
+     if devnode_present:
+         # check /dev/raw1394 access permissions
+         devnode_permissions = check_1394oldstack_devnode_permissions()
+-        print "  /dev/raw1394 permissions.. " + str(devnode_permissions)
++        print( "  /dev/raw1394 permissions.. " + str(devnode_permissions))
+     else:
+         devnode_permissions = None
+ 
+     if newstack_active:
+         # check permissions
+         newstack_permissions = get_juju_permissions()
+-        print "  /dev/fw* permissions:"
+-        print newstack_permissions
++        print( "  /dev/fw* permissions:")
++        print( newstack_permissions)
+ 
+-    print "  User IDs:"
+-    print get_user_ids()
++    print( "  User IDs:")
++    print( get_user_ids())
+ 
+ 
+     # check libraries
+-    print " Prerequisites (dynamic at run-time)..."
+-    print "   gcc ............... %s" % get_version_first_line('gcc --version')
+-    print "   g++ ............... %s" % get_version_first_line('g++ --version')
+-    print "   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version')
+-    print "   jackd ............. %s" % get_version_first_line('jackd --version')
+-    print "     path ............ %s" % get_command_path('jackd')
+-    print "     flags ........... %s" % get_package_flags("jack")
+-    print "   libraw1394 ........ %s" % get_package_version("libraw1394")
+-    print "     flags ........... %s" % get_package_flags("libraw1394")
+-    print "   libavc1394 ........ %s" % get_package_version("libavc1394")
+-    print "     flags ........... %s" % get_package_flags("libavc1394")
+-    print "   libiec61883 ....... %s" % get_package_version("libiec61883")
+-    print "     flags ........... %s" % get_package_flags("libiec61883")
+-    print "   libxml++-2.6 ...... %s" % get_package_version("libxml++-2.6")
+-    print "     flags ........... %s" % get_package_flags("libxml++-2.6")
+-    print "   dbus-1 ............ %s" % get_package_version("dbus-1")
+-    print "     flags ........... %s" % get_package_flags("dbus-1")
+-    print " Prerequisites (static at compile-time)..."
++    print( " Prerequisites (dynamic at run-time)...")
++    print( "   gcc ............... %s" % get_version_first_line('gcc --version'))
++    print( "   g++ ............... %s" % get_version_first_line('g++ --version'))
++    print( "   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version'))
++    print( "   jackd ............. %s" % get_version_first_line('jackd --version'))
++    print( "     path ............ %s" % get_command_path('jackd'))
++    print( "     flags ........... %s" % get_package_flags("jack"))
++    print( "   libraw1394 ........ %s" % get_package_version("libraw1394"))
++    print( "     flags ........... %s" % get_package_flags("libraw1394"))
++    print( "   libavc1394 ........ %s" % get_package_version("libavc1394"))
++    print( "     flags ........... %s" % get_package_flags("libavc1394"))
++    print( "   libiec61883 ....... %s" % get_package_version("libiec61883"))
++    print( "     flags ........... %s" % get_package_flags("libiec61883"))
++    print( "   libxml++-2.6 ...... %s" % get_package_version("libxml++-2.6"))
++    print( "     flags ........... %s" % get_package_flags("libxml++-2.6"))
++    print( "   dbus-1 ............ %s" % get_package_version("dbus-1"))
++    print( "     flags ........... %s" % get_package_flags("dbus-1"))
++    print( " Prerequisites (static at compile-time)...")
+     f = open( "$PYTHONDIR/static_info.txt", "r" )
+     for line in f:
+         line = line[:-1]
+         if line is not "\n" and line.startswith("  "):
+-            print line
++            print( line)
+     f.close()
+ 
+     # libraw
+ 
+-    print " uname -a..." 
+-    print "   " + run_command("uname -a")
++    print( " uname -a..." )
++    print( "   " + run_command("uname -a"))
+     
+-    print " Hardware..."
++    print( " Hardware...")
+     # check host controller
+-    print "   Host controllers:"
++    print( "   Host controllers:")
+     list_host_controllers()
+-    print "   CPU info:"
++    print( "   CPU info:")
+     if len(run_command("which lscpu")) > 0:
+-        print run_command("lscpu")
++        print( run_command("lscpu"))
+     else:
+-        print run_command("cat /proc/cpuinfo")
++        print( run_command("cat /proc/cpuinfo"))
+ 
+-    print " Configuration..."
++    print( " Configuration...")
+     # check RT settings
+     
+     # check IRQ settings 
+-    print "  IRQ information"
++    print( "  IRQ information")
+     info = IRQInfo()
+ 
+     info.load()
+-    print str(info)
++    print( str(info))
+ 
+-    print ""
+-    print "=== REPORT ==="
++    print( "")
++    print( "=== REPORT ===")
+     
+     help = HelpStrings()
+     
+     # do the interpretation of the tests
+-    print "FireWire kernel drivers:"
++    print( "FireWire kernel drivers:")
+     if (oldstack_loaded or oldstack_statically_linked) and \
+        (newstack_loaded or newstack_statically_linked):
+         help.show('MODULES_BOTH_STACKS_LOADED')
+@@ -182,7 +182,7 @@
+         help.show('MODULES_NEW_STACK_LOADED')
+         sys.exit(-1)
+     elif oldstack_statically_linked:
+-        print "[PASS] Kernel drivers statically linked into the kernel."
++        print( "[PASS] Kernel drivers statically linked into the kernel.")
+     elif not oldstack_present:
+         help.show('MODULES_OLD_STACK_NOT_INSTALLED')
+         sys.exit(-1)
+@@ -190,7 +190,7 @@
+         help.show('MODULES_OLD_STACK_NOT_LOADED')
+         sys.exit(-1)
+     else:
+-        print "[PASS] Kernel modules present and correctly loaded."
++        print( "[PASS] Kernel modules present and correctly loaded.")
+ 
+     if not devnode_present:
+         help.show('DEVNODE_OLD_STACK_NOT_PRESENT')
+@@ -200,7 +200,7 @@
+             help.show('DEVNODE_OLD_STACK_NO_PERMISSION')
+             sys.exit(-1)
+         else:
+-            print "[PASS] /dev/raw1394 node present and accessible."
++            print( "[PASS] /dev/raw1394 node present and accessible.")
+     
+     
+     
+--- support/tools/listirqinfo.py	2016-10-26 11:40:27.649947997 +0200
++++ support/tools/listirqinfo.py	2016-10-26 11:40:49.113679663 +0200
+@@ -18,14 +18,13 @@
+ #
+ 
+ import os
+-import commands
++import subprocess
+ import re
+ 
+ LISTIRQINFO_VERSION="0.3"
+ 
+ def sortedDictValues(adict):
+-    items = adict.items()
+-    items.sort()
++    items = sorted(adict.items())
+     return [value for key, value in items]
+ 
+ class IRQ:
+@@ -63,7 +62,7 @@
+ 
+     def load(self):
+         # get PID info
+-        (exitstatus, outtext) = commands.getstatusoutput('ps -eLo pid,cmd,class,rtprio | grep IRQ')
++        (exitstatus, outtext) = subprocess.getstatusoutput('ps -eLo pid,cmd,class,rtprio | grep IRQ')
+         
+         rawstr = r"""([0-9]+) +\[IRQ-([0-9]+)\] +([A-Z]{2}) +([-0-9]+)"""
+         compile_obj = re.compile(rawstr)
+@@ -82,7 +81,7 @@
+                     irq.scheduling_priority = None
+                 IRQs[irq.number] = irq
+         
+-        (exitstatus, outtext) = commands.getstatusoutput('ps -eLo pid,cmd,class,rtprio | grep softirq')
++        (exitstatus, outtext) = subprocess.getstatusoutput('ps -eLo pid,cmd,class,rtprio | grep softirq')
+         
+         rawstr = r"""([0-9]+) +\[softirq-(.*)\] +([A-Z]+) +([-0-9]+)"""
+         compile_obj = re.compile(rawstr)
+@@ -103,7 +102,7 @@
+                 softIRQs[irq.name] = irq
+         
+         # get irq info
+-        (exitstatus, outtext) = commands.getstatusoutput('cat /proc/interrupts')
++        (exitstatus, outtext) = subprocess.getstatusoutput('cat /proc/interrupts')
+         lines = outtext.splitlines()
+         nb_cpus = len(lines[0].split())
+         str0 = "([0-9]+): +";
+@@ -157,15 +156,15 @@
+ 
+ if __name__== '__main__':
+ 
+-    print ""
+-    print "Interrupt list utility " + LISTIRQINFO_VERSION
+-    print "=========================="
+-    print "(C) 2008 Pieter Palmers"
+-    print ""
++    print( "" )
++    print( "Interrupt list utility " + LISTIRQINFO_VERSION )
++    print( "==========================" )
++    print( "(C) 2008 Pieter Palmers" )
++    print( "" )
+     
+     info = IRQInfo()
+ 
+     info.load()
+-    print str(info)
++    print( str(info) )
+     
+-    print ""
++    print( "" )
+--- support/tools/helpstrings.py	2016-10-26 11:49:55.222852359 +0200
++++ support/tools/helpstrings.py	2016-10-26 11:50:03.264751821 +0200
+@@ -55,5 +55,5 @@
+         return self.strings[sid]
+ 
+     def show(self, sid):
+-        print self.get(sid)
++        print( self.get(sid) )
+     
+--- support/mixer-qt4/ffado/configuration.py	2016-10-27 10:29:11.419708154 +0200
++++ support/mixer-qt4/ffado/configuration.py	2016-10-27 10:29:21.208585776 +0200
+@@ -40,7 +40,7 @@
+             if must_exist:
+                 log.error("cannot open file")
+             return
+-        f = open( filename, "r" )
++        f = open( filename, "r", encoding='utf-8' )
+ 
+         lex = Parser( f )
+         config = {}
+@@ -48,7 +48,7 @@
+             tmp = lex.parsenamedvalue()
+             if tmp != None:
+                 config[ tmp[0] ] = tmp[1]
+-        if config.has_key("device_definitions"):
++        if "device_definitions" in config:
+             for dev in config["device_definitions"]:
+                 self.addDevice( dev )
+ 
+@@ -142,7 +142,7 @@
+             name = token
+             token = self.lex.get_token()
+             if token in ("=",":"):
+-                #print "%sWill parse value" % level
++                #print( "%sWill parse value" % level )
+                 value = self.parsevalue( level )
+                 return (name,value)
+         log.debug("%sparsenamedvalue() will return None!" % level)
+@@ -160,6 +160,6 @@
+     log.setLevel(logging.DEBUG)
+     devs = DeviceList( file )
+ 
+-    print devs.devices
++    print( devs.devices )
+ 
+ # vim: et
+
+--- support/mixer-qt4/ffado/panelmanager.py	2016-10-27 10:32:05.776528393 +0200
++++ support/mixer-qt4/ffado/panelmanager.py	2016-10-27 10:32:14.381420817 +0200
+@@ -214,7 +214,7 @@
+             self.emit(SIGNAL("connectionLost"))
+ 
+     def removePanel(self, guid):
+-        print "Removing widget for device" + guid
++        print( "Removing widget for device" + guid )
+         w = self.panels[guid]
+         del self.panels[guid] # remove from the list
+         idx = self.tabs.indexOf(w)
+@@ -474,7 +474,7 @@
+         try:
+           f = open(savefilename, 'w')
+         except IOError:
+-          print "Unable to open save file"
++          print( "Unable to open save file" )
+           return
+         for s in saveString:
+           f.write(s)
+@@ -485,7 +485,7 @@
+         try:
+           f = open(readfilename, 'r')
+         except IOError:
+-          print "Unable to open file"
++          print( "Unable to open file" )
+           return
+         log.debug("Opening file %s" % readfilename)
+         # discard useless whitespace characters
+@@ -496,28 +496,28 @@
+         # Check it is a compatible "FFADO" file
+         # It must start with the <?xml ... tag as the first string
+         if readString[0].find("<?xml") == -1:
+-            print "Not an xml data file"
++            print( "Not an xml data file" )
+             return
+         # Then there must be a file version tag somewhere in the file
+         try:
+             idx = readString.index('<fileversion>')
+         except Exception:
+-            print "Data file should contain the version tag"
++            print( "Data file should contain the version tag" )
+             return
+         if readString[idx+1].find("<major>") == -1:
+-            print "Incompatible versioning of the file"
++            print( "Incompatible versioning of the file" )
+         if readString[idx+3].find("</major>") == -1:
+-            print "Not a valid xml file"
++            print( "Not a valid xml file" )
+         if readString[idx+4].find("<minor>") == -1:
+-            print "Incompatible versioning of the file"
++            print( "Incompatible versioning of the file" )
+         if readString[idx+6].find("</minor>") == -1:
+-            print "Not a valid xml file"
++            print( "Not a valid xml file" )
+         version_major = readString[idx+2]
+         version =  version_major + '.' + readString[idx+5]
+         log.debug("File version: %s" % version)
+         # File version newer than present
+         if int(version_major) > int(str(FILE_VERSION).split('.')[0]):
+-            print "File version is too recent: you should upgrade your FFADO installation"
++            print( "File version is too recent: you should upgrade your FFADO installation" )
+             return
+         # FIXME At a time it will be necessary to detect if an older major version is detected
+         #
+@@ -528,13 +528,13 @@
+         nd = readString.count('<device>');
+         n  = readString.count('</device>');
+         if n != nd:
+-            print "Not a regular xml file: opening device tag must match closing ones"
++            print( "Not a regular xml file: opening device tag must match closing ones" )
+             return
+         while nd > 0:
+           idxb = readString.index('<device>')
+           idxe = readString.index('</device>')
+           if idxe < idxb+1:
+-            print "Not a regular xml file: data must be enclosed between a <device> and </device> tag"
++            print( "Not a regular xml file: data must be enclosed between a <device> and </device> tag" )
+             return
+           stringDev = []
+           for s in readString[idxb:idxe]:
+@@ -543,7 +543,7 @@
+           try:
+               idx = stringDev.index('<guid>')
+           except Exception:
+-              print "Device guid not found"
++              print( "Device guid not found" )
+               return
+           guid = stringDev[idx+1]
+           log.debug("Device %s found" % guid)
+--- support/mixer-qt4/ffado/ffadowindow.py	2016-10-27 10:33:30.892464298 +0200
++++ support/mixer-qt4/ffado/ffadowindow.py	2016-10-27 10:27:39.281860035 +0200
+@@ -115,7 +115,7 @@
+         log.info("connectToDBUS")
+         try:
+             self.setupDeviceManager()
+-        except dbus.DBusException, ex:
++        except( dbus.DBusException, ex ):
+             log.error("Could not communicate with the FFADO DBus service...")
+             if not hasattr(self,"retry"):
+                 self.retry = StartDialog(self)
+@@ -128,7 +128,7 @@
+     def tryStartDBUSServer(self):
+         try:
+             self.setupDeviceManager()
+-        except dbus.DBusException, ex:
++        except( dbus.DBusException, ex ):
+             if hasattr(self, "retry"):
+                 self.retry.setEnabled(False)
+             subprocess.Popen(['ffado-dbus-server', '-v3']).pid
+@@ -176,7 +176,7 @@
+         lock_socket.bind('\0' + process_name)
+         # Lock acquired
+     except socket.error:
+-        print 'ffado-mixer instance is already running'
++        print( 'ffado-mixer instance is already running' )
+         sys.exit()
+ 
+ 
+--- support/mixer-qt4/ffado/widgets/matrixmixer.py	2016-10-27 10:34:34.579668098 +0200
++++ support/mixer-qt4/ffado/widgets/matrixmixer.py	2016-10-27 10:27:39.303859760 +0200
+@@ -64,7 +64,7 @@
+         self.colors[n] = color
+ 
+     def getColor(self, n):
+-        #print "ColorForNumber.getColor( %g )" % (n)
++        #print( "ColorForNumber.getColor( %g )" % (n) )
+         keys = self.colors.keys()
+         keys.sort()
+         low = keys[-1]
+@@ -73,7 +73,7 @@
+             if keys[i] <= n and keys[i+1] > n:
+                 low = keys[i]
+                 high = keys[i+1]
+-        #print "%g is between %g and %g" % (n, low, high)
++        #print( "%g is between %g and %g" % (n, low, high) )
+         f = 0
+         if high != low:
+             f = (n-low) / (high-low)
+--- support/mixer-qt4/ffado/widgets/crossbarrouter.py	2016-10-27 10:35:29.865976924 +0200
++++ support/mixer-qt4/ffado/widgets/crossbarrouter.py	2016-10-27 10:27:39.302859773 +0200
+@@ -159,7 +159,7 @@
+         self.vubtn.setChecked(self.settings.value("crossbarrouter/runvu", False).toBool())
+ 
+     def __del__(self):
+-        print "CrossbarRouter.__del__()"
++        print( "CrossbarRouter.__del__()" )
+         self.settings.setValue("crossbarrouter/runvu", self.vubtn.isChecked())
+ 
+     def runVu(self, run=True):
+--- support/mixer-qt4/ffado/mixer/saffire_dice.py	2016-10-27 10:36:17.388382812 +0200
++++ support/mixer-qt4/ffado/mixer/saffire_dice.py	2016-10-27 10:27:39.297859835 +0200
+@@ -63,8 +63,8 @@
+         Generic_Dice_EAP.__init__(self, parent)
+ 
+     def buildMixer(self):
+-        #print self.hw
+-        #print self.hw.getText("/Generic/Nickname")
++        #print( self.hw )
++        #print( self.hw.getText("/Generic/Nickname") )
+         Generic_Dice_EAP.buildMixer(self)
+ 
+         widget = QtGui.QWidget()
+--- support/mixer-qt4/ffado/mixer/rme.py	2016-10-27 10:37:09.918726093 +0200
++++ support/mixer-qt4/ffado/mixer/rme.py	2016-10-27 10:27:39.296859848 +0200
+@@ -435,8 +435,8 @@
+ 
+     def initValues(self):
+ 
+-        # print self.hw.servername
+-        # print self.hw.basepath
++        # print( self.hw.servername )
++        # print( self.hw.basepath )
+         self.inputmatrix = MatrixMixer(self.hw.servername, self.hw.basepath+"/Mixer/InputFaders", self, "Columns_are_inputs", 0x8000, self.hw.basepath+"/Mixer/InputMutes", self.hw.basepath+"/Mixer/InputInverts", True)
+         layout = QtGui.QVBoxLayout()
+         layout.addWidget(self.inputmatrix)
+--- support/mixer-qt4/ffado/mixer/profire2626.py	2016-10-27 10:37:58.812114841 +0200
++++ support/mixer-qt4/ffado/mixer/profire2626.py	2016-10-27 10:27:39.295859860 +0200
+@@ -63,8 +63,8 @@
+         Generic_Dice_EAP.__init__(self, parent)
+ 
+     def buildMixer(self):
+-        #print self.hw
+-        #print self.hw.getText("/Generic/Nickname")
++        #print( self.hw )
++        #print( self.hw.getText("/Generic/Nickname") )
+         Generic_Dice_EAP.buildMixer(self)
+ 
+         widget = QtGui.QWidget()
+--- support/mixer-qt4/ffado/mixer/globalmixer.py	2016-10-27 10:38:58.474368960 +0200
++++ support/mixer-qt4/ffado/mixer/globalmixer.py	2016-10-27 10:27:39.287859960 +0200
+@@ -126,7 +126,7 @@
+                 self.samplerate.setCurrentIndex(0);
+ 
+     def initValues( self ):
+-        #print "GlobalMixer::initValues()"
++        #print( "GlobalMixer::initValues()" )
+         nb_clocks = self.clockselect.count()
+         for i in range( nb_clocks ):
+             self.clocksource.insertItem( nb_clocks, self.clockselect.getEnumLabel( i ) )
+@@ -201,7 +201,7 @@
+         try:
+             idx = readString.index('<nickname>')
+         except Exception:
+-            print "No nickname found"
++            print( "No nickname found" )
+             idx = -1
+         if idx >= 0:
+             nickname = readString[idx+1]
+@@ -213,7 +213,7 @@
+         try:
+             idx = readString.index('<clock>')
+         except Exception:
+-            print "No clock found"
++            print( "No clock found" )
+             idx = -1
+         if idx >= 0:
+             clock = readString[idx+1]
+@@ -224,7 +224,7 @@
+             try:
+                 idxclock = clockLabel.index(clock)
+             except Exception:
+-                print "No %s clock found" % clock
++                print( "No %s clock found" % clock )
+                 idxclock = -1
+             if idxclock >= 0:
+                 self.on_clocksource_activated(idxclock)           
+@@ -235,7 +235,7 @@
+         try:
+             idx = readString.index('<samplerate>')
+         except Exception:
+-            print "Samplerate not found"
++            print( "Samplerate not found" )
+             idx = -1
+         if idx >= 0:
+             samplerate = readString[idx+1]
+@@ -246,7 +246,7 @@
+             try:
+                 idxsrate = srateLabel.index(samplerate)
+             except Exception:
+-                print "No %s samplerate found" % samplerate
++                print( "No %s samplerate found" % samplerate )
+                 idxsrate = -1
+             if idxsrate >= 0:
+                 self.on_samplerate_activated(idxsrate)    
+--- support/mixer-qt4/ffado/mixer/generic_dice_eap.py	2016-10-27 10:39:33.884926268 +0200
++++ support/mixer-qt4/ffado/mixer/generic_dice_eap.py	2016-10-27 10:27:39.287859960 +0200
+@@ -37,8 +37,8 @@
+         self.layout.addWidget(self.tabs)
+ 
+     def buildMixer(self):
+-        #print self.hw
+-        #print self.hw.getText("/Generic/Nickname")
++        #print( self.hw )
++        #print( self.hw.getText("/Generic/Nickname") )
+         self.mixer = MatrixMixer(self.hw.servername, self.hw.basepath+"/EAP/MatrixMixer", self, "Columns_are_outputs", -1, None, None, False, QtGui.QTabWidget.North, QtGui.QTabWidget.Rounded)
+         self.tabs.addTab(self.mixer, "Mixer")
+ 
+--- configuration	2016-10-27 10:50:33.186683861 +0200
++++ configuration.new	2016-10-27 11:06:55.072408601 +0200
+@@ -162,7 +162,7 @@
+     modelname   = "STUDIOLIVE_2442";
+     driver      = "DICE";
+ },
+-{ # Entry for StudioLive 1602, from Ulrich-Lorenz Schlüter
++{ # Entry for StudioLive 1602, from Ulrich-Lorenz SchlÃ¼ter
+     vendorid    = 0x00000A92;
+     modelid     = 0x00000013;
+     vendorname  = "PreSonus";
+--- support/mixer-qt4/ffado/registration.py	2016-10-27 13:27:10.778197800 +0200
++++ support/mixer-qt4/ffado/registration.py	2016-10-27 13:26:00.798072672 +0200
+@@ -21,8 +21,9 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-import urllib
+-import ConfigParser, os
++import urllib.parse, urllib.request
++import configparser, os
++import codecs
+ 
+ from ffado.config import REGISTER_URL, INI_FILE_PATH, FFADO_CONFIG_DIR
+ from PyQt4.QtGui import QMessageBox
+@@ -56,7 +57,7 @@
+ 
+         # parse the ini file
+         self.config_filename = os.path.expanduser(INI_FILE_PATH)
+-        self.parser = ConfigParser.SafeConfigParser()
++        self.parser = configparser.SafeConfigParser()
+         self.parser.read(self.config_filename)
+         self.section_name = "%s:%X" % (self.ffado_version, self.guid)
+         self.email = "(optional)"
+@@ -75,20 +76,20 @@
+         post_vals['email'] = self.email
+ 
+         try:
+-            response = urllib.urlopen(REGISTER_URL,
+-                                      urllib.urlencode(post_vals))
++            response = urllib.request.urlopen(REGISTER_URL,
++                                      urllib.parse.urlencode(post_vals).encode('ascii'))
+         except:
+             log.error("failed, network error")
+             return (-1, "Network Error")
+     
+         lines = response.readlines()
+-        
++        print(lines)
+         ok = False
+         errline = "Bad response from server"
+         for i in range(len(lines)):
+-            if lines[i][0:10] == "RESULT: OK":
++            if lines[i][0:10] == b"RESULT: OK":
+                 ok = True
+-            elif lines[i][0:12] == "RESULT: FAIL":
++            elif lines[i][0:12] == b"RESULT: FAIL":
+                 ok = False
+                 if len(lines)>i+1:
+                     errline = lines[i+1]
+@@ -146,8 +147,7 @@
+                 if dlg.choice == "neversend":
+                     self.mark_ignore_version()
+                 elif dlg.choice == "send":
+-                    asciiData = dlg.getEmail().toAscii()
+-                    self.email = asciiData.data()
++                    self.email = ascii(dlg.getEmail())
+                     self.remember_email(self.email)
+ 
+                     retval = self.register_ffado_usage()
+--- src/libutil/Configuration.cpp	2016-10-28 11:50:34.121742365 +0200
++++ src/libutil/Configuration.cpp	2016-10-29 13:54:16.560248885 +0200
+@@ -64,7 +64,7 @@
+                 delete c;
+                 return false;
+             } catch (ParseException& e) {
+-                debugWarning("Could not parse file: %s\n", filename.c_str());
++                debugWarning("Could not parse file: %s\nError: %s, Line: %i, What: %s", filename.c_str(), e.getError(), e.getLine(), e.what());
+                 delete c;
+                 return false;
+             } catch (...) {
+--- support/tools/ffado-diag-static	2016-11-05 11:44:06.887574970 +0100
++++ support/tools/ffado-diag-static	2016-11-05 12:00:26.337330163 +0100
+@@ -26,7 +26,6 @@
+ 
+ # Add the path of the installed dependent files
+ import os
+-import commands
+ import re
+ import logging
+ 
+@@ -55,11 +54,11 @@
+ ## main program
+ if __name__== '__main__':
+ 
+-    print welcome_msg
++    print(welcome_msg)
+ 
+     num_args = len(sys.argv)
+     if num_args not in [1,2]:
+-        print help
++        print(help)
+         sys.exit(0)
+ 
+     if num_args == 2:
+@@ -69,23 +68,23 @@
+         elif loglevel == 2:
+             logging.getLogger('staticdiag').setLevel(logging.DEBUG)
+ 
+-    print "=== CHECK ==="
++    print("=== CHECK ===")
+ 
+     # check libraries
+-    print "   gcc ............... %s" % get_version_first_line('gcc --version')
+-    print "   g++ ............... %s" % get_version_first_line('g++ --version')
+-    print "   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version')
+-    print "   jackd ............. %s" % get_version_first_line('jackd --version')
+-    print "     path ............ %s" % get_command_path('jackd')
+-    print "     flags ........... %s" % get_package_flags("jack")
+-    print "   libraw1394 ........ %s" % get_package_version("libraw1394")
+-    print "     flags ........... %s" % get_package_flags("libraw1394")
+-    print "   libavc1394 ........ %s" % get_package_version("libavc1394")
+-    print "     flags ........... %s" % get_package_flags("libavc1394")
+-    print "   libiec61883 ....... %s" % get_package_version("libiec61883")
+-    print "     flags ........... %s" % get_package_flags("libiec61883")
+-    print "   libxml++-2.6 ...... %s" % get_package_version("libxml++-2.6")
+-    print "     flags ........... %s" % get_package_flags("libxml++-2.6")
+-    print "   dbus-1 ............ %s" % get_package_version("dbus-1")
+-    print "     flags ........... %s" % get_package_flags("dbus-1")
++    print("   gcc ............... %s" % get_version_first_line('gcc --version'))
++    print("   g++ ............... %s" % get_version_first_line('g++ --version'))
++    print("   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version'))
++    print("   jackd ............. %s" % get_version_first_line('jackd --version'))
++    print("     path ............ %s" % get_command_path('jackd'))
++    print("     flags ........... %s" % get_package_flags("jack"))
++    print("   libraw1394 ........ %s" % get_package_version("libraw1394"))
++    print("     flags ........... %s" % get_package_flags("libraw1394"))
++    print("   libavc1394 ........ %s" % get_package_version("libavc1394"))
++    print("     flags ........... %s" % get_package_flags("libavc1394"))
++    print("   libiec61883 ....... %s" % get_package_version("libiec61883"))
++    print("     flags ........... %s" % get_package_flags("libiec61883"))
++    print("   libxml++-2.6 ...... %s" % get_package_version("libxml++-2.6"))
++    print("     flags ........... %s" % get_package_flags("libxml++-2.6"))
++    print("   dbus-1 ............ %s" % get_package_version("dbus-1"))
++    print("     flags ........... %s" % get_package_flags("dbus-1"))
+ 

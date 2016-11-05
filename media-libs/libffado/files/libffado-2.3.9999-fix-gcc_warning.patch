@@ -1,0 +1,2591 @@
+--- src/libieee1394/cycletimer.h	2016-10-26 12:00:59.686545420 +0200
++++ src/libieee1394/cycletimer.h	2016-10-26 12:20:03.409246918 +0200
+@@ -94,7 +94,7 @@
+ 
+ #ifdef DEBUG
+         if (x >= TICKS_PER_SECOND * 128L) {
+-            debugWarning("insufficient wrapping: %"PRIu64"\n",x);
++            debugWarning("insufficient wrapping: %" PRIu64 "\n",x);
+         }
+ #endif
+ 
+@@ -117,7 +117,7 @@
+ 
+ #ifdef DEBUG
+         if (x < 0) {
+-            debugWarning("insufficient wrapping: %"PRId64"\n",x);
++            debugWarning("insufficient wrapping: %" PRId64 "\n",x);
+         }
+ #endif
+ 
+@@ -144,10 +144,10 @@
+ 
+ #ifdef DEBUG
+         if (x >= (int64_t)(TICKS_PER_SECOND * 128L)) {
+-            debugWarning("insufficient wrapping (max): %"PRIu64"\n",x);
++            debugWarning("insufficient wrapping (max): %" PRIu64 "\n",x);
+         }
+         if (x < 0) {
+-            debugWarning("insufficient wrapping (min): %"PRId64"\n",x);
++            debugWarning("insufficient wrapping (min): %" PRId64 "\n",x);
+         }
+ #endif
+     return x;
+@@ -248,7 +248,7 @@
+ #ifdef DEBUG
+     if(diff > max || diff < -max) {
+         debugWarning("difference does not make any sense\n");
+-        debugWarning("diff=%"PRId64" max=%"PRId64"\n", diff, max);
++        debugWarning("diff=%" PRId64 " max=%" PRId64 "\n", diff, max);
+         
+     }
+ #endif
+@@ -301,7 +301,7 @@
+ static inline uint64_t sytRecvToFullTicks(uint64_t syt_timestamp, unsigned int rcv_cycle, uint64_t ctr_now) {
+     uint64_t timestamp;
+ 
+-    debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE, "SYT=%"PRIX64" CY=%u CTR=%08"PRIX64"\n",
++    debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE, "SYT=%" PRIX64 " CY=%u CTR=%08" PRIX64 "\n",
+                        syt_timestamp, rcv_cycle, ctr_now);
+ 
+     // reconstruct the full cycle
+@@ -312,7 +312,7 @@
+     // the cycle timer should be ahead of the receive timer
+     int diff_cycles = diffCycles(cc_cycles, rcv_cycle);
+     if (diff_cycles<0) {
+-        debugWarning("current cycle timer not ahead of receive cycle: rcv: %u / cc: %"PRIu64" (%d)\n",
++        debugWarning("current cycle timer not ahead of receive cycle: rcv: %u / cc: %" PRIu64 " (%d)\n",
+                         rcv_cycle, cc_cycles, diff_cycles);
+     }
+ 
+@@ -350,7 +350,7 @@
+         timestamp  = new_cycles * TICKS_PER_CYCLE;
+     } else {
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                           "Detected wraparound: %u + %"PRId64" = %"PRId64"\n",
++                           "Detected wraparound: %u + %" PRId64 " = %" PRId64 "\n",
+                            rcv_cycle, delta_cycles, new_cycles);
+ 
+         new_cycles-=8000; // wrap around
+@@ -371,7 +371,7 @@
+     #ifdef DEBUG
+         if(( TICKS_TO_CYCLE_TIMER(timestamp) & 0xFFFF) != syt_timestamp) {
+             debugWarning("back-converted timestamp not equal to SYT\n");
+-            debugWarning("TS=%011"PRIu64" TSC=%08"PRIX64" SYT=%04"PRIX64"\n",
++            debugWarning("TS=%011" PRIu64 " TSC=%08" PRIX64 " SYT=%04" PRIX64 "\n",
+                   timestamp, TICKS_TO_CYCLE_TIMER(timestamp), syt_timestamp);
+         }
+     #endif
+@@ -390,7 +390,7 @@
+ static inline uint64_t sytRecvToFullTicks2(uint64_t syt_timestamp, uint32_t rcv_ctr) {
+     uint64_t timestamp;
+ 
+-    debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE, "SYT=%04"PRIX64" RCV_CTR=%08X\n",
++    debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE, "SYT=%04" PRIX64 " RCV_CTR=%08X\n",
+                        syt_timestamp, rcv_ctr);
+ 
+     // reconstruct the top part of the timestamp using the current cycle number
+@@ -432,7 +432,7 @@
+     #ifdef DEBUG
+         if(( TICKS_TO_CYCLE_TIMER(timestamp) & 0xFFFF) != syt_timestamp) {
+             debugWarning("back-converted timestamp not equal to SYT\n");
+-            debugWarning("TS=%011"PRIu64" TSC=%08"PRIX64" SYT=%04"PRIX64"\n",
++            debugWarning("TS=%011" PRIu64 " TSC=%08" PRIX64 " SYT=%04" PRIX64 "\n",
+                   timestamp, TICKS_TO_CYCLE_TIMER(timestamp), syt_timestamp);
+         }
+     #endif
+@@ -456,7 +456,7 @@
+ static inline uint64_t sytXmitToFullTicks(uint64_t syt_timestamp, unsigned int xmt_cycle, uint64_t ctr_now) {
+     uint64_t timestamp;
+ 
+-    debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE, "SYT=%08"PRIX64" CY=%04X CTR=%08"PRIX64"\n",
++    debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE, "SYT=%08" PRIX64 " CY=%04X CTR=%08" PRIX64 "\n",
+                        syt_timestamp, xmt_cycle, ctr_now);
+ 
+     // reconstruct the full cycle
+@@ -466,7 +466,7 @@
+     // check for bogus CTR
+     int diff_cycles = diffCycles(xmt_cycle, cc_cycles);
+     if (diff_cycles<0) {
+-        debugWarning("xmit cycle not ahead of current cycle: xmt: %u / cc: %"PRIu64" (%d)\n",
++        debugWarning("xmit cycle not ahead of current cycle: xmt: %u / cc: %" PRIu64 " (%d)\n",
+                         xmt_cycle, cc_cycles, diff_cycles);
+     }
+ 
+@@ -504,7 +504,7 @@
+         timestamp  = new_cycles * TICKS_PER_CYCLE;
+     } else {
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                           "Detected wraparound: %u + %"PRId64" = %"PRId64"\n",
++                           "Detected wraparound: %u + %" PRId64 " = %" PRId64 "\n",
+                            xmt_cycle, delta_cycles, new_cycles);
+ 
+         new_cycles-=8000; // wrap around
+@@ -525,7 +525,7 @@
+     #ifdef DEBUG
+         if(( TICKS_TO_CYCLE_TIMER(timestamp) & 0xFFFF) != syt_timestamp) {
+             debugWarning("back-converted timestamp not equal to SYT\n");
+-            debugWarning("TS=%011"PRIu64" TSC=%08"PRIX64" SYT=%04"PRIX64"\n",
++            debugWarning("TS=%011" PRIu64 " TSC=%08" PRIX64 " SYT=%04" PRIX64 "\n",
+                   timestamp, TICKS_TO_CYCLE_TIMER(timestamp), syt_timestamp);
+         }
+     #endif
+--- tests/test-ieee1394service.cpp	2016-10-26 12:00:59.740544744 +0200
++++ tests/test-ieee1394service.cpp	2016-10-26 12:23:42.326510076 +0200
+@@ -163,13 +163,13 @@
+         debugError("(%p) CTR read error\n", this);
+     }
+     debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                "(%p) Cycle timer: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                "(%p) Cycle timer: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                 this, ctr,
+                 (unsigned int)TICKS_TO_SECS( ctr ),
+                 (unsigned int)TICKS_TO_CYCLES( ctr ),
+                 (unsigned int)TICKS_TO_OFFSET( ctr ) );
+     debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                "(%p)    from DLL: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                "(%p)    from DLL: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                 this, ctr_dll,
+                 (unsigned int)TICKS_TO_SECS( ctr_dll ),
+                 (unsigned int)TICKS_TO_CYCLES( ctr_dll ),
+@@ -198,19 +198,19 @@
+         abs_diff = diff;
+     }
+     debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                "(%p)       diff: %s%011"PRIu64" (%03us %04ucy %04uticks)\n", this,
++                "(%p)       diff: %s%011" PRIu64 " (%03us %04ucy %04uticks)\n", this,
+                 ((int64_t)abs_diff==diff?" ":"-"), abs_diff, (unsigned int)TICKS_TO_SECS( abs_diff ),
+                 (unsigned int)TICKS_TO_CYCLES( abs_diff ), (unsigned int)TICKS_TO_OFFSET( abs_diff ) );
+     if (abs_diff > DIFF_CONSIDERED_LARGE) {
+-        debugWarning("(%p) Alert, large diff: %"PRId64"\n", this, diff);
++        debugWarning("(%p) Alert, large diff: %" PRId64 "\n", this, diff);
+         debugOutput ( DEBUG_LEVEL_NORMAL,
+-                    "(%p)  Cycle timer: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                    "(%p)  Cycle timer: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                     this, ctr,
+                     (unsigned int)TICKS_TO_SECS( ctr ),
+                     (unsigned int)TICKS_TO_CYCLES( ctr ),
+                     (unsigned int)TICKS_TO_OFFSET( ctr ) );
+         debugOutput ( DEBUG_LEVEL_NORMAL,
+-                    "(%p)   from DLL: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                    "(%p)   from DLL: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                     this, ctr_dll,
+                     (unsigned int)TICKS_TO_SECS( ctr_dll ),
+                     (unsigned int)TICKS_TO_CYCLES( ctr_dll ),
+@@ -219,16 +219,16 @@
+     
+     diff = diffTicks(ctr, ctr_prev);
+     if (diff < 0) {
+-        debugWarning("(%p) Alert, non-monotonic ctr (direct): %"PRId64" - %"PRId64" = %"PRId64"\n",
++        debugWarning("(%p) Alert, non-monotonic ctr (direct): %" PRId64 " - %" PRId64 " = %" PRId64 "\n",
+                      this, ctr, ctr_prev, diff);
+         debugOutput ( DEBUG_LEVEL_NORMAL,
+-                    "(%p)  Cycle timer now : %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                    "(%p)  Cycle timer now : %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                     this, ctr,
+                     (unsigned int)TICKS_TO_SECS( ctr ),
+                     (unsigned int)TICKS_TO_CYCLES( ctr ),
+                     (unsigned int)TICKS_TO_OFFSET( ctr ) );
+         debugOutput ( DEBUG_LEVEL_NORMAL,
+-                    "(%p)  Cycle timer prev: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                    "(%p)  Cycle timer prev: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                     this, ctr_prev,
+                     (unsigned int)TICKS_TO_SECS( ctr_prev ),
+                     (unsigned int)TICKS_TO_CYCLES( ctr_prev ),
+@@ -236,16 +236,16 @@
+     }
+     diff = diffTicks(ctr_dll, ctr_dll_prev);
+     if (diff < 0) {
+-        debugWarning("(%p) Alert, non-monotonic ctr (dll): %"PRId64" - %"PRId64" = %"PRId64"\n",
++        debugWarning("(%p) Alert, non-monotonic ctr (dll): %" PRId64 " - %" PRId64 " = %" PRId64 "\n",
+                      this, ctr_dll, ctr_dll_prev, diff);
+         debugOutput ( DEBUG_LEVEL_NORMAL,
+-                    "(%p)  Cycle timer now : %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                    "(%p)  Cycle timer now : %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                     this, ctr_dll,
+                     (unsigned int)TICKS_TO_SECS( ctr_dll ),
+                     (unsigned int)TICKS_TO_CYCLES( ctr_dll ),
+                     (unsigned int)TICKS_TO_OFFSET( ctr_dll ) );
+         debugOutput ( DEBUG_LEVEL_NORMAL,
+-                    "(%p)  Cycle timer prev: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                    "(%p)  Cycle timer prev: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                     this, ctr_dll_prev,
+                     (unsigned int)TICKS_TO_SECS( ctr_dll_prev ),
+                     (unsigned int)TICKS_TO_CYCLES( ctr_dll_prev ),
+@@ -266,7 +266,7 @@
+                     (unsigned int)CYCLE_TIMER_GET_CYCLES( tmp_orig ),
+                     (unsigned int)CYCLE_TIMER_GET_OFFSET( tmp_orig ) );
+         debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                    "(%p) TICKS: %011"PRIu32" (%03us %04ucy %04uticks)\n",
++                    "(%p) TICKS: %011" PRIu32 " (%03us %04ucy %04uticks)\n",
+                     this, tmp_ticks,
+                     (unsigned int)TICKS_TO_SECS( tmp_ticks ),
+                     (unsigned int)TICKS_TO_CYCLES( tmp_ticks ),
+--- tests/test-timestampedbuffer.cpp	2016-10-26 12:28:53.734616939 +0200
++++ tests/test-timestampedbuffer.cpp	2016-10-26 12:36:47.964688247 +0200
+@@ -345,7 +345,7 @@
+                 ts_head=(uint64_t)ts_head_tmp;
+ 
+                 if (timestamp != ts_head) {
+-                    debugError(" cycle %4u error: %011"PRIu64" != %011"PRIu64"\n",
++                    debugError(" cycle %4u error: %011" PRIu64 " != %011" PRIu64 "\n",
+                                cycle, timestamp, ts_head);
+                     pass=false;
+                 }
+@@ -418,7 +418,7 @@
+             }
+ 
+             debugOutput(DEBUG_LEVEL_NORMAL,
+-                        "Simulating cycle %d @ time=%011"PRIu64", diff=%"PRId64"\n",
++                        "Simulating cycle %d @ time=%011" PRIu64 ", diff=%" PRId64 "\n",
+                         cycle, time, diff);
+ 
+             if(diff > 0) {
+@@ -435,10 +435,10 @@
+                 ts_head=(uint64_t)ts_head_tmp;
+                 ts_tail=(uint64_t)ts_tail_tmp;
+                 debugOutput(DEBUG_LEVEL_NORMAL,
+-                        " TS after write: HEAD: %011"PRIu64", FC=%04u\n",
++                        " TS after write: HEAD: %011" PRIu64 ", FC=%04u\n",
+                         ts_head,fc_head);
+                 debugOutput(DEBUG_LEVEL_NORMAL,
+-                        "                 TAIL: %011"PRIu64", FC=%04u\n",
++                        "                 TAIL: %011" PRIu64 ", FC=%04u\n",
+                         ts_tail,fc_tail);
+ 
+                 // read one packet
+@@ -450,10 +450,10 @@
+                 ts_head=(uint64_t)ts_head_tmp;
+                 ts_tail=(uint64_t)ts_tail_tmp;
+                 debugOutput(DEBUG_LEVEL_NORMAL,
+-                        " TS after write: HEAD: %011"PRIu64", FC=%04u\n",
++                        " TS after write: HEAD: %011" PRIu64 ", FC=%04u\n",
+                         ts_head,fc_head);
+                 debugOutput(DEBUG_LEVEL_NORMAL,
+-                        "                 TAIL: %011"PRIu64", FC=%04u\n",
++                        "                 TAIL: %011" PRIu64 ", FC=%04u\n",
+                         ts_tail,fc_tail);
+ 
+                 // check
+@@ -525,7 +525,7 @@
+             }
+ 
+             debugOutput(DEBUG_LEVEL_NORMAL,
+-                        "Simulating cycle %d @ time=%011"PRIu64", diff=%"PRId64"\n",
++                        "Simulating cycle %d @ time=%011" PRIu64 ", diff=%" PRId64 "\n",
+                         cycle, time, diff);
+ 
+             if(diff>0) {
+@@ -542,10 +542,10 @@
+                 ts_head=(uint64_t)ts_head_tmp;
+                 ts_tail=(uint64_t)ts_tail_tmp;
+                 debugOutput(DEBUG_LEVEL_NORMAL,
+-                        " TS after write: HEAD: %011"PRIu64", FC=%04u\n",
++                        " TS after write: HEAD: %011" PRIu64 ", FC=%04u\n",
+                         ts_head,fc_head);
+                 debugOutput(DEBUG_LEVEL_NORMAL,
+-                        "                 TAIL: %011"PRIu64", FC=%04u\n",
++                        "                 TAIL: %011" PRIu64 ", FC=%04u\n",
+                         ts_tail,fc_tail);
+ 
+                 if (fc_head > (signed int)blocksize) {
+@@ -560,10 +560,10 @@
+                     ts_head=(uint64_t)ts_head_tmp;
+                     ts_tail=(uint64_t)ts_tail_tmp;
+                     debugOutput(DEBUG_LEVEL_NORMAL,
+-                            " TS after read: HEAD: %011"PRIu64", FC=%04u\n",
++                            " TS after read: HEAD: %011" PRIu64 ", FC=%04u\n",
+                             ts_head,fc_head);
+                     debugOutput(DEBUG_LEVEL_NORMAL,
+-                            "                TAIL: %011"PRIu64", FC=%04u\n",
++                            "                TAIL: %011" PRIu64 ", FC=%04u\n",
+                             ts_tail,fc_tail);
+                 }
+ 
+--- tests/test-focusrite.cpp	2016-10-26 12:28:53.733616951 +0200
++++ tests/test-focusrite.cpp	2016-10-26 12:39:38.482556480 +0200
+@@ -184,7 +184,7 @@
+                 SleepRelativeUsec(10000);
+             }
+             if (!retval) {
+-                debugError( " read from %16"PRIX64" failed (id: %d)\n", addr, id);
++                debugError( " read from %16" PRIX64 " failed (id: %d)\n", addr, id);
+             } else {
+                 value = CondSwapFromBus32(value);
+             
+--- tests/test-bufferops.cpp	2016-10-26 12:28:53.731616976 +0200
++++ tests/test-bufferops.cpp	2016-10-26 12:42:07.055699060 +0200
+@@ -87,7 +87,7 @@
+         start = Util::SystemTimeSource::getCurrentTimeAsUsecs();
+         byteSwapToBus(buffer_1, nb_quadlets);
+         elapsed = Util::SystemTimeSource::getCurrentTimeAsUsecs() - start;
+-        printMessage( " took %"PRI_FFADO_MICROSECS_T"usec...\n", elapsed);
++        printMessage( " took %" PRI_FFADO_MICROSECS_T "usec...\n", elapsed);
+         
+     }
+ 
+@@ -155,7 +155,7 @@
+         start = Util::SystemTimeSource::getCurrentTimeAsUsecs();
+         convertFromInt24AndLabelAsMBLA(buffer_1, nb_quadlets);
+         elapsed = Util::SystemTimeSource::getCurrentTimeAsUsecs() - start;
+-        printMessage( " took %"PRI_FFADO_MICROSECS_T"usec...\n", elapsed);
++        printMessage( " took %" PRI_FFADO_MICROSECS_T "usec...\n", elapsed);
+     }
+ 
+     // check
+@@ -237,7 +237,7 @@
+         start = Util::SystemTimeSource::getCurrentTimeAsUsecs();
+         convertFromFloatAndLabelAsMBLA(buffer_1, nb_quadlets);
+         elapsed = Util::SystemTimeSource::getCurrentTimeAsUsecs() - start;
+-        printMessage( " took %"PRI_FFADO_MICROSECS_T"usec...\n", elapsed);
++        printMessage( " took %" PRI_FFADO_MICROSECS_T "usec...\n", elapsed);
+     }
+ 
+     // check
+--- tests/systemtests/test-sysload.cpp	2016-10-26 12:28:53.738616889 +0200
++++ tests/systemtests/test-sysload.cpp	2016-10-26 12:44:47.547692634 +0200
+@@ -189,12 +189,12 @@
+         toc = rt_gettime_usecs();
+         int64_t usecs_late = toc - sleep_time;
+         if(usecs_late > 1000) {
+-            debugWarning("late wakeup: %"PRId64" usecs\n", usecs_late);
++            debugWarning("late wakeup: %" PRId64 " usecs\n", usecs_late);
+         }
+ 
+         // try and detect lockup ()
+         if(usecs_late > 100000) {
+-            debugWarning("very late wakeup: %"PRId64" usecs\n", usecs_late);
++            debugWarning("very late wakeup: %" PRId64 " usecs\n", usecs_late);
+             // force exit, since this is a loop out of control
+             run=0;
+         }
+--- tests/systemtests/test-clock_nanosleep.cpp	2016-10-26 12:28:53.737616901 +0200
++++ tests/systemtests/test-clock_nanosleep.cpp	2016-10-26 12:46:34.652353642 +0200
+@@ -69,7 +69,7 @@
+     ts.tv_sec = wake_at_usec / (1000000LL);
+     ts.tv_nsec = (wake_at_usec % (1000000LL)) * 1000LL;
+     debugOutput(DEBUG_LEVEL_VERBOSE,
+-                "clock_nanosleep until %"PRId64" sec, %"PRId64" nanosec\n",
++                "clock_nanosleep until %" PRId64 " sec, %" PRId64 " nanosec\n",
+                 (int64_t)ts.tv_sec, (int64_t)ts.tv_nsec);
+     int err = clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+     debugOutput(DEBUG_LEVEL_VERBOSE,
+@@ -106,7 +106,7 @@
+         wake_at += SLEEP_PERIOD_USECS;
+         
+         debugOutput(DEBUG_LEVEL_VERBOSE,
+-                    "cuckoo from %p at %012"PRI_FFADO_MICROSECS_T"\n",
++                    "cuckoo from %p at %012" PRI_FFADO_MICROSECS_T "\n",
+                     obj, getCurrentTimeAsUsecs());
+         
+         pthread_testcancel();
+--- tests/systemtests/gen-loadpulses.cpp	2016-10-26 12:28:53.737616901 +0200
++++ tests/systemtests/gen-loadpulses.cpp	2016-10-26 12:48:34.103860292 +0200
+@@ -187,12 +187,12 @@
+         uint64_t toc = rt_gettime_usecs();
+         int64_t usecs_late = toc - sleep_time;
+         if(usecs_late > 1000) {
+-            debugWarning("late wakeup: %"PRId64" usecs\n", usecs_late);
++            debugWarning("late wakeup: %" PRId64 " usecs\n", usecs_late);
+         }
+ 
+         // try and detect lockup ()
+         if(usecs_late > 100000) {
+-            debugWarning("very late wakeup: %"PRId64" usecs\n", usecs_late);
++            debugWarning("very late wakeup: %" PRId64 " usecs\n", usecs_late);
+             // force exit, since this is a loop out of control
+             run=0;
+         }
+--- tests/test-ffado.cpp	2016-10-26 12:28:53.732616964 +0200
++++ tests/test-ffado.cpp	2016-10-26 12:51:18.406806223 +0200
+@@ -509,7 +509,7 @@
+         }
+         uint64_t result_rcv = sytRecvToFullTicks(syt_timestamp, rcv_cycle, ctr_now);
+         uint64_t result_xmt = sytXmitToFullTicks(syt_timestamp, rcv_cycle, ctr_now);
+-        printf("RCV: 0x%010"PRIX64" %010"PRIu64"  XMT: 0x%010"PRIX64" %010"PRIu64" CTR: %010"PRIu64"\n",
++        printf("RCV: 0x%010" PRIX64 " %010" PRIu64 "  XMT: 0x%010" PRIX64 " %010" PRIu64 " CTR: %010" PRIu64 "\n",
+                result_rcv, result_rcv, result_xmt, result_xmt, CYCLE_TIMER_TO_TICKS(ctr_now));
+ 
+     } else {
+--- support/firmware/fireworks-downloader.cpp	2016-10-26 12:28:53.705617301 +0200
++++ support/firmware/fireworks-downloader.cpp	2016-10-26 12:53:14.928349503 +0200
+@@ -214,7 +214,7 @@
+     }
+ 
+     if (node_id < 0) {
+-        printMessage("Could not find device with GUID 0x%016"PRIX64"\n", guid);
++        printMessage("Could not find device with GUID 0x%016" PRIX64 "\n", guid);
+         return -1;
+     }
+ 
+--- support/dbus/controlserver.cpp	2016-10-26 12:28:53.702617339 +0200
++++ support/dbus/controlserver.cpp	2016-10-26 12:55:14.630853016 +0200
+@@ -625,7 +625,7 @@
+ Register::getValue( const uint64_t& addr )
+ {
+     uint64_t val = m_Slave.getValue(addr);
+-    debugOutput( DEBUG_LEVEL_VERBOSE, "getValue(%"PRId64") => %"PRId64"\n", addr, val );
++    debugOutput( DEBUG_LEVEL_VERBOSE, "getValue(%" PRId64 ") => %" PRId64 "\n", addr, val );
+     return val;
+ }
+ 
+--- src/libieee1394/test-cyclecalc.cpp	2016-10-26 12:28:53.678617639 +0200
++++ src/libieee1394/test-cyclecalc.cpp	2016-10-26 12:56:54.935599034 +0200
+@@ -50,7 +50,7 @@
+                           (unsigned int)CYCLE_TIMER_GET_CYCLES(now_ctr),
+                           (unsigned int)CYCLE_TIMER_GET_OFFSET(now_ctr));
+ 
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"NOW              : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"NOW              : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           now,
+                           (unsigned int)TICKS_TO_SECS(now),
+                           (unsigned int)TICKS_TO_CYCLES(now),
+@@ -64,7 +64,7 @@
+                           cycle);
+     uint64_t calc_ts = sytRecvToFullTicks(syt, cycle, now_ctr);
+ 
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"CALC_TS          : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"CALC_TS          : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           calc_ts,
+                           (unsigned int)TICKS_TO_SECS(calc_ts),
+                           (unsigned int)TICKS_TO_CYCLES(calc_ts),
+--- src/libstreaming/amdtp/AmdtpTransmitStreamProcessor.cpp	2016-10-26 12:28:53.681617601 +0200
++++ src/libstreaming/amdtp/AmdtpTransmitStreamProcessor.cpp	2016-10-26 12:58:49.975160842 +0200
+@@ -201,7 +201,7 @@
+         {
+             // we are too late
+             debugOutput(DEBUG_LEVEL_VERBOSE,
+-                        "Too late: CY=%04d, TC=%04u, CUT=%04d, TSP=%011"PRIu64" (%04u)\n",
++                        "Too late: CY=%04d, TC=%04u, CUT=%04d, TSP=%011" PRIu64 " (%04u)\n",
+                         (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr),
+                         transmit_at_cycle, cycles_until_transmit,
+                         presentation_time, (unsigned int)TICKS_TO_CYCLES(presentation_time) );
+@@ -230,7 +230,7 @@
+ 
+             // for timestamp tracing
+             debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                               "XMIT PKT: TSP= %011"PRIu64" (%04u) (%04u) (%04u)\n",
++                               "XMIT PKT: TSP= %011" PRIu64 " (%04u) (%04u) (%04u)\n",
+                                presentation_time,
+                                (unsigned int)CYCLE_TIMER_GET_CYCLES(pkt_ctr),
+                                presentation_cycle, transmit_at_cycle);
+@@ -240,7 +240,7 @@
+         else
+         {
+             debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                               "Too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011"PRIu64" (%04u), TSP=%011"PRId64" (%04u)\n",
++                               "Too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011" PRIu64 " (%04u), TSP=%011" PRId64 " (%04u)\n",
+                                (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr),
+                                transmit_at_cycle, cycles_until_transmit,
+                                transmit_at_time, (unsigned int)TICKS_TO_CYCLES(transmit_at_time),
+@@ -249,7 +249,7 @@
+             if ( cycles_until_transmit > m_max_cycles_to_transmit_early + 1 )
+             {
+                 debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                                   "Way too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011"PRIu64" (%04u), TSP=%011"PRId64"(%04u)\n",
++                                   "Way too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011" PRIu64 " (%04u), TSP=%011" PRId64 "(%04u)\n",
+                                    (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr),
+                                    transmit_at_cycle, cycles_until_transmit,
+                                    transmit_at_time, (unsigned int)TICKS_TO_CYCLES(transmit_at_time),
+@@ -270,7 +270,7 @@
+     if (m_data_buffer->readFrames(m_syt_interval, (char *)(data + 8)))
+     {
+         debugOutputExtreme(DEBUG_LEVEL_VERBOSE,
+-                           "XMIT DATA: TSP= %011"PRIu64" (%04u)\n",
++                           "XMIT DATA: TSP= %011" PRIu64 " (%04u)\n",
+                            m_last_timestamp,
+                            (unsigned int)TICKS_TO_CYCLES(m_last_timestamp));
+         #if 0
+@@ -302,7 +302,7 @@
+ {
+     struct iec61883_packet *packet = ( struct iec61883_packet * ) data;
+     debugOutputExtreme(DEBUG_LEVEL_ULTRA_VERBOSE,
+-                       "XMIT SILENT (cy %04d): TSP=%011"PRIu64" (%04u)\n",
++                       "XMIT SILENT (cy %04d): TSP=%011" PRIu64 " (%04u)\n",
+                        (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp,
+                        (unsigned int)TICKS_TO_CYCLES(m_last_timestamp));
+ 
+@@ -340,7 +340,7 @@
+ {
+     struct iec61883_packet *packet = ( struct iec61883_packet * ) data;
+     debugOutputExtreme(DEBUG_LEVEL_ULTRA_VERBOSE,
+-                       "XMIT EMPTY (cy %04d): TSP=%011"PRIu64" (%04u)\n",
++                       "XMIT EMPTY (cy %04d): TSP=%011" PRIu64 " (%04u)\n",
+                        (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp,
+                        (unsigned int)TICKS_TO_CYCLES(m_last_timestamp) );
+     packet->sid = m_local_node_id;
+--- src/libstreaming/rme/RmeTransmitStreamProcessor.cpp	2016-10-26 12:28:53.687617526 +0200
++++ src/libstreaming/rme/RmeTransmitStreamProcessor.cpp	2016-10-26 13:01:12.393380369 +0200
+@@ -227,7 +227,7 @@
+         {
+             // we are too late
+             debugOutput(DEBUG_LEVEL_VERBOSE,
+-                        "Too late: CY=%04u, TC=%04u, CUT=%04d, TSP=%011"PRIu64" (%04u)\n",
++                        "Too late: CY=%04u, TC=%04u, CUT=%04d, TSP=%011" PRIu64 " (%04u)\n",
+                         cycle,
+                         transmit_at_cycle, cycles_until_transmit,
+                         presentation_time, (unsigned int)TICKS_TO_CYCLES(presentation_time) );
+@@ -265,7 +265,7 @@
+         else
+         {
+             debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                        "Too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011"PRIu64" (%04u), TSP=%011"PRIu64" (%04u)\n",
++                        "Too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011" PRIu64 " (%04u), TSP=%011" PRIu64 " (%04u)\n",
+                         cycle,
+                         transmit_at_cycle, cycles_until_transmit,
+                         transmit_at_time, ( unsigned int ) TICKS_TO_CYCLES ( transmit_at_time ),
+@@ -274,7 +274,7 @@
+             if ( cycles_until_transmit > RME_MAX_CYCLES_TO_TRANSMIT_EARLY + 1 )
+             {
+                 debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                            "Way too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011"PRIu64" (%04u), TSP=%011"PRIu64" (%04u)\n",
++                            "Way too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011" PRIu64 " (%04u), TSP=%011" PRIu64 " (%04u)\n",
+                             cycle,
+                             transmit_at_cycle, cycles_until_transmit,
+                             transmit_at_time, ( unsigned int ) TICKS_TO_CYCLES ( transmit_at_time ),
+@@ -341,7 +341,7 @@
+     unsigned char *tag, unsigned char *sy,
+     uint32_t pkt_ctr )
+ {
+-    debugOutput ( DEBUG_LEVEL_VERY_VERBOSE, "XMIT EMPTY: CY=%04lu, TSP=%011"PRIu64" (%04u)\n",
++    debugOutput ( DEBUG_LEVEL_VERY_VERBOSE, "XMIT EMPTY: CY=%04lu, TSP=%011" PRIu64 " (%04u)\n",
+                 CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp, 
+                 ( unsigned int ) TICKS_TO_CYCLES ( m_last_timestamp ) );
+ 
+@@ -426,7 +426,7 @@
+ {
+     unsigned int cycle = CYCLE_TIMER_GET_CYCLES(pkt_ctr);
+ 
+-    debugOutput( DEBUG_LEVEL_VERY_VERBOSE, "XMIT SILENT: CY=%04u, TSP=%011"PRIu64" (%04u)\n",
++    debugOutput( DEBUG_LEVEL_VERY_VERBOSE, "XMIT SILENT: CY=%04u, TSP=%011" PRIu64 " (%04u)\n",
+                  cycle, m_last_timestamp,
+                  ( unsigned int ) TICKS_TO_CYCLES ( m_last_timestamp ) );
+ 
+--- src/rme/fireface_flash.cpp	2016-10-26 13:04:36.038834450 +0200
++++ src/rme/fireface_flash.cpp	2016-10-26 13:10:37.250318685 +0200
+@@ -580,15 +580,15 @@
+         return -1;
+ 
+     i = read_flash(addr, (quadlet_t *)(vbuf), RME_FF_FLASH_MIXER_ARRAY_SIZE/4);
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "read_flash(%"PRId64") returned %d\n", addr, i);
++    debugOutput(DEBUG_LEVEL_VERBOSE, "read_flash(%" PRId64 ") returned %d\n", addr, i);
+ 
+     addr += RME_FF_FLASH_MIXER_ARRAY_SIZE;
+     i = read_flash(addr, (quadlet_t *)(pbuf), RME_FF_FLASH_MIXER_ARRAY_SIZE/4);
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "read_flash(%"PRId64") returned %d\n", addr, i);
++    debugOutput(DEBUG_LEVEL_VERBOSE, "read_flash(%" PRId64 ") returned %d\n", addr, i);
+ 
+     addr += RME_FF_FLASH_MIXER_ARRAY_SIZE;
+     i = read_flash(addr, (quadlet_t *)obuf, RME_FF_FLASH_SECTOR_SIZE_QUADS);
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "read_flash(%"PRId64") returned %d\n", addr, i);
++    debugOutput(DEBUG_LEVEL_VERBOSE, "read_flash(%" PRId64 ") returned %d\n", addr, i);
+ 
+     for (out=0; out<nch/2; out++) {
+         for (in=0; in<nch; in++) {
+@@ -664,7 +664,7 @@
+             shadow[0x1f80/4+out] = dsettings->output_faders[out];
+         }
+         i = write_flash(addr, shadow, RME_FF800_FLASH_MIXER_SHADOW_SIZE/4);
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%"PRId64") returned %d\n", addr, i);
++        debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%" PRId64 ") returned %d\n", addr, i);
+         addr = RME_FF800_FLASH_MIXER_VOLUME_ADDR;
+     }
+ 
+@@ -693,15 +693,15 @@
+     }
+ 
+     i = write_flash(addr, (quadlet_t *)(vbuf), RME_FF_FLASH_MIXER_ARRAY_SIZE/4);
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%"PRId64") returned %d\n", addr, i);
++    debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%" PRId64 ") returned %d\n", addr, i);
+ 
+     addr += RME_FF_FLASH_MIXER_ARRAY_SIZE;
+     i = write_flash(addr, (quadlet_t *)(pbuf), RME_FF_FLASH_MIXER_ARRAY_SIZE/4);
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%"PRId64") returned %d\n", addr, i);
++    debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%" PRId64 ") returned %d\n", addr, i);
+ 
+     addr += RME_FF_FLASH_MIXER_ARRAY_SIZE;
+     i = write_flash(addr, (quadlet_t *)obuf, RME_FF_FLASH_SECTOR_SIZE_QUADS);
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%"PRId64") returned %d\n", addr, i);
++    debugOutput(DEBUG_LEVEL_VERBOSE, "write_flash(%" PRId64 ") returned %d\n", addr, i);
+ 
+     return 0;
+ }
+--- src/rme/rme_avdevice.cpp	2016-10-26 13:04:36.039834438 +0200
++++ src/rme/rme_avdevice.cpp	2016-10-26 13:12:21.069020773 +0200
+@@ -1176,7 +1176,7 @@
+     
+     quadlet = 0;
+     if (get1394Service().read(0xffc0 | getNodeId(), reg, 1, &quadlet) <= 0) {
+-        debugError("Error doing RME read from register 0x%06"PRIx64"\n",reg);
++        debugError("Error doing RME read from register 0x%06" PRIx64 "\n",reg);
+     }
+     return ByteSwapFromDevice32(quadlet);
+ }
+@@ -1187,7 +1187,7 @@
+     unsigned int i;
+ 
+     if (get1394Service().read(0xffc0 | getNodeId(), reg, n_quads, buf) <= 0) {
+-        debugError("Error doing RME block read of %d quadlets from register 0x%06"PRIx64"\n",
++        debugError("Error doing RME block read of %d quadlets from register 0x%06" PRIx64 "\n",
+             n_quads, reg);
+         return -1;
+     }
+@@ -1205,7 +1205,7 @@
+     data = ByteSwapToDevice32(data);
+     if (get1394Service().write(0xffc0 | getNodeId(), reg, 1, &data) <= 0) {
+         err = 1;
+-        debugError("Error doing RME write to register 0x%06"PRIx64"\n",reg);
++        debugError("Error doing RME write to register 0x%06" PRIx64 "\n",reg);
+     }
+ 
+     return (err==0)?0:-1;
+@@ -1226,7 +1226,7 @@
+     }
+     if (get1394Service().write(0xffc0 | getNodeId(), reg, n_quads, data) <= 0) {
+         err = 1;
+-        debugError("Error doing RME block write of %d quadlets to register 0x%06"PRIx64"\n",
++        debugError("Error doing RME block write of %d quadlets to register 0x%06" PRIx64 "\n",
+           n_quads, reg);
+     }
+ 
+--- src/libstreaming/motu/MotuTransmitStreamProcessor.cpp	2016-10-26 13:04:36.024834625 +0200
++++ src/libstreaming/motu/MotuTransmitStreamProcessor.cpp	2016-10-26 13:14:02.086757878 +0200
+@@ -228,7 +228,7 @@
+         {
+             // we are too late
+             debugOutput(DEBUG_LEVEL_VERBOSE,
+-                        "Too late: CY=%04u, TC=%04u, CUT=%04d, TSP=%011"PRIu64" (%04u)\n",
++                        "Too late: CY=%04u, TC=%04u, CUT=%04d, TSP=%011" PRIu64 " (%04u)\n",
+                         cycle,
+                         transmit_at_cycle, cycles_until_transmit,
+                         presentation_time, (unsigned int)TICKS_TO_CYCLES(presentation_time) );
+@@ -259,7 +259,7 @@
+         else
+         {
+             debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                        "Too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011"PRIu64" (%04u), TSP=%011"PRIu64" (%04u)\n",
++                        "Too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011" PRIu64 " (%04u), TSP=%011" PRIu64 " (%04u)\n",
+                         cycle,
+                         transmit_at_cycle, cycles_until_transmit,
+                         transmit_at_time, ( unsigned int ) TICKS_TO_CYCLES ( transmit_at_time ),
+@@ -268,7 +268,7 @@
+             if ( cycles_until_transmit > MOTU_MAX_CYCLES_TO_TRANSMIT_EARLY + 1 )
+             {
+                 debugOutput ( DEBUG_LEVEL_VERY_VERBOSE,
+-                            "Way too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011"PRIu64" (%04u), TSP=%011"PRIu64" (%04u)\n",
++                            "Way too early: CY=%04u, TC=%04u, CUT=%04d, TST=%011" PRIu64 " (%04u), TSP=%011" PRIu64 " (%04u)\n",
+                             cycle,
+                             transmit_at_cycle, cycles_until_transmit,
+                             transmit_at_time, ( unsigned int ) TICKS_TO_CYCLES ( transmit_at_time ),
+@@ -377,7 +377,7 @@
+     unsigned char *tag, unsigned char *sy,
+     uint32_t pkt_ctr )
+ {
+-    debugOutput ( DEBUG_LEVEL_VERY_VERBOSE, "XMIT EMPTY: CY=%04d, TSP=%011"PRIu64" (%04u)\n",
++    debugOutput ( DEBUG_LEVEL_VERY_VERBOSE, "XMIT EMPTY: CY=%04d, TSP=%011" PRIu64 " (%04u)\n",
+                 (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp, 
+                 ( unsigned int ) TICKS_TO_CYCLES ( m_last_timestamp ) );
+ 
+@@ -407,7 +407,7 @@
+ {
+     unsigned int cycle = CYCLE_TIMER_GET_CYCLES(pkt_ctr);
+ 
+-    debugOutput( DEBUG_LEVEL_VERY_VERBOSE, "XMIT SILENT: CY=%04u, TSP=%011"PRIu64" (%04u)\n",
++    debugOutput( DEBUG_LEVEL_VERY_VERBOSE, "XMIT SILENT: CY=%04u, TSP=%011" PRIu64 " (%04u)\n",
+                  cycle, m_last_timestamp,
+                  ( unsigned int ) TICKS_TO_CYCLES ( m_last_timestamp ) );
+ 
+--- src/motu/motu_avdevice.cpp	2016-10-26 13:04:36.035834488 +0200
++++ src/motu/motu_avdevice.cpp	2016-10-26 13:15:47.842435750 +0200
+@@ -1986,7 +1986,7 @@
+ 
+     // Note: 1394Service::read() expects a physical ID, not the node id
+     if (get1394Service().read(0xffc0 | getNodeId(), reg, 1, &quadlet) <= 0) {
+-        debugError("Error doing motu read from register 0x%012"PRId64"\n",reg);
++        debugError("Error doing motu read from register 0x%012" PRId64 "\n",reg);
+     }
+ 
+     return CondSwapFromBus32(quadlet);
+@@ -2002,7 +2002,7 @@
+     signed int i;
+ 
+     if (get1394Service().read(0xffc0 | getNodeId(), reg, n_quads, buf) <= 0) {
+-        debugError("Error doing motu block read of %d quadlets from register 0x%"PRIx64"\n", n_quads, reg);
++        debugError("Error doing motu block read of %d quadlets from register 0x%" PRIx64 "\n", n_quads, reg);
+         return -1;
+     }
+     for (i=0; i<n_quads; i++) {
+@@ -2028,7 +2028,7 @@
+     // Note: 1394Service::write() expects a physical ID, not the node id
+     if (get1394Service().write(0xffc0 | getNodeId(), reg, 1, &data) <= 0) {
+         err = 1;
+-        debugError("Error doing motu write to register 0x%012"PRIx64"\n",reg);
++        debugError("Error doing motu write to register 0x%012" PRIx64 "\n",reg);
+     }
+ 
+     SleepRelativeUsec(100);
+@@ -2049,7 +2049,7 @@
+     }
+     if (get1394Service().write(0xffc0 | getNodeId(), reg, n_quads, data) <= 0) {
+         ret = -1;
+-        debugError("Error doing motu block write of %d quadlets to register 0x%"PRId64"\n", n_quads, reg);
++        debugError("Error doing motu block write of %d quadlets to register 0x%" PRId64 "\n", n_quads, reg);
+     }
+     return ret;
+ }
+--- src/libstreaming/amdtp-oxford/AmdtpOxfordReceiveStreamProcessor.cpp	2016-10-26 13:04:36.018834700 +0200
++++ src/libstreaming/amdtp-oxford/AmdtpOxfordReceiveStreamProcessor.cpp	2016-10-26 13:17:22.041258102 +0200
+@@ -193,7 +193,7 @@
+             m_dll_e2 += m_dll_c * err;
+ 
+             debugOutput(DEBUG_LEVEL_VERY_VERBOSE,
+-                        "Generated TSP: %16"PRIu64" %"PRId64" %d %d\n", 
++                        "Generated TSP: %16" PRIu64 " %" PRId64 " %d %d\n", 
+                         m_next_packet_timestamp,
+                         m_next_packet_timestamp-m_last_timestamp,
+                         (int)frames_in_tempbuffer,
+--- src/libutil/TimestampedBuffer.cpp	2016-10-26 13:04:36.031834538 +0200
++++ src/libutil/TimestampedBuffer.cpp	2016-10-26 13:23:32.849622360 +0200
+@@ -211,7 +211,7 @@
+ 
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+                        "for (%p) "
+-                       "NTS="TIMESTAMP_FORMAT_SPEC", DLL2=%f, RATE=%f\n",
++                       "NTS=" TIMESTAMP_FORMAT_SPEC ", DLL2=%f, RATE=%f\n",
+                        this, m_buffer_next_tail_timestamp, m_dll_e2, getRate());
+ }
+ 
+@@ -246,7 +246,7 @@
+     if (rate<0.0) debugError("rate < 0! (%f)\n",rate);
+     if (fabsf(m_nominal_rate - rate)>(m_nominal_rate*0.1)) {
+         debugWarning("(%p) rate (%10.5f) more that 10%% off nominal "
+-                     "(rate=%10.5f, diff="TIMESTAMP_FORMAT_SPEC", update_period=%d)\n",
++                     "(rate=%10.5f, diff=" TIMESTAMP_FORMAT_SPEC ", update_period=%d)\n",
+                      this, rate,m_nominal_rate,diff, m_update_period);
+ 
+         return m_nominal_rate;
+@@ -372,7 +372,7 @@
+     debugOutput(DEBUG_LEVEL_VERBOSE," nominal rate=%f\n",
+                                     m_nominal_rate);
+ 
+-    debugOutput(DEBUG_LEVEL_VERBOSE," wrapping at "TIMESTAMP_FORMAT_SPEC"\n",m_wrap_at);
++    debugOutput(DEBUG_LEVEL_VERBOSE," wrapping at " TIMESTAMP_FORMAT_SPEC "\n",m_wrap_at);
+ 
+     assert(m_buffer_size);
+     assert(m_events_per_frame);
+@@ -618,7 +618,7 @@
+  */
+ bool TimestampedBuffer::blockProcessWriteFrames(unsigned int nbframes, ffado_timestamp_t ts) {
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "(%p) Writing %u frames for ts "TIMESTAMP_FORMAT_SPEC"\n",
++                       "(%p) Writing %u frames for ts " TIMESTAMP_FORMAT_SPEC "\n",
+                        this, nbframes, ts);
+     int xrun;
+     unsigned int offset = 0;
+@@ -844,10 +844,10 @@
+ 
+ #ifdef DEBUG
+     if (new_timestamp >= m_wrap_at) {
+-        debugWarning("timestamp not wrapped: "TIMESTAMP_FORMAT_SPEC"\n",new_timestamp);
++        debugWarning("timestamp not wrapped: " TIMESTAMP_FORMAT_SPEC "\n",new_timestamp);
+     }
+     if ((ts >= m_wrap_at) || (ts < 0 )) {
+-        debugWarning("ts not wrapped correctly: "TIMESTAMP_FORMAT_SPEC"\n",ts);
++        debugWarning("ts not wrapped correctly: " TIMESTAMP_FORMAT_SPEC "\n",ts);
+     }
+ #endif
+ 
+@@ -861,8 +861,8 @@
+     EXIT_CRITICAL_SECTION;
+ 
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "for (%p) to "TIMESTAMP_FORMAT_SPEC" => "TIMESTAMP_FORMAT_SPEC", "
+-                       "NTS="TIMESTAMP_FORMAT_SPEC", DLL2=%f, RATE=%f\n",
++                       "for (%p) to " TIMESTAMP_FORMAT_SPEC " => " TIMESTAMP_FORMAT_SPEC ", "
++                       "NTS=" TIMESTAMP_FORMAT_SPEC ", DLL2=%f, RATE=%f\n",
+                        this, new_timestamp, ts, m_buffer_next_tail_timestamp, m_dll_e2, getRate());
+ }
+ 
+@@ -882,7 +882,7 @@
+ 
+ #ifdef DEBUG
+     if (new_timestamp >= m_wrap_at) {
+-        debugWarning("timestamp not wrapped: "TIMESTAMP_FORMAT_SPEC"\n", new_timestamp);
++        debugWarning("timestamp not wrapped: " TIMESTAMP_FORMAT_SPEC "\n", new_timestamp);
+     }
+ #endif
+ 
+@@ -907,8 +907,8 @@
+     EXIT_CRITICAL_SECTION;
+ 
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "for (%p) to "TIMESTAMP_FORMAT_SPEC" => "TIMESTAMP_FORMAT_SPEC", "
+-                       "NTS="TIMESTAMP_FORMAT_SPEC", DLL2=%f, RATE=%f\n",
++                       "for (%p) to " TIMESTAMP_FORMAT_SPEC " => " TIMESTAMP_FORMAT_SPEC ", "
++                       "NTS=" TIMESTAMP_FORMAT_SPEC ", DLL2=%f, RATE=%f\n",
+                        this, new_timestamp, ts, m_buffer_next_tail_timestamp, m_dll_e2, getRate());
+ }
+ 
+@@ -1051,33 +1051,33 @@
+                        " nbframes: %d, m_update_period: %d \n",
+                        nbframes, m_update_period);
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       " tail TS: "TIMESTAMP_FORMAT_SPEC", next tail TS: "TIMESTAMP_FORMAT_SPEC"\n", 
++                       " tail TS: " TIMESTAMP_FORMAT_SPEC ", next tail TS: " TIMESTAMP_FORMAT_SPEC "\n", 
+                        m_buffer_tail_timestamp, m_buffer_next_tail_timestamp);
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       " new TS: "TIMESTAMP_FORMAT_SPEC", diff: "TIMESTAMP_FORMAT_SPEC"\n", 
++                       " new TS: " TIMESTAMP_FORMAT_SPEC ", diff: " TIMESTAMP_FORMAT_SPEC "\n", 
+                        new_timestamp, diff);
+ 
+     if (diff > max_abs_diff) {
+         //debugShowBackLogLines(100);
+-        debugWarning("(%p) difference rather large (+): diff="TIMESTAMP_FORMAT_SPEC", max="TIMESTAMP_FORMAT_SPEC", "TIMESTAMP_FORMAT_SPEC", "TIMESTAMP_FORMAT_SPEC"\n",
++        debugWarning("(%p) difference rather large (+): diff=" TIMESTAMP_FORMAT_SPEC ", max=" TIMESTAMP_FORMAT_SPEC ", " TIMESTAMP_FORMAT_SPEC ", " TIMESTAMP_FORMAT_SPEC "\n",
+             this, diff, max_abs_diff, new_timestamp, m_buffer_next_tail_timestamp);
+     } else if (diff < -max_abs_diff) {
+         //debugShowBackLogLines(100);
+-        debugWarning("(%p) difference rather large (-): diff="TIMESTAMP_FORMAT_SPEC", max="TIMESTAMP_FORMAT_SPEC", "TIMESTAMP_FORMAT_SPEC", "TIMESTAMP_FORMAT_SPEC"\n",
++        debugWarning("(%p) difference rather large (-): diff=" TIMESTAMP_FORMAT_SPEC ", max=" TIMESTAMP_FORMAT_SPEC ", " TIMESTAMP_FORMAT_SPEC ", " TIMESTAMP_FORMAT_SPEC "\n",
+             this, diff, -max_abs_diff, new_timestamp, m_buffer_next_tail_timestamp);
+     }
+ 
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "(%p): diff="TIMESTAMP_FORMAT_SPEC" ",
++                       "(%p): diff=" TIMESTAMP_FORMAT_SPEC " ",
+                        this, diff);
+ #endif
+ 
+     double err = diff;
+     debugOutputShortExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                            "diff2="TIMESTAMP_FORMAT_SPEC" err=%f\n",
++                            "diff2=" TIMESTAMP_FORMAT_SPEC " err=%f\n",
+                             diff, err);
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "B: FC=%10u, TS="TIMESTAMP_FORMAT_SPEC", NTS="TIMESTAMP_FORMAT_SPEC"\n",
++                       "B: FC=%10u, TS=" TIMESTAMP_FORMAT_SPEC ", NTS=" TIMESTAMP_FORMAT_SPEC "\n",
+                        m_framecounter, m_buffer_tail_timestamp, m_buffer_next_tail_timestamp);
+ 
+     ENTER_CRITICAL_SECTION;
+@@ -1088,13 +1088,13 @@
+ 
+     if (m_buffer_next_tail_timestamp >= m_wrap_at) {
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                           "Unwrapping next tail timestamp: "TIMESTAMP_FORMAT_SPEC"",
++                           "Unwrapping next tail timestamp: " TIMESTAMP_FORMAT_SPEC "",
+                            m_buffer_next_tail_timestamp);
+ 
+         m_buffer_next_tail_timestamp -= m_wrap_at;
+ 
+         debugOutputShortExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                                " => "TIMESTAMP_FORMAT_SPEC"\n",
++                                " => " TIMESTAMP_FORMAT_SPEC "\n",
+                                 m_buffer_next_tail_timestamp);
+ 
+     }
+@@ -1102,24 +1102,24 @@
+     EXIT_CRITICAL_SECTION;
+ 
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "A: TS="TIMESTAMP_FORMAT_SPEC", NTS="TIMESTAMP_FORMAT_SPEC", DLLe2=%f, RATE=%f\n",
++                       "A: TS=" TIMESTAMP_FORMAT_SPEC ", NTS=" TIMESTAMP_FORMAT_SPEC ", DLLe2=%f, RATE=%f\n",
+                        m_buffer_tail_timestamp, m_buffer_next_tail_timestamp, m_dll_e2, m_current_rate);
+ 
+ 
+     if(m_buffer_tail_timestamp>=m_wrap_at) {
+-        debugError("Wrapping failed for m_buffer_tail_timestamp! "TIMESTAMP_FORMAT_SPEC"\n",m_buffer_tail_timestamp);
+-        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, " IN="TIMESTAMP_FORMAT_SPEC", TS="TIMESTAMP_FORMAT_SPEC", NTS="TIMESTAMP_FORMAT_SPEC"\n",
++        debugError("Wrapping failed for m_buffer_tail_timestamp! " TIMESTAMP_FORMAT_SPEC "\n",m_buffer_tail_timestamp);
++        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, " IN=" TIMESTAMP_FORMAT_SPEC ", TS=" TIMESTAMP_FORMAT_SPEC ", NTS=" TIMESTAMP_FORMAT_SPEC "\n",
+                     new_timestamp, m_buffer_tail_timestamp, m_buffer_next_tail_timestamp);
+ 
+     }
+     if(m_buffer_next_tail_timestamp>=m_wrap_at) {
+-        debugError("Wrapping failed for m_buffer_next_tail_timestamp! "TIMESTAMP_FORMAT_SPEC"\n",m_buffer_next_tail_timestamp);
+-        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, " IN="TIMESTAMP_FORMAT_SPEC", TS="TIMESTAMP_FORMAT_SPEC", NTS="TIMESTAMP_FORMAT_SPEC"\n",
++        debugError("Wrapping failed for m_buffer_next_tail_timestamp! " TIMESTAMP_FORMAT_SPEC "\n",m_buffer_next_tail_timestamp);
++        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, " IN=" TIMESTAMP_FORMAT_SPEC ", TS=" TIMESTAMP_FORMAT_SPEC ", NTS=" TIMESTAMP_FORMAT_SPEC "\n",
+                     new_timestamp, m_buffer_tail_timestamp, m_buffer_next_tail_timestamp);
+     }
+     
+     if(m_buffer_tail_timestamp==m_buffer_next_tail_timestamp) {
+-        debugError("Current and next timestamps are equal: "TIMESTAMP_FORMAT_SPEC" "TIMESTAMP_FORMAT_SPEC"\n",
++        debugError("Current and next timestamps are equal: " TIMESTAMP_FORMAT_SPEC " " TIMESTAMP_FORMAT_SPEC "\n",
+                    m_buffer_tail_timestamp,m_buffer_next_tail_timestamp);
+     }
+ 
+@@ -1145,10 +1145,10 @@
+ 
+     debugOutputShort( DEBUG_LEVEL_NORMAL, "  TimestampedBuffer (%p): %04d frames, %04d events\n",
+                                           this, m_framecounter, getBufferFill());
+-    debugOutputShort( DEBUG_LEVEL_NORMAL, "   Timestamps           : head: "TIMESTAMP_FORMAT_SPEC", Tail: "TIMESTAMP_FORMAT_SPEC", Next tail: "TIMESTAMP_FORMAT_SPEC"\n",
++    debugOutputShort( DEBUG_LEVEL_NORMAL, "   Timestamps           : head: " TIMESTAMP_FORMAT_SPEC ", Tail: " TIMESTAMP_FORMAT_SPEC ", Next tail: " TIMESTAMP_FORMAT_SPEC "\n",
+                                           ts_head, m_buffer_tail_timestamp, m_buffer_next_tail_timestamp);
+ #ifdef DEBUG
+-    debugOutputShort( DEBUG_LEVEL_NORMAL, "    Head - Tail         : "TIMESTAMP_FORMAT_SPEC" (%f frames)\n", diff, diff/m_dll_e2*m_update_period);
++    debugOutputShort( DEBUG_LEVEL_NORMAL, "    Head - Tail         : " TIMESTAMP_FORMAT_SPEC " (%f frames)\n", diff, diff/m_dll_e2*m_update_period);
+ #endif
+     debugOutputShort( DEBUG_LEVEL_NORMAL, "   DLL Rate             : %f (%f)\n", m_dll_e2, m_dll_e2/m_update_period);
+     debugOutputShort( DEBUG_LEVEL_NORMAL, "   DLL Bandwidth        : %10e 1/ticks (%f Hz)\n", getBandwidth(), getBandwidth() * TICKS_PER_SECOND);
+--- src/libutil/SystemTimeSource.cpp	2016-10-26 13:04:36.030834550 +0200
++++ src/libutil/SystemTimeSource.cpp	2016-10-26 13:25:04.775473129 +0200
+@@ -96,7 +96,7 @@
+         ts.tv_sec = wake_at_usec / (1000000LL);
+         ts.tv_nsec = (wake_at_usec % (1000000LL)) * 1000LL;
+         debugOutputExtreme(DEBUG_LEVEL_VERBOSE,
+-                       "clock_nanosleep until %"PRId64" sec, %"PRId64" nanosec\n",
++                       "clock_nanosleep until %" PRId64 " sec, %" PRId64 " nanosec\n",
+                        (int64_t)ts.tv_sec, (int64_t)ts.tv_nsec);
+         int err = clock_nanosleep(clock_id, TIMER_ABSTIME, &ts, NULL);
+         if(err) {
+--- src/libstreaming/rme/RmeReceiveStreamProcessor.cpp	2016-10-26 13:26:41.230267278 +0200
++++ src/libstreaming/rme/RmeReceiveStreamProcessor.cpp	2016-10-26 13:33:18.010306845 +0200
+@@ -231,7 +231,7 @@
+     // later than expected (the real receive time)
+     #ifdef DEBUG
+     if(isRunning()) {
+-        debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"STMP: %"PRIu64"ticks | tpf=%f\n",
++        debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"STMP: %" PRIu64 "ticks | tpf=%f\n",
+             m_last_timestamp, getTicksPerFrame());
+     }
+     #endif
+--- src/rme/fireface_hw.cpp	2016-10-26 13:26:41.242267128 +0200
++++ src/rme/fireface_hw.cpp	2016-10-26 13:34:24.735472665 +0200
+@@ -893,7 +893,7 @@
+             return -1;
+         }
+ 
+-debugOutput(DEBUG_LEVEL_VERBOSE, "start 0x%016"PRIx64" data: %08x\n", addr, data);
++debugOutput(DEBUG_LEVEL_VERBOSE, "start 0x%016" PRIx64 " data: %08x\n", addr, data);
+         ret = writeRegister(addr, data);
+ debugOutput(DEBUG_LEVEL_VERBOSE, "  ret=%d\n", ret);
+         if (ret == 0) {
+--- src/libstreaming/motu/MotuReceiveStreamProcessor.cpp	2016-10-26 13:37:15.361339548 +0200
++++ src/libstreaming/motu/MotuReceiveStreamProcessor.cpp	2016-10-26 13:37:38.279053037 +0200
+@@ -236,7 +236,7 @@
+     // later than expected (the real receive time)
+     #ifdef DEBUG
+     if(isRunning()) {
+-        debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"STMP: %"PRIu64"ticks | tpf=%f\n",
++        debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"STMP: %" PRIu64 "ticks | tpf=%f\n",
+             m_last_timestamp, getTicksPerFrame());
+     }
+     #endif
+--- src/libutil/StreamStatistics.cpp	2016-10-26 13:37:15.371339423 +0200
++++ src/libutil/StreamStatistics.cpp	2016-10-26 13:40:38.655798018 +0200
+@@ -54,7 +54,7 @@
+ 
+ void StreamStatistics::dumpInfo() {
+     debugOutputShort( DEBUG_LEVEL_VERBOSE, 
+-                      "--- Stats for %s: min=%"PRId64" avg=%f max=%"PRId64" cnt=%"PRId64" sum=%"PRId64"\n",
++                      "--- Stats for %s: min=%" PRId64 " avg=%f max=%" PRId64 " cnt=%" PRId64 " sum=%" PRId64 "\n",
+                       m_name.c_str(), m_min, m_average, m_max, m_count, m_sum);
+     debugOutputShort( DEBUG_LEVEL_VERBOSE, "    Signal stats\n");
+     for (unsigned int i=0;i <= MAX_SIGNAL_VALUE; i++) {
+--- src/libutil/Configuration.cpp	2016-10-26 13:37:15.366339486 +0200
++++ src/libutil/Configuration.cpp	2016-10-26 13:42:14.406600968 +0200
+@@ -189,7 +189,7 @@
+         {
+             int64_t i = s;
+             debugOutput(DEBUG_LEVEL_NORMAL,
+-                        "  %s%s = %"PRId64" (0x%016"PRIX64")\n",
++                        "  %s%s = %" PRId64 " (0x%016" PRIX64 ")\n",
+                         prefix.c_str(), s.getName(), i, i);
+         }
+         break;
+@@ -258,7 +258,7 @@
+         Setting::Type t = s->getType();
+         if(t == Setting::TypeInt64) {
+             ref = *s;
+-            debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "path '%s' has value %"PRId64"\n", path.c_str(), ref);
++            debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "path '%s' has value %" PRId64 "\n", path.c_str(), ref);
+             return true;
+         } else {
+             debugWarning("path '%s' has wrong type\n", path.c_str());
+--- src/libstreaming/StreamProcessorManager.cpp	2016-10-26 13:37:15.351339673 +0200
++++ src/libstreaming/StreamProcessorManager.cpp	2016-10-26 13:51:46.841444548 +0200
+@@ -198,14 +198,14 @@
+         } else if (errno == EINVAL) {
+             debugError("(%p) sem_[timed]wait error (result=%d errno=EINVAL)\n", 
+                         this, result);
+-            debugError("(%p) timeout_nsec=%"PRId64" ts.sec=%"PRId64" ts.nsec=%"PRId64"\n", 
++            debugError("(%p) timeout_nsec=%" PRId64 " ts.sec=%" PRId64 " ts.nsec=%" PRId64 "\n", 
+                        this, m_activity_wait_timeout_nsec,
+ 		       (int64_t)ts.tv_sec, (int64_t)ts.tv_nsec);
+             return eAR_Error;
+         } else {
+             debugError("(%p) sem_[timed]wait error (result=%d errno=%d)\n", 
+                         this, result, errno);
+-            debugError("(%p) timeout_nsec=%"PRId64" ts.sec=%"PRId64" ts.nsec=%"PRId64"\n", 
++            debugError("(%p) timeout_nsec=%" PRId64 " ts.sec=%" PRId64 " ts.nsec=%" PRId64 "\n", 
+                        this, m_activity_wait_timeout_nsec, 
+ 		       (int64_t)ts.tv_sec, (int64_t)ts.tv_nsec);
+             return eAR_Error;
+@@ -635,8 +635,8 @@
+     
+         #if DEBUG_EXTREME_ENABLE
+         int64_t now = Util::SystemTimeSource::getCurrentTime();
+-        debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "CTR  pred: %"PRId64", syncdelay: %"PRId64", diff: %"PRId64"\n", ticks_at_period, ticks_at_period_margin, ticks_at_period_margin-ticks_at_period );
+-        debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "PREWAIT  pred: %"PRId64", now: %"PRId64", wait: %"PRId64"\n", pred_system_time_at_xfer, now, pred_system_time_at_xfer-now );
++        debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "CTR  pred: %" PRId64 ", syncdelay: %" PRId64 ", diff: %" PRId64 "\n", ticks_at_period, ticks_at_period_margin, ticks_at_period_margin-ticks_at_period );
++        debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "PREWAIT  pred: %" PRId64 ", now: %" PRId64 ", wait: %" PRId64 "\n", pred_system_time_at_xfer, now, pred_system_time_at_xfer-now );
+         #endif
+     
+         // wait until it's time to transfer
+@@ -644,7 +644,7 @@
+     
+         #if DEBUG_EXTREME_ENABLE
+         now = Util::SystemTimeSource::getCurrentTime();
+-        debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "POSTWAIT pred: %"PRId64", now: %"PRId64", excess: %"PRId64"\n", pred_system_time_at_xfer, now, now-pred_system_time_at_xfer );
++        debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "POSTWAIT pred: %" PRId64 ", now: %" PRId64 ", excess: %" PRId64 "\n", pred_system_time_at_xfer, now, now-pred_system_time_at_xfer );
+         #endif
+     }
+ 
+@@ -665,7 +665,7 @@
+     // determine a point in time where the system should start
+     // figure out where we are now
+     uint64_t time_of_first_sample = m_SyncSource->getTimeAtPeriod();
+-    debugOutput( DEBUG_LEVEL_VERBOSE, " sync at TS=%011"PRIu64" (%03us %04uc %04ut)...\n", 
++    debugOutput( DEBUG_LEVEL_VERBOSE, " sync at TS=%011" PRIu64 " (%03us %04uc %04ut)...\n", 
+         time_of_first_sample,
+         (unsigned int)TICKS_TO_SECS(time_of_first_sample),
+         (unsigned int)TICKS_TO_CYCLES(time_of_first_sample),
+@@ -682,10 +682,10 @@
+ 
+     time_of_first_sample = addTicks(time_of_first_sample,
+                                     time_for_startup_ticks);
+-    debugOutput( DEBUG_LEVEL_VERBOSE, "  add %d frames (%011"PRIu64" ticks)...\n", 
++    debugOutput( DEBUG_LEVEL_VERBOSE, "  add %d frames (%011" PRIu64 " ticks)...\n", 
+         time_for_startup_frames, time_for_startup_ticks);
+ 
+-    debugOutput( DEBUG_LEVEL_VERBOSE, "  => first sample at TS=%011"PRIu64" (%03us %04uc %04ut)...\n", 
++    debugOutput( DEBUG_LEVEL_VERBOSE, "  => first sample at TS=%011" PRIu64 " (%03us %04uc %04ut)...\n", 
+         time_of_first_sample,
+         (unsigned int)TICKS_TO_SECS(time_of_first_sample),
+         (unsigned int)TICKS_TO_CYCLES(time_of_first_sample),
+@@ -698,12 +698,12 @@
+ 
+     uint64_t time_to_start_recv = substractTicks(time_of_first_sample,
+                                                  prestart_cycles_for_recv * TICKS_PER_CYCLE);
+-    debugOutput( DEBUG_LEVEL_VERBOSE, "  => xmit starts at  TS=%011"PRIu64" (%03us %04uc %04ut)...\n", 
++    debugOutput( DEBUG_LEVEL_VERBOSE, "  => xmit starts at  TS=%011" PRIu64 " (%03us %04uc %04ut)...\n", 
+         time_to_start_xmit,
+         (unsigned int)TICKS_TO_SECS(time_to_start_xmit),
+         (unsigned int)TICKS_TO_CYCLES(time_to_start_xmit),
+         (unsigned int)TICKS_TO_OFFSET(time_to_start_xmit));
+-    debugOutput( DEBUG_LEVEL_VERBOSE, "  => recv starts at  TS=%011"PRIu64" (%03us %04uc %04ut)...\n", 
++    debugOutput( DEBUG_LEVEL_VERBOSE, "  => recv starts at  TS=%011" PRIu64 " (%03us %04uc %04ut)...\n", 
+         time_to_start_recv,
+         (unsigned int)TICKS_TO_SECS(time_to_start_recv),
+         (unsigned int)TICKS_TO_CYCLES(time_to_start_recv),
+@@ -755,7 +755,7 @@
+         ffado_timestamp_t ts;
+         signed int fc;
+         (*it)->getBufferHeadTimestamp ( &ts, &fc );
+-        debugOutput( DEBUG_LEVEL_VERBOSE, " transmit buffer tail %010"PRId64" => head TS %010"PRIu64", fc=%d...\n",
++        debugOutput( DEBUG_LEVEL_VERBOSE, " transmit buffer tail %010" PRId64 " => head TS %010" PRIu64 ", fc=%d...\n",
+                     time_of_first_sample, (uint64_t)ts, fc);
+     }
+ 
+@@ -785,7 +785,7 @@
+         time_to_start_sync = time_to_start_xmit;
+     }
+     if(!m_SyncSource->scheduleStartRunning(time_to_start_sync)) {
+-        debugError("m_SyncSource->scheduleStartRunning(%11"PRIu64") failed\n", time_to_start_sync);
++        debugError("m_SyncSource->scheduleStartRunning(%11" PRIu64 ") failed\n", time_to_start_sync);
+         return false;
+     }
+ 
+@@ -795,7 +795,7 @@
+           ++it ) {
+         if(*it != m_SyncSource) {
+             if(!(*it)->scheduleStartRunning(time_to_start_recv)) {
+-                debugError("%p->scheduleStartRunning(%11"PRIu64") failed\n", *it, time_to_start_recv);
++                debugError("%p->scheduleStartRunning(%11" PRIu64 ") failed\n", *it, time_to_start_recv);
+                 return false;
+             }
+         }
+@@ -805,7 +805,7 @@
+           ++it ) {
+         if(*it != m_SyncSource) {
+             if(!(*it)->scheduleStartRunning(time_to_start_xmit)) {
+-                debugError("%p->scheduleStartRunning(%11"PRIu64") failed\n", *it, time_to_start_xmit);
++                debugError("%p->scheduleStartRunning(%11" PRIu64 ") failed\n", *it, time_to_start_xmit);
+                 return false;
+             }
+         }
+@@ -838,7 +838,7 @@
+     m_time_of_transfer2 = substractTicks(m_time_of_transfer2, (uint64_t)(m_period * rate));
+     #endif
+ 
+-    debugOutput( DEBUG_LEVEL_VERBOSE, "  initial time of transfer %010"PRId64", rate %f...\n",
++    debugOutput( DEBUG_LEVEL_VERBOSE, "  initial time of transfer %010" PRId64 ", rate %f...\n",
+                 m_time_of_transfer, rate);
+ 
+     // FIXME: ideally we'd want the SP itself to account for the xmit_prebuffer_frames
+@@ -857,7 +857,7 @@
+     //  that allows us to calculate the tail timestamp for the buffer.
+ 
+     int64_t transmit_tail_timestamp = addTicks(m_time_of_transfer, delay_in_ticks);
+-    debugOutput( DEBUG_LEVEL_VERBOSE, "  preset transmit tail TS %010"PRId64", rate %f...\n",
++    debugOutput( DEBUG_LEVEL_VERBOSE, "  preset transmit tail TS %010" PRId64 ", rate %f...\n",
+                 transmit_tail_timestamp, rate);
+ 
+     for ( StreamProcessorVectorIterator it = m_TransmitProcessors.begin();
+@@ -868,7 +868,7 @@
+         ffado_timestamp_t ts;
+         signed int fc;
+         (*it)->getBufferHeadTimestamp ( &ts, &fc );
+-        debugOutput( DEBUG_LEVEL_VERBOSE, "   => transmit head TS %010"PRId64", fc=%d...\n",
++        debugOutput( DEBUG_LEVEL_VERBOSE, "   => transmit head TS %010" PRId64 ", fc=%d...\n",
+                     (uint64_t)ts, fc);
+     }
+ 
+@@ -925,7 +925,7 @@
+             for ( i = 0; i < nb_rcv_sp; i++) {
+                 StreamProcessor *s = m_ReceiveProcessors.at(i);
+                 diff = diffTicks(m_SyncSource->getTimeAtPeriod(), s->getTimeAtPeriod());
+-                debugOutput( DEBUG_LEVEL_VERY_VERBOSE, "  offset between SyncSP %p and SP %p is %"PRId64" ticks...\n", 
++                debugOutput( DEBUG_LEVEL_VERY_VERBOSE, "  offset between SyncSP %p and SP %p is %" PRId64 " ticks...\n", 
+                     m_SyncSource, s, diff);
+                 if ( nb_sync_runs == periods_per_align_try ) {
+                     diff_between_streams[i] = diff;
+@@ -947,7 +947,7 @@
+ 
+             diff_between_streams[i] /= periods_per_align_try;
+             diff_between_streams_frames[i] = (int)roundf(diff_between_streams[i] / s->getTicksPerFrame());
+-            debugOutput( DEBUG_LEVEL_VERBOSE, "   avg offset between SyncSP %p and SP %p is %"PRId64" ticks, %d frames...\n", 
++            debugOutput( DEBUG_LEVEL_VERBOSE, "   avg offset between SyncSP %p and SP %p is %" PRId64 " ticks, %d frames...\n", 
+                 m_SyncSource, s, diff_between_streams[i], diff_between_streams_frames[i]);
+ 
+             aligned &= (diff_between_streams_frames[i] == 0);
+@@ -1229,8 +1229,8 @@
+ 
+     #if DEBUG_EXTREME_ENABLE
+     int64_t now = Util::SystemTimeSource::getCurrentTime();
+-    debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "CTR  pred: %"PRId64", syncdelay: %"PRId64", diff: %"PRId64"\n", ticks_at_period, ticks_at_period_margin, ticks_at_period_margin-ticks_at_period );
+-    debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "PREWAIT  pred: %"PRId64", now: %"PRId64", wait: %"PRId64"\n", pred_system_time_at_xfer, now, pred_system_time_at_xfer-now );
++    debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "CTR  pred: %" PRId64 ", syncdelay: %" PRId64 ", diff: %" PRId64 "\n", ticks_at_period, ticks_at_period_margin, ticks_at_period_margin-ticks_at_period );
++    debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "PREWAIT  pred: %" PRId64 ", now: %" PRId64 ", wait: %" PRId64 "\n", pred_system_time_at_xfer, now, pred_system_time_at_xfer-now );
+     #endif
+ 
+     // wait until it's time to transfer
+@@ -1238,7 +1238,7 @@
+ 
+     #if DEBUG_EXTREME_ENABLE
+     now = Util::SystemTimeSource::getCurrentTime();
+-    debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "POSTWAIT pred: %"PRId64", now: %"PRId64", excess: %"PRId64"\n", pred_system_time_at_xfer, now, now-pred_system_time_at_xfer );
++    debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "POSTWAIT pred: %" PRId64 ", now: %" PRId64 ", excess: %" PRId64 "\n", pred_system_time_at_xfer, now, now-pred_system_time_at_xfer );
+     #endif
+ 
+     // the period should be ready now
+@@ -1368,14 +1368,14 @@
+     // values is more than 50 ticks. 1 sample at 48k is 512 ticks
+     // so 50 ticks = 10%, which is a rather large jitter value.
+     if(diff-ticks_per_period > m_max_diff_ticks || diff-ticks_per_period < -m_max_diff_ticks) {
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "rather large TSP difference TS=%011"PRIu64" => TS=%011"PRIu64" (%d, nom %d)\n",
++        debugOutput(DEBUG_LEVEL_VERBOSE, "rather large TSP difference TS=%011" PRIu64 " => TS=%011" PRIu64 " (%d, nom %d)\n",
+                                             m_time_of_transfer2, m_time_of_transfer, diff, ticks_per_period);
+     }
+     m_time_of_transfer2 = m_time_of_transfer;
+     #endif
+ 
+     debugOutputExtreme(DEBUG_LEVEL_VERBOSE,
+-                        "transfer period %d at %"PRIu64" ticks...\n",
++                        "transfer period %d at %" PRIu64 " ticks...\n",
+                         m_nbperiods, m_time_of_transfer);
+ 
+     #if DEBUG_EXTREME_ENABLE
+@@ -1391,7 +1391,7 @@
+         xmt_bf = (*it)->getBufferFill();
+     }
+     debugOutputExtreme( DEBUG_LEVEL_VERY_VERBOSE, 
+-                        "XF at %011"PRIu64" ticks, RBF=%d, XBF=%d, SUM=%d...\n",
++                        "XF at %011" PRIu64 " ticks, RBF=%d, XBF=%d, SUM=%d...\n",
+                         m_time_of_transfer, rcv_bf, xmt_bf, rcv_bf+xmt_bf);
+     #endif
+ 
+@@ -1466,7 +1466,7 @@
+ bool StreamProcessorManager::transfer(enum StreamProcessor::eProcessorType t) {
+     if(m_SyncSource == NULL) return false;
+     debugOutputExtreme( DEBUG_LEVEL_VERY_VERBOSE,
+-        "transfer(%d) at TS=%011"PRIu64" (%03us %04uc %04ut)...\n", 
++        "transfer(%d) at TS=%011" PRIu64 " (%03us %04uc %04ut)...\n", 
+         t, m_time_of_transfer,
+         (unsigned int)TICKS_TO_SECS(m_time_of_transfer),
+         (unsigned int)TICKS_TO_CYCLES(m_time_of_transfer),
+@@ -1480,7 +1480,7 @@
+                 it != m_ReceiveProcessors.end();
+                 ++it ) {
+             if(!(*it)->getFrames(m_period, m_time_of_transfer)) {
+-                    debugWarning("could not getFrames(%u, %11"PRIu64") from stream processor (%p)\n",
++                    debugWarning("could not getFrames(%u, %11" PRIu64 ") from stream processor (%p)\n",
+                             m_period, m_time_of_transfer,*it);
+                 retval &= false; // buffer underrun
+             }
+@@ -1503,7 +1503,7 @@
+             int64_t transmit_timestamp = addTicks(m_time_of_transfer, one_ringbuffer_in_ticks);
+ 
+             if(!(*it)->putFrames(m_period, transmit_timestamp)) {
+-                debugWarning("could not putFrames(%u,%"PRIu64") to stream processor (%p)\n",
++                debugWarning("could not putFrames(%u,%" PRIu64 ") to stream processor (%p)\n",
+                         m_period, transmit_timestamp, *it);
+                 retval &= false; // buffer underrun
+             }
+@@ -1544,7 +1544,7 @@
+ bool StreamProcessorManager::transferSilence(enum StreamProcessor::eProcessorType t) {
+     if(m_SyncSource == NULL) return false;
+     debugOutput( DEBUG_LEVEL_VERY_VERBOSE,
+-        "transferSilence(%d) at TS=%011"PRIu64" (%03us %04uc %04ut)...\n", 
++        "transferSilence(%d) at TS=%011" PRIu64 " (%03us %04uc %04ut)...\n", 
+         t, m_time_of_transfer,
+         (unsigned int)TICKS_TO_SECS(m_time_of_transfer),
+         (unsigned int)TICKS_TO_CYCLES(m_time_of_transfer),
+@@ -1558,7 +1558,7 @@
+                 it != m_ReceiveProcessors.end();
+                 ++it ) {
+             if(!(*it)->dropFrames(m_period, m_time_of_transfer)) {
+-                    debugWarning("could not dropFrames(%u, %11"PRIu64") from stream processor (%p)\n",
++                    debugWarning("could not dropFrames(%u, %11" PRIu64 ") from stream processor (%p)\n",
+                             m_period, m_time_of_transfer,*it);
+                 retval &= false; // buffer underrun
+             }
+@@ -1581,7 +1581,7 @@
+             int64_t transmit_timestamp = addTicks(m_time_of_transfer, one_ringbuffer_in_ticks);
+ 
+             if(!(*it)->putSilenceFrames(m_period, transmit_timestamp)) {
+-                debugWarning("could not putSilenceFrames(%u,%"PRIu64") to stream processor (%p)\n",
++                debugWarning("could not putSilenceFrames(%u,%" PRIu64 ") to stream processor (%p)\n",
+                         m_period, transmit_timestamp, *it);
+                 retval &= false; // buffer underrun
+             }
+--- src/libstreaming/generic/StreamProcessor.cpp	2016-10-26 14:01:16.878318106 +0200
++++ src/libstreaming/generic/StreamProcessor.cpp	2016-10-26 14:02:14.242600954 +0200
+@@ -303,7 +303,7 @@
+         signed int fc;
+         m_data_buffer->getBufferTailTimestamp(&ts,&fc);
+     
+-        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "=> NPD="TIMESTAMP_FORMAT_SPEC", LTS="TIMESTAMP_FORMAT_SPEC", FC=%5u, TPF=%f\n",
++        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "=> NPD=" TIMESTAMP_FORMAT_SPEC ", LTS=" TIMESTAMP_FORMAT_SPEC ", FC=%5u, TPF=%f\n",
+             next_period_boundary, ts, fc, getTicksPerFrame()
+             );
+         #endif
+@@ -316,7 +316,7 @@
+         signed int fc;
+         m_data_buffer->getBufferTailTimestamp(&ts,&fc);
+     
+-        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "=> NPD="TIMESTAMP_FORMAT_SPEC", LTS="TIMESTAMP_FORMAT_SPEC", FC=%5u, TPF=%f\n",
++        debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "=> NPD=" TIMESTAMP_FORMAT_SPEC ", LTS=" TIMESTAMP_FORMAT_SPEC ", FC=%5u, TPF=%f\n",
+             next_period_boundary, ts, fc, getTicksPerFrame()
+             );
+         #endif
+@@ -464,7 +464,7 @@
+         #ifdef DEBUG
+         if (m_last_timestamp > 0 && m_last_timestamp2 > 0) {
+             int64_t tsp_diff = diffTicks(m_last_timestamp, m_last_timestamp2);
+-            debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "TSP diff: %"PRId64"\n", tsp_diff);
++            debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "TSP diff: %" PRId64 "\n", tsp_diff);
+             double tsp_diff_d = tsp_diff;
+             double fs_syt = 1.0/tsp_diff_d;
+             fs_syt *= (double)getNominalFramesPerPacket() * (double)TICKS_PER_USEC * 1e6;
+@@ -486,7 +486,7 @@
+                 // so 50 ticks = 10%, which is a rather large jitter value.
+                 if(diff-ticks_per_packet > m_max_diff_ticks || diff-ticks_per_packet < -m_max_diff_ticks) {
+                     debugOutput(DEBUG_LEVEL_VERBOSE,
+-                                "cy %04d rather large TSP difference TS=%011"PRIu64" => TS=%011"PRIu64" (%d, nom %d)\n",
++                                "cy %04d rather large TSP difference TS=%011" PRIu64 " => TS=%011" PRIu64 " (%d, nom %d)\n",
+                                 (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp2,
+                                 m_last_timestamp, diff, ticks_per_packet);
+                     // !!!HACK!!! FIXME: this is the result of a failure in wrapping/unwrapping somewhere
+@@ -497,7 +497,7 @@
+                     last_timestamp_fixed = addTicks(m_last_timestamp, TICKS_PER_SECOND);
+                     diff = diffTicks(last_timestamp_fixed, m_last_timestamp2);
+                     if(diff-ticks_per_packet < 50 && diff-ticks_per_packet > -50) {
+-                        debugWarning("cy %04d rather large TSP difference TS=%011"PRIu64" => TS=%011"PRIu64" (%d, nom %d)\n",
++                        debugWarning("cy %04d rather large TSP difference TS=%011" PRIu64 " => TS=%011" PRIu64 " (%d, nom %d)\n",
+                                     (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp2,
+                                     m_last_timestamp, diff, ticks_per_packet);
+                         debugWarning("HACK: fixed by adding one second of ticks. This is a bug being run-time fixed.\n");
+@@ -507,7 +507,7 @@
+                         last_timestamp_fixed = substractTicks(m_last_timestamp, TICKS_PER_SECOND);
+                         diff = diffTicks(last_timestamp_fixed, m_last_timestamp2);
+                         if(diff-ticks_per_packet < 50 && diff-ticks_per_packet > -50) {
+-                            debugWarning("cy %04d rather large TSP difference TS=%011"PRIu64" => TS=%011"PRIu64" (%d, nom %d)\n",
++                            debugWarning("cy %04d rather large TSP difference TS=%011" PRIu64 " => TS=%011" PRIu64 " (%d, nom %d)\n",
+                                         (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp2,
+                                         m_last_timestamp, diff, ticks_per_packet);
+                             debugWarning("HACK: fixed by subtracing one second of ticks. This is a bug being run-time fixed.\n");
+@@ -516,7 +516,7 @@
+                     }
+                 }
+                 debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                                "%04u %011"PRIu64" %011"PRIu64" %d %d\n",
++                                "%04u %011" PRIu64 " %011" PRIu64 " %d %d\n",
+                                 (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr),
+                                 m_last_timestamp2, m_last_timestamp, 
+                                 diff, ticks_per_packet);
+@@ -524,7 +524,7 @@
+         #endif
+ 
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                          "RECV: CY=%04u TS=%011"PRIu64"\n",
++                          "RECV: CY=%04u TS=%011" PRIu64 "\n",
+                           (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr),
+                           m_last_timestamp);
+ 
+@@ -693,7 +693,7 @@
+         enum eChildReturnValue result = generateSilentPacketHeader(data, length, tag, sy, pkt_ctr);
+         if (result == eCRV_Packet) {
+             debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                               "XMIT SILENT: CY=%04u TS=%011"PRIu64"\n",
++                               "XMIT SILENT: CY=%04u TS=%011" PRIu64 "\n",
+                                (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp);
+ 
+             // assumed not to xrun
+@@ -744,7 +744,7 @@
+         enum eChildReturnValue result = generatePacketHeader(data, length, tag, sy, pkt_ctr);
+         if (result == eCRV_Packet || result == eCRV_Defer) {
+             debugOutputExtreme(DEBUG_LEVEL_VERBOSE,
+-                               "XMIT: CY=%04u TS=%011"PRIu64"\n",
++                               "XMIT: CY=%04u TS=%011" PRIu64 "\n",
+                                (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp);
+ 
+             // valid packet timestamp
+@@ -781,7 +781,7 @@
+             #ifdef DEBUG
+             if (m_last_timestamp > 0 && m_last_timestamp2 > 0) {
+                 int64_t tsp_diff = diffTicks(m_last_timestamp, m_last_timestamp2);
+-                debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "TSP diff: %"PRId64"\n", tsp_diff);
++                debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "TSP diff: %" PRId64 "\n", tsp_diff);
+                 double tsp_diff_d = tsp_diff;
+                 double fs_syt = 1.0/tsp_diff_d;
+                 fs_syt *= (double)getNominalFramesPerPacket() * (double)TICKS_PER_USEC * 1e6;
+@@ -790,7 +790,7 @@
+                 double fs_diff_norm = fs_diff/fs_nom;
+                 debugOutputExtreme(DEBUG_LEVEL_VERBOSE, "Nom fs: %12f, Instantanous fs: %12f, diff: %12f (%12f)\n",
+                            fs_nom, fs_syt, fs_diff, fs_diff_norm);
+-//                 debugOutput(DEBUG_LEVEL_VERBOSE, "Diff fs: %12f, m_last_timestamp: %011"PRIu64", m_last_timestamp2: %011"PRIu64"\n",
++//                 debugOutput(DEBUG_LEVEL_VERBOSE, "Diff fs: %12f, m_last_timestamp: %011" PRIu64 ", m_last_timestamp2: %011" PRIu64 "\n",
+ //                            fs_diff, m_last_timestamp, m_last_timestamp2);
+                 if (fs_diff_norm > m_max_fs_diff_norm || fs_diff_norm < -m_max_fs_diff_norm) {
+                     debugWarning( "Instantanous samplerate more than %0.0f%% off nominal. [Nom fs: %12f, Instantanous fs: %12f, diff: %12f (%12f)]\n",
+@@ -804,12 +804,12 @@
+                 // so 50 ticks = 10%, which is a rather large jitter value.
+                 if(diff-ticks_per_packet > m_max_diff_ticks || diff-ticks_per_packet < -m_max_diff_ticks) {
+                     debugOutput(DEBUG_LEVEL_VERBOSE,
+-                                "cy %04d, rather large TSP difference TS=%011"PRIu64" => TS=%011"PRIu64" (%d, nom %d)\n",
++                                "cy %04d, rather large TSP difference TS=%011" PRIu64 " => TS=%011" PRIu64 " (%d, nom %d)\n",
+                                 (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp2,
+                                 m_last_timestamp, diff, ticks_per_packet);
+                 }
+                 debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                                "%04d %011"PRIu64" %011"PRIu64" %d %d\n",
++                                "%04d %011" PRIu64 " %011" PRIu64 " %d %d\n",
+                                 (int)CYCLE_TIMER_GET_CYCLES(pkt_ctr), m_last_timestamp2,
+                                 m_last_timestamp, diff, ticks_per_packet);
+             }
+@@ -902,7 +902,7 @@
+ bool StreamProcessor::getFrames(unsigned int nbframes, int64_t ts) {
+     bool result;
+     debugOutputExtreme( DEBUG_LEVEL_VERBOSE,
+-                        "(%p, %s) getFrames(%d, %11"PRIu64")\n",
++                        "(%p, %s) getFrames(%d, %11" PRIu64 ")\n",
+                         this, getTypeString(), nbframes, ts);
+     assert( getType() == ePT_Receive );
+     if(isDryRunning()) result = getFramesDry(nbframes, ts);
+@@ -933,15 +933,15 @@
+     lag_ticks = diffTicks(ts, ts_expected);
+     lag_frames = (((float)lag_ticks) / srate);
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "stream (%p): drifts %6d ticks = %10.5f frames (rate=%10.5f), %"PRId64", %"PRIu64", %d\n",
++                       "stream (%p): drifts %6d ticks = %10.5f frames (rate=%10.5f), %" PRId64 ", %" PRIu64 ", %d\n",
+                        this, lag_ticks, lag_frames, srate, ts, ts_expected, fc);
+     if (lag_frames >= 1.0) {
+         // the stream lags
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "stream (%p): lags  with %6d ticks = %10.5f frames (rate=%10.5f), %"PRId64", %"PRIu64", %d\n",
++        debugOutput(DEBUG_LEVEL_VERBOSE, "stream (%p): lags  with %6d ticks = %10.5f frames (rate=%10.5f), %" PRId64 ", %" PRIu64 ", %d\n",
+                       this, lag_ticks, lag_frames, srate, ts, ts_expected, fc);
+     } else if (lag_frames <= -1.0) {
+         // the stream leads
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "stream (%p): leads with %6d ticks = %10.5f frames (rate=%10.5f), %"PRId64", %"PRIu64", %d\n",
++        debugOutput(DEBUG_LEVEL_VERBOSE, "stream (%p): leads with %6d ticks = %10.5f frames (rate=%10.5f), %" PRId64 ", %" PRIu64 ", %d\n",
+                       this, lag_ticks, lag_frames, srate, ts, ts_expected, fc);
+     }
+ #endif
+@@ -955,7 +955,7 @@
+ bool StreamProcessor::getFramesDry(unsigned int nbframes, int64_t ts)
+ {
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "stream (%p): dry run %d frames (@ ts=%"PRId64")\n",
++                       "stream (%p): dry run %d frames (@ ts=%" PRId64 ")\n",
+                        this, nbframes, ts);
+     // dry run on this side means that we put silence in all enabled ports
+     // since there is do data put into the ringbuffer in the dry-running state
+@@ -966,7 +966,7 @@
+ StreamProcessor::dropFrames(unsigned int nbframes, int64_t ts)
+ {
+     bool result;
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "StreamProcessor::dropFrames(%d, %"PRId64")\n", nbframes, ts);
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "StreamProcessor::dropFrames(%d, %" PRId64 ")\n", nbframes, ts);
+     result = m_data_buffer->dropFrames(nbframes);
+     SIGNAL_ACTIVITY_ISO_RECV;
+     return result;
+@@ -976,7 +976,7 @@
+ {
+     bool result;
+     debugOutputExtreme( DEBUG_LEVEL_VERBOSE,
+-                        "(%p, %s) putFrames(%d, %11"PRIu64")\n",
++                        "(%p, %s) putFrames(%d, %11" PRIu64 ")\n",
+                         this, getTypeString(), nbframes, ts);
+     assert( getType() == ePT_Transmit );
+     if(isDryRunning()) result = putFramesDry(nbframes, ts);
+@@ -989,12 +989,12 @@
+ StreamProcessor::putFramesWet(unsigned int nbframes, int64_t ts)
+ {
+     debugOutputExtreme(DEBUG_LEVEL_ULTRA_VERBOSE,
+-                       "StreamProcessor::putFramesWet(%d, %"PRIu64")\n",
++                       "StreamProcessor::putFramesWet(%d, %" PRIu64 ")\n",
+                        nbframes, ts);
+     // transfer the data
+     m_data_buffer->blockProcessWriteFrames(nbframes, ts);
+     debugOutputExtreme(DEBUG_LEVEL_ULTRA_VERBOSE,
+-                       " New timestamp: %"PRIu64"\n", ts);
++                       " New timestamp: %" PRIu64 "\n", ts);
+     return true; // FIXME: what about failure?
+ }
+ 
+@@ -1002,7 +1002,7 @@
+ StreamProcessor::putFramesDry(unsigned int nbframes, int64_t ts)
+ {
+     debugOutputExtreme(DEBUG_LEVEL_ULTRA_VERBOSE,
+-                       "StreamProcessor::putFramesDry(%d, %"PRIu64")\n",
++                       "StreamProcessor::putFramesDry(%d, %" PRIu64 ")\n",
+                        nbframes, ts);
+     // do nothing
+     return true;
+@@ -1012,7 +1012,7 @@
+ StreamProcessor::putSilenceFrames(unsigned int nbframes, int64_t ts)
+ {
+     debugOutput(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "StreamProcessor::putSilenceFrames(%d, %"PRIu64")\n",
++                       "StreamProcessor::putSilenceFrames(%d, %" PRIu64 ")\n",
+                        nbframes, ts);
+ 
+     size_t bytes_per_frame = getEventSize() * getEventsPerFrame();
+@@ -1232,12 +1232,12 @@
+     debugOutput(DEBUG_LEVEL_VERBOSE,"for %s SP (%p)\n", ePTToString(getType()), this);
+     #ifdef DEBUG
+     uint64_t now = m_1394service.getCycleTimerTicks();
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           now,
+                           (unsigned int)TICKS_TO_SECS(now),
+                           (unsigned int)TICKS_TO_CYCLES(now),
+                           (unsigned int)TICKS_TO_OFFSET(now));
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Start at              : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Start at              : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           tx,
+                           (unsigned int)TICKS_TO_SECS(tx),
+                           (unsigned int)TICKS_TO_CYCLES(tx),
+@@ -1278,12 +1278,12 @@
+     debugOutput(DEBUG_LEVEL_VERBOSE,"for %s SP (%p)\n", ePTToString(getType()), this);
+     #ifdef DEBUG
+     uint64_t now = m_1394service.getCycleTimerTicks();
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           now,
+                           (unsigned int)TICKS_TO_SECS(now),
+                           (unsigned int)TICKS_TO_CYCLES(now),
+                           (unsigned int)TICKS_TO_OFFSET(now));
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Start at              : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Start at              : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           tx,
+                           (unsigned int)TICKS_TO_SECS(tx),
+                           (unsigned int)TICKS_TO_CYCLES(tx),
+@@ -1302,12 +1302,12 @@
+     debugOutput(DEBUG_LEVEL_VERBOSE,"for %s SP (%p)\n", ePTToString(getType()), this);
+     #ifdef DEBUG
+     uint64_t now = m_1394service.getCycleTimerTicks();
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           now,
+                           (unsigned int)TICKS_TO_SECS(now),
+                           (unsigned int)TICKS_TO_CYCLES(now),
+                           (unsigned int)TICKS_TO_OFFSET(now));
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Stop at              : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Stop at              : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           tx,
+                           (unsigned int)TICKS_TO_SECS(tx),
+                           (unsigned int)TICKS_TO_CYCLES(tx),
+@@ -1327,12 +1327,12 @@
+     debugOutput(DEBUG_LEVEL_VERBOSE,"for %s SP (%p)\n", ePTToString(getType()), this);
+     #ifdef DEBUG
+     uint64_t now = m_1394service.getCycleTimerTicks();
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Now                   : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           now,
+                           (unsigned int)TICKS_TO_SECS(now),
+                           (unsigned int)TICKS_TO_CYCLES(now),
+                           (unsigned int)TICKS_TO_OFFSET(now));
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  Stop at              : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  Stop at              : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                           tx,
+                           (unsigned int)TICKS_TO_SECS(tx),
+                           (unsigned int)TICKS_TO_CYCLES(tx),
+@@ -1952,7 +1952,7 @@
+     debugOutputShort( DEBUG_LEVEL_NORMAL, "  Port, Channel    : %d, %d\n", m_1394service.getPort(), m_channel);
+     m_IsoHandlerManager.dumpInfoForStream(this);
+     uint64_t now = m_1394service.getCycleTimerTicks();
+-    debugOutputShort( DEBUG_LEVEL_NORMAL, "  Now                   : %011"PRIu64" (%03us %04uc %04ut)\n",
++    debugOutputShort( DEBUG_LEVEL_NORMAL, "  Now                   : %011" PRIu64 " (%03us %04uc %04ut)\n",
+                         now,
+                         (unsigned int)TICKS_TO_SECS(now),
+                         (unsigned int)TICKS_TO_CYCLES(now),
+--- src/libieee1394/IsoHandlerManager.cpp	2016-10-26 14:07:21.870755073 +0200
++++ src/libieee1394/IsoHandlerManager.cpp	2016-10-26 14:15:20.344773324 +0200
+@@ -345,11 +345,11 @@
+         int64_t measured_diff_ticks = diffTicks(ctr_at_poll_return_ticks, last_packet_seen_ticks);
+ 
+         debugOutputExtreme(DEBUG_LEVEL_VERBOSE,
+-                           "(%p, %s) check handler %d: diff = %"PRId64", max = %"PRId64", now: %08X, last: %08X\n",
++                           "(%p, %s) check handler %d: diff = %" PRId64 ", max = %" PRId64 ", now: %08X, last: %08X\n",
+                            this, (m_handlerType == IsoHandler::eHT_Transmit? "Transmit": "Receive"), 
+                            i, measured_diff_ticks, max_diff_ticks, ctr_at_poll_return, last_packet_seen);
+         if(measured_diff_ticks > max_diff_ticks) {
+-            debugWarning("(%p, %s) Handler died: now: %08X, last: %08X, diff: %"PRId64" (max: %"PRId64")\n",
++            debugWarning("(%p, %s) Handler died: now: %08X, last: %08X, diff: %" PRId64 " (max: %" PRId64 ")\n",
+                          this, (m_handlerType == IsoHandler::eHT_Transmit? "Transmit": "Receive"),
+                          ctr_at_poll_return, last_packet_seen, measured_diff_ticks, max_diff_ticks);
+             m_IsoHandler_map_shadow[i]->notifyOfDeath();
+@@ -438,14 +438,14 @@
+         } else if (errno == EINVAL) {
+             debugError("(%p) sem_timedwait error (result=%d errno=EINVAL)\n", 
+                         this, result);
+-            debugError("(%p) timeout_nsec=%lld ts.sec=%"PRId64" ts.nsec=%"PRId64"\n", 
++            debugError("(%p) timeout_nsec=%lld ts.sec=%" PRId64 " ts.nsec=%" PRId64 "\n", 
+                        this, m_activity_wait_timeout_nsec, 
+ 		       (int64_t)ts.tv_sec, (int64_t)ts.tv_nsec);
+             return eAR_Error;
+         } else {
+             debugError("(%p) sem_timedwait error (result=%d errno=%d)\n", 
+                         this, result, errno);
+-            debugError("(%p) timeout_nsec=%lld ts.sec=%"PRId64" ts.nsec=%"PRId64"\n", 
++            debugError("(%p) timeout_nsec=%lld ts.sec=%" PRId64 " ts.nsec=%" PRId64 "\n", 
+                        this, m_activity_wait_timeout_nsec,
+ 		       (int64_t)ts.tv_sec, (int64_t)ts.tv_nsec);
+             return eAR_Error;
+@@ -1592,13 +1592,13 @@
+ 
+     if((pkt_ctr & ~0x0FFFL) != pkt_ctr_ref) {
+         debugWarning("reconstructed CTR counter discrepancy\n");
+-        debugWarning(" ingredients: %X, %X, %X, %X, %X, %d, %ld, %ld, %"PRId64"\n",
++        debugWarning(" ingredients: %X, %X, %X, %X, %X, %d, %ld, %ld, %" PRId64 "\n",
+                      cycle, pkt_ctr_ref, pkt_ctr, 
+ 		     now, m_last_now, now_secs_ref, 
+ 		     (long int)CYCLE_TIMER_GET_SECS(now),
+ 		     (long int)CYCLE_TIMER_GET_SECS(m_last_now),
+ 		     tmp);
+-        debugWarning(" diffcy = %"PRId64" \n", diff_cycles);
++        debugWarning(" diffcy = %" PRId64 " \n", diff_cycles);
+     }
+     #endif
+     m_last_packet_handled_at = pkt_ctr;
+@@ -1677,13 +1677,13 @@
+ 
+         if(((pkt_ctr & ~0x0FFFL) != pkt_ctr_ref) && (m_packets > m_buf_packets)) {
+             debugWarning("reconstructed CTR counter discrepancy\n");
+-            debugWarning(" ingredients: %X, %X, %X, %X, %X, %d, %ld, %ld, %"PRId64"\n",
++            debugWarning(" ingredients: %X, %X, %X, %X, %X, %d, %ld, %ld, %" PRId64 "\n",
+                         cycle, pkt_ctr_ref, pkt_ctr,
+ 			 now, m_last_now, now_secs_ref, 
+ 			 (long int)CYCLE_TIMER_GET_SECS(now),
+ 			 (long int)CYCLE_TIMER_GET_SECS(m_last_now), 
+ 			 tmp);
+-            debugWarning(" diffcy = %"PRId64" \n", diff_cycles);
++            debugWarning(" diffcy = %" PRId64 " \n", diff_cycles);
+         }
+         #endif
+     }
+--- src/libieee1394/ieee1394service.cpp	2016-10-26 14:07:21.872755048 +0200
++++ src/libieee1394/ieee1394service.cpp	2016-10-26 14:18:44.028226931 +0200
+@@ -136,11 +136,11 @@
+           it != m_armHandlers.end();
+           ++it )
+     {
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "Unregistering ARM handler for 0x%016"PRIX64"\n", (*it)->getStart());
++        debugOutput(DEBUG_LEVEL_VERBOSE, "Unregistering ARM handler for 0x%016" PRIX64 "\n", (*it)->getStart());
+         if(m_armHelperNormal) {
+             int err = raw1394_arm_unregister(m_armHelperNormal->get1394Handle(), (*it)->getStart());
+             if (err) {
+-                debugError(" Failed to unregister ARM handler for 0x%016"PRIX64"\n", (*it)->getStart());
++                debugError(" Failed to unregister ARM handler for 0x%016" PRIX64 "\n", (*it)->getStart());
+                 debugError(" Error: %s\n", strerror(errno));
+             }
+         } else {
+@@ -603,7 +603,7 @@
+ 
+         #ifdef DEBUG
+         debugOutput(DEBUG_LEVEL_VERY_VERBOSE,
+-            "read: node 0x%hX, addr = 0x%016"PRIX64", length = %zd\n",
++            "read: node 0x%hX, addr = 0x%016" PRIX64 ", length = %zd\n",
+             nodeId, addr, length);
+         printBuffer( DEBUG_LEVEL_VERY_VERBOSE, length, buffer );
+         #endif
+@@ -612,7 +612,7 @@
+     } else {
+         #ifdef DEBUG
+         debugOutput(DEBUG_LEVEL_VERBOSE,
+-                    "raw1394_read failed: node 0x%hX, addr = 0x%016"PRIX64", length = %zd\n",
++                    "raw1394_read failed: node 0x%hX, addr = 0x%016" PRIX64 ", length = %zd\n",
+                     nodeId, addr, length);
+         #endif
+         return false;
+@@ -658,7 +658,7 @@
+     }
+ 
+     #ifdef DEBUG
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"write: node 0x%hX, addr = 0x%016"PRIX64", length = %zd\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"write: node 0x%hX, addr = 0x%016" PRIX64 ", length = %zd\n",
+                 nodeId, addr, length);
+     printBuffer( DEBUG_LEVEL_VERY_VERBOSE, length, data );
+     #endif
+@@ -695,15 +695,15 @@
+         return false;
+     }
+     #ifdef DEBUG
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"lockCompareSwap64: node 0x%X, addr = 0x%016"PRIX64"\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"lockCompareSwap64: node 0x%X, addr = 0x%016" PRIX64 "\n",
+                 nodeId, addr);
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"  if (*(addr)==0x%016"PRIX64") *(addr)=0x%016"PRIX64"\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"  if (*(addr)==0x%016" PRIX64 ") *(addr)=0x%016" PRIX64 "\n",
+                 compare_value, swap_value);
+     fb_octlet_t buffer;
+     if(!read_octlet( nodeId, addr,&buffer )) {
+         debugWarning("Could not read register\n");
+     } else {
+-        debugOutput(DEBUG_LEVEL_VERBOSE,"before = 0x%016"PRIX64"\n", buffer);
++        debugOutput(DEBUG_LEVEL_VERBOSE,"before = 0x%016" PRIX64 "\n", buffer);
+     }
+     #endif
+ 
+@@ -727,7 +727,7 @@
+     if(!read_octlet( nodeId, addr,&buffer )) {
+         debugWarning("Could not read register\n");
+     } else {
+-        debugOutput(DEBUG_LEVEL_VERBOSE,"after = 0x%016"PRIX64"\n", buffer);
++        debugOutput(DEBUG_LEVEL_VERBOSE,"after = 0x%016" PRIX64 "\n", buffer);
+     }
+     #endif
+ 
+@@ -1121,7 +1121,7 @@
+ 
+ bool Ieee1394Service::registerARMHandler(ARMHandler *h) {
+     debugOutput(DEBUG_LEVEL_VERBOSE,
+-                "Registering ARM handler (%p) for 0x%016"PRIX64", length %zu\n",
++                "Registering ARM handler (%p) for 0x%016" PRIX64 ", length %zu\n",
+                 h, h->getStart(), h->getLength());
+ 
+     // FIXME: note that this will result in the ARM handlers not running in a realtime context
+@@ -1131,7 +1131,7 @@
+                                    h->getNotificationOptions(),
+                                    h->getClientTransactions());
+     if (err) {
+-        debugError("Failed to register ARM handler for 0x%016"PRIX64"\n", h->getStart());
++        debugError("Failed to register ARM handler for 0x%016" PRIX64 "\n", h->getStart());
+         debugError(" Error: %s\n", strerror(errno));
+         return false;
+     }
+@@ -1140,7 +1140,7 @@
+ }
+ 
+ bool Ieee1394Service::unregisterARMHandler( ARMHandler *h ) {
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "Unregistering ARM handler (%p) for 0x%016"PRIX64"\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE, "Unregistering ARM handler (%p) for 0x%016" PRIX64 "\n",
+         h, h->getStart());
+ 
+     for ( arm_handler_vec_t::iterator it = m_armHandlers.begin();
+@@ -1172,7 +1172,7 @@
+  */
+ nodeaddr_t Ieee1394Service::findFreeARMBlock( nodeaddr_t start, size_t length, size_t step ) {
+     debugOutput(DEBUG_LEVEL_VERBOSE,
+-                "Finding free ARM block of %zd bytes, from 0x%016"PRIX64" in steps of %zd bytes\n",
++                "Finding free ARM block of %zd bytes, from 0x%016" PRIX64 " in steps of %zd bytes\n",
+                 length, start, step);
+ 
+     int cnt=0;
+@@ -1184,11 +1184,11 @@
+         err = raw1394_arm_register(m_handle, start, length, 0, 0, 0, 0, 0);
+ 
+         if (err) {
+-            debugOutput(DEBUG_LEVEL_VERBOSE, " -> cannot use 0x%016"PRIX64"\n", start);
++            debugOutput(DEBUG_LEVEL_VERBOSE, " -> cannot use 0x%016" PRIX64 "\n", start);
+             debugError("    Error: %s\n", strerror(errno));
+             start += step;
+         } else {
+-            debugOutput(DEBUG_LEVEL_VERBOSE, " -> use 0x%016"PRIX64"\n", start);
++            debugOutput(DEBUG_LEVEL_VERBOSE, " -> use 0x%016" PRIX64 "\n", start);
+             err = raw1394_arm_unregister(m_handle, start);
+             if (err) {
+                 debugOutput(DEBUG_LEVEL_VERBOSE, " error unregistering test handler\n");
+@@ -1237,7 +1237,7 @@
+             raw1394_arm_request_t arm_req = arm_req_resp->request;
+             raw1394_arm_response_t arm_resp = arm_req_resp->response;
+ 
+-            debugOutput(DEBUG_LEVEL_VERBOSE,"ARM handler for address 0x%016"PRIX64" called\n",
++            debugOutput(DEBUG_LEVEL_VERBOSE,"ARM handler for address 0x%016" PRIX64 " called\n",
+                 (*it)->getStart());
+             debugOutput(DEBUG_LEVEL_VERBOSE," request type   : 0x%02X\n", request_type);
+             debugOutput(DEBUG_LEVEL_VERBOSE," request length : %04d\n", requested_length);
+@@ -1633,7 +1633,7 @@
+     debugOutput( DEBUG_LEVEL_VERBOSE, " Name: %s\n", getPortName().c_str() );
+     debugOutput( DEBUG_LEVEL_VERBOSE, " CycleTimerHelper: %p, IsoManager: %p, WatchDog: %p\n",
+                  m_pCTRHelper, m_pIsoManager, m_pWatchdog );
+-    debugOutput( DEBUG_LEVEL_VERBOSE, " Time: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++    debugOutput( DEBUG_LEVEL_VERBOSE, " Time: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                 ctr,
+                 (unsigned int)TICKS_TO_SECS( ctr ),
+                 (unsigned int)TICKS_TO_CYCLES( ctr ),
+--- src/libieee1394/CycleTimerHelper.cpp	2016-10-26 14:07:21.869755085 +0200
++++ src/libieee1394/CycleTimerHelper.cpp	2016-10-26 14:22:34.149350021 +0200
+@@ -163,10 +163,10 @@
+                         "Bogus CTR: %08X on try %02d\n",
+                         m_cycle_timer_prev, maxtries2);
+         }
+-        debugOutput( DEBUG_LEVEL_VERBOSE, " read : CTR: %11u, local: %17"PRIu64"\n",
++        debugOutput( DEBUG_LEVEL_VERBOSE, " read : CTR: %11u, local: %17" PRIu64 "\n",
+                             m_cycle_timer_prev, local_time);
+         debugOutput(DEBUG_LEVEL_VERBOSE,
+-                           "  ctr   : 0x%08X %11"PRIu64" (%03us %04ucy %04uticks)\n",
++                           "  ctr   : 0x%08X %11" PRIu64 " (%03us %04ucy %04uticks)\n",
+                            (uint32_t)m_cycle_timer_prev, (uint64_t)CYCLE_TIMER_TO_TICKS(m_cycle_timer_prev),
+                            (unsigned int)CYCLE_TIMER_GET_SECS( m_cycle_timer_prev ),
+                            (unsigned int)CYCLE_TIMER_GET_CYCLES( m_cycle_timer_prev ),
+@@ -291,10 +291,10 @@
+     uint64_t cycle_timer_ticks = CYCLE_TIMER_TO_TICKS(cycle_timer);
+     #endif
+ 
+-    debugOutputExtreme( DEBUG_LEVEL_VERY_VERBOSE, " read : CTR: %11u, local: %17"PRIu64"\n",
++    debugOutputExtreme( DEBUG_LEVEL_VERY_VERBOSE, " read : CTR: %11u, local: %17" PRIu64 "\n",
+                         cycle_timer, local_time);
+     debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                       "  ctr   : 0x%08X %11"PRIu64" (%03us %04ucy %04uticks)\n",
++                       "  ctr   : 0x%08X %11" PRIu64 " (%03us %04ucy %04uticks)\n",
+                        (uint32_t)cycle_timer, (uint64_t)cycle_timer_ticks,
+                        (unsigned int)TICKS_TO_SECS( (uint64_t)cycle_timer_ticks ),
+                        (unsigned int)TICKS_TO_CYCLES( (uint64_t)cycle_timer_ticks ),
+@@ -351,7 +351,7 @@
+         #ifdef DEBUG
+         ffado_microsecs_t now = Util::SystemTimeSource::getCurrentTimeAsUsecs();
+         int sleep_time = m_sleep_until - now;
+-        debugOutput( DEBUG_LEVEL_ULTRA_VERBOSE, "(%p) Sleep until %"PRId64"/%f (now: %"PRId64", diff=%d) ...\n",
++        debugOutput( DEBUG_LEVEL_ULTRA_VERBOSE, "(%p) Sleep until %" PRId64 "/%f (now: %" PRId64 ", diff=%d) ...\n",
+                     this, m_sleep_until, m_next_time_usecs, now, sleep_time);
+         #endif
+         Util::SystemTimeSource::SleepUsecAbsolute(m_sleep_until);
+@@ -402,7 +402,7 @@
+         not_good = (-err_ticks > 1*TICKS_PER_CYCLE || err_ticks > 1*TICKS_PER_CYCLE);
+         if(not_good) {
+             debugOutput(DEBUG_LEVEL_VERBOSE, 
+-                        "(%p) have to retry CTR read, diff unrealistic: diff: %"PRId64", max: +/- %u (try: %d) %"PRId64"\n", 
++                        "(%p) have to retry CTR read, diff unrealistic: diff: %" PRId64 ", max: +/- %u (try: %d) %" PRId64 "\n", 
+                         this, err_ticks, 1*TICKS_PER_CYCLE, ntries, expected_ticks);
+             // sleep half a cycle to make sure the hardware moved on
+             Util::SystemTimeSource::SleepUsecRelative(USECS_PER_CYCLE / 2);
+@@ -431,10 +431,10 @@
+         return true;
+     }
+ 
+-    debugOutputExtreme( DEBUG_LEVEL_ULTRA_VERBOSE, " read : CTR: %11u, local: %17"PRIu64"\n",
++    debugOutputExtreme( DEBUG_LEVEL_ULTRA_VERBOSE, " read : CTR: %11u, local: %17" PRIu64 "\n",
+                         cycle_timer, local_time);
+     debugOutputExtreme(DEBUG_LEVEL_ULTRA_VERBOSE,
+-                       "  ctr   : 0x%08X %11"PRIu64" (%03us %04ucy %04uticks)\n",
++                       "  ctr   : 0x%08X %11" PRIu64 " (%03us %04ucy %04uticks)\n",
+                        (uint32_t)cycle_timer, (uint64_t)cycle_timer_ticks,
+                        (unsigned int)TICKS_TO_SECS( (uint64_t)cycle_timer_ticks ),
+                        (unsigned int)TICKS_TO_CYCLES( (uint64_t)cycle_timer_ticks ),
+@@ -448,7 +448,7 @@
+         m_first_run = false;
+     } else if (diff_ticks > m_ticks_per_update * 20) {
+         debugOutput(DEBUG_LEVEL_VERBOSE,
+-                    "re-init dll due to too large tick diff: %"PRId64" >> %f\n",
++                    "re-init dll due to too large tick diff: %" PRId64 " >> %f\n",
+                     diff_ticks, (float)(m_ticks_per_update * 20));
+         if(!initDLL()) {
+             debugError("(%p) Could not init DLL\n", this);
+@@ -474,7 +474,7 @@
+         if (ticks_late >= 0) {
+             diff_ticks_corr = diff_ticks - ticks_late;
+             debugOutputExtreme(DEBUG_LEVEL_ULTRA_VERBOSE,
+-                               "diff_ticks_corr=%"PRId64", diff_ticks = %"PRId64", ticks_late = %"PRId64"\n",
++                               "diff_ticks_corr=%" PRId64 ", diff_ticks = %" PRId64 ", ticks_late = %" PRId64 "\n",
+                                diff_ticks_corr, diff_ticks, ticks_late);
+         } else {
+             debugError("Early wakeup, should not happen!\n");
+@@ -485,7 +485,7 @@
+         #ifdef DEBUG
+         // makes no sense if not running realtime
+         if(m_realtime && usecs_late > 1000) {
+-            debugOutput(DEBUG_LEVEL_VERBOSE, "Rather late wakeup: %"PRId64" usecs\n", usecs_late);
++            debugOutput(DEBUG_LEVEL_VERBOSE, "Rather late wakeup: %" PRId64 " usecs\n", usecs_late);
+         }
+         #endif
+ 
+@@ -538,26 +538,26 @@
+         m_next_time_usecs += m_usecs_per_update;
+ 
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE, 
+-                           " usecs: current: %f next: %f usecs_late=%"PRId64" ticks_late=%"PRId64"\n",
++                           " usecs: current: %f next: %f usecs_late=%" PRId64 " ticks_late=%" PRId64 "\n",
+                            m_current_time_usecs, m_next_time_usecs, usecs_late, ticks_late);
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                           " ticks: current: %f next: %f diff=%"PRId64"\n",
++                           " ticks: current: %f next: %f diff=%" PRId64 "\n",
+                            m_current_time_ticks, m_next_time_ticks, diff_ticks);
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                           " ticks: current: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                           " ticks: current: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                            (uint64_t)m_current_time_ticks,
+                            (unsigned int)TICKS_TO_SECS( (uint64_t)m_current_time_ticks ),
+                            (unsigned int)TICKS_TO_CYCLES( (uint64_t)m_current_time_ticks ),
+                            (unsigned int)TICKS_TO_OFFSET( (uint64_t)m_current_time_ticks ) );
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                           " ticks: next   : %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                           " ticks: next   : %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                            (uint64_t)m_next_time_ticks,
+                            (unsigned int)TICKS_TO_SECS( (uint64_t)m_next_time_ticks ),
+                            (unsigned int)TICKS_TO_CYCLES( (uint64_t)m_next_time_ticks ),
+                            (unsigned int)TICKS_TO_OFFSET( (uint64_t)m_next_time_ticks ) );
+ 
+         debugOutputExtreme(DEBUG_LEVEL_VERY_VERBOSE,
+-                           " state: local: %11"PRIu64", dll_e2: %f, rate: %f\n",
++                           " state: local: %11" PRIu64 ", dll_e2: %f, rate: %f\n",
+                            local_time, m_dll_e2, getRate());
+     }
+ 
+@@ -601,7 +601,7 @@
+         dll_time = substractTicks(offset_in_ticks_int, -y_step_in_ticks_int);
+     }
+     int32_t ctr_diff = cycle_timer_ticks-dll_time;
+-    debugOutput(DEBUG_LEVEL_ULTRA_VERBOSE, "(%p) CTR DIFF: HW %010"PRIu64" - DLL %010u = %010d (%s)\n", 
++    debugOutput(DEBUG_LEVEL_ULTRA_VERBOSE, "(%p) CTR DIFF: HW %010" PRIu64 " - DLL %010u = %010d (%s)\n", 
+                 this, cycle_timer_ticks, dll_time, ctr_diff, (ctr_diff>0?"lag":"lead"));
+ #endif
+ 
+@@ -804,19 +804,19 @@
+     
+         if (diffTicks(cycle_timer_ticks, m_cycle_timer_ticks_prev) < 0) {
+             debugOutput( DEBUG_LEVEL_VERY_VERBOSE,
+-                        "non-monotonic CTR (try %02d): %"PRIu64" -> %"PRIu64"\n",
++                        "non-monotonic CTR (try %02d): %" PRIu64 " -> %" PRIu64 "\n",
+                         maxtries, m_cycle_timer_ticks_prev, cycle_timer_ticks);
+             debugOutput( DEBUG_LEVEL_VERY_VERBOSE,
+                         "                            : %08X -> %08X\n",
+                         m_cycle_timer_prev, *cycle_timer);
+             debugOutput( DEBUG_LEVEL_VERY_VERBOSE,
+-                        " current: %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                        " current: %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                         cycle_timer_ticks,
+                         (unsigned int)TICKS_TO_SECS( cycle_timer_ticks ),
+                         (unsigned int)TICKS_TO_CYCLES( cycle_timer_ticks ),
+                         (unsigned int)TICKS_TO_OFFSET( cycle_timer_ticks ) );
+             debugOutput( DEBUG_LEVEL_VERY_VERBOSE,
+-                        " prev   : %011"PRIu64" (%03us %04ucy %04uticks)\n",
++                        " prev   : %011" PRIu64 " (%03us %04ucy %04uticks)\n",
+                         m_cycle_timer_ticks_prev,
+                         (unsigned int)TICKS_TO_SECS( m_cycle_timer_ticks_prev ),
+                         (unsigned int)TICKS_TO_CYCLES( m_cycle_timer_ticks_prev ),
+--- src/libieee1394/configrom.cpp	2016-10-26 14:07:21.870755073 +0200
++++ src/libieee1394/configrom.cpp	2016-10-26 14:24:47.147687313 +0200
+@@ -527,7 +527,7 @@
+ ConfigRom::updatedNodeId()
+ {
+     debugOutput( DEBUG_LEVEL_VERBOSE, 
+-                 "Checking for updated node id for device with GUID 0x%016"PRIX64"...\n",
++                 "Checking for updated node id for device with GUID 0x%016" PRIX64 "...\n",
+                  getGuid());
+ 
+     struct csr1212_csr* csr = NULL;
+@@ -558,14 +558,14 @@
+             | CSR1212_BE32_TO_CPU(csr->bus_info_data[4]);
+ 
+         debugOutput( DEBUG_LEVEL_VERBOSE,
+-                        " Node has GUID 0x%016"PRIX64"\n",
++                        " Node has GUID 0x%016" PRIX64 "\n",
+                         guid);
+ 
+         if ( guid == getGuid() ) {
+             debugOutput( DEBUG_LEVEL_VERBOSE, "GUID matches ours\n");
+             if ( nodeId != getNodeId() ) {
+                 debugOutput( DEBUG_LEVEL_VERBOSE,
+-                             "Device with GUID 0x%016"PRIX64" changed node id "
++                             "Device with GUID 0x%016" PRIX64 " changed node id "
+                              "from %d to %d\n",
+                              getGuid(),
+                              getNodeId(),
+@@ -573,7 +573,7 @@
+                 m_nodeId = nodeId;
+             } else {
+                 debugOutput( DEBUG_LEVEL_VERBOSE,
+-                             "Device with GUID 0x%016"PRIX64" kept node id %d\n",
++                             "Device with GUID 0x%016" PRIX64 " kept node id %d\n",
+                              getGuid(),
+                              getNodeId());
+             }
+@@ -590,7 +590,7 @@
+     }
+ 
+     debugOutput( DEBUG_LEVEL_VERBOSE,
+-                 "Device with GUID 0x%016"PRIX64" could not be found on "
++                 "Device with GUID 0x%016" PRIX64 " could not be found on "
+                  "the bus anymore (removed?)\n",
+                  getGuid() );
+     m_nodeId = INVALID_NODE_ID;
+@@ -603,7 +603,7 @@
+     using namespace std;
+     debugOutput(DEBUG_LEVEL_NORMAL, "Config ROM\n" );
+     debugOutput(DEBUG_LEVEL_NORMAL, "\tCurrent Node Id:\t%d\n",       getNodeId() );
+-    debugOutput(DEBUG_LEVEL_NORMAL, "\tGUID:\t\t\t0x%016"PRIX64"\n",       getGuid());
++    debugOutput(DEBUG_LEVEL_NORMAL, "\tGUID:\t\t\t0x%016" PRIX64 "\n",       getGuid());
+     debugOutput(DEBUG_LEVEL_NORMAL, "\tVendor Name:\t\t%s\n",         getVendorName().c_str() );
+     debugOutput(DEBUG_LEVEL_NORMAL, "\tModel Name:\t\t%s\n",          getModelName().c_str() );
+     debugOutput(DEBUG_LEVEL_NORMAL, "\tNode Vendor ID:\t\t0x%06x\n",  getNodeVendorId() );
+@@ -624,7 +624,7 @@
+     using namespace std;
+     printMessage("Config ROM\n" );
+     printMessage("\tCurrent Node Id:\t%d\n",       getNodeId() );
+-    printMessage("\tGUID:\t\t\t0x%016"PRIX64"\n",       getGuid());
++    printMessage("\tGUID:\t\t\t0x%016" PRIX64 "\n",       getGuid());
+     printMessage("\tVendor Name:\t\t%s\n",         getVendorName().c_str() );
+     printMessage("\tModel Name:\t\t%s\n",          getModelName().c_str() );
+     printMessage("\tNode Vendor ID:\t\t0x%06x\n",  getNodeVendorId() );
+--- src/genericavc/stanton/scs.cpp	2016-10-26 14:07:21.857755235 +0200
++++ src/genericavc/stanton/scs.cpp	2016-10-26 14:27:35.733579699 +0200
+@@ -71,7 +71,7 @@
+     memset(cmdBuffer, 0, sizeof(cmdBuffer));
+     // read the current value present in the register, i.e. read-ping
+     if(!readRegBlock(addr, (quadlet_t *)cmdBuffer, 1) ) {
+-        debugError("Could not read from addr 0x%012"PRIX64"\n",  addr);
++        debugError("Could not read from addr 0x%012" PRIX64 "\n",  addr);
+     } else {
+         int version = cmdBuffer[0] & 0xFFFF;
+         debugOutput(DEBUG_LEVEL_VERBOSE, "Read Ping response: %08X, Version: %d\n", cmdBuffer[0], version);
+@@ -86,7 +86,7 @@
+ 
+     // execute the command
+     if(!writeRegBlock(addr, (quadlet_t *)cmdBuffer, 1)) {
+-        debugError("Could not write to addr 0x%012"PRIX64"\n",  addr);
++        debugError("Could not write to addr 0x%012" PRIX64 "\n",  addr);
+     } else {
+         debugOutput(DEBUG_LEVEL_VERBOSE, "Write Ping succeeded\n");
+     }
+@@ -128,7 +128,7 @@
+ 
+     // execute the command
+     if(!writeRegBlock(addr, (quadlet_t *)cmdBuffer, 2)) {
+-        debugError("Could not write to addr 0x%012"PRIX64"\n", addr);
++        debugError("Could not write to addr 0x%012" PRIX64 "\n", addr);
+         return false;
+     }
+ 
+@@ -142,7 +142,7 @@
+ 
+     // execute the command
+     if(!writeRegBlock(addr, (quadlet_t *)cmdBuffer, 2)) {
+-        debugError("Could not write to addr 0x%012"PRIX64"\n", addr);
++        debugError("Could not write to addr 0x%012" PRIX64 "\n", addr);
+         return false;
+     }
+ 
+@@ -172,7 +172,7 @@
+ 
+     // execute the command
+     if(!writeRegBlock(addr, (quadlet_t *)cmdBuffer, len_quadlets)) {
+-        debugError("Could not write to addr 0x%012"PRIX64"\n", addr);
++        debugError("Could not write to addr 0x%012" PRIX64 "\n", addr);
+         return false;
+     }
+     return true;
+@@ -180,7 +180,7 @@
+ 
+ bool
+ ScsDevice::readRegBlock(fb_nodeaddr_t addr, fb_quadlet_t *data, size_t length_quads, size_t blocksize_quads) {
+-    debugOutput(DEBUG_LEVEL_VERBOSE,"Reading register 0x%016"PRIX64", length %zd quadlets, to %p\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE,"Reading register 0x%016" PRIX64 ", length %zd quadlets, to %p\n",
+         addr, length_quads, data);
+ 
+     fb_nodeid_t nodeId = getNodeId() | 0xFFC0;
+@@ -199,9 +199,9 @@
+         }
+         #endif
+ 
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "reading addr: 0x%016"PRIX64", %d quads to %p\n", curr_addr, quads_todo, curr_data);
++        debugOutput(DEBUG_LEVEL_VERBOSE, "reading addr: 0x%016" PRIX64 ", %d quads to %p\n", curr_addr, quads_todo, curr_data);
+         if(!get1394Service().read( nodeId, curr_addr, quads_todo, curr_data ) ) {
+-            debugError("Could not read %d quadlets from node 0x%04X addr 0x%012"PRIX64"\n", quads_todo, nodeId, curr_addr);
++            debugError("Could not read %d quadlets from node 0x%04X addr 0x%012" PRIX64 "\n", quads_todo, nodeId, curr_addr);
+             return false;
+         }
+ 
+@@ -214,7 +214,7 @@
+ bool
+ ScsDevice::writeRegBlock(fb_nodeaddr_t addr, fb_quadlet_t *data, size_t length_quads, size_t blocksize_quads) {
+     debugOutput(DEBUG_LEVEL_VERY_VERBOSE,
+-                "Writing register 0x%016"PRIX64", length: %zd quadlets, from %p\n",
++                "Writing register 0x%016" PRIX64 ", length: %zd quadlets, from %p\n",
+                 addr, length_quads, data);
+ 
+     fb_quadlet_t data_out[length_quads];
+@@ -237,9 +237,9 @@
+         }
+         #endif
+ 
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "writing addr: 0x%016"PRIX64", %d quads from %p\n", curr_addr, quads_todo, curr_data);
++        debugOutput(DEBUG_LEVEL_VERBOSE, "writing addr: 0x%016" PRIX64 ", %d quads from %p\n", curr_addr, quads_todo, curr_data);
+         if(!get1394Service().write( nodeId, addr, quads_todo, curr_data ) ) {
+-            debugError("Could not write %d quadlets to node 0x%04X addr 0x%012"PRIX64"\n", quads_todo, nodeId, curr_addr);
++            debugError("Could not write %d quadlets to node 0x%04X addr 0x%012" PRIX64 "\n", quads_todo, nodeId, curr_addr);
+             return false;
+         }
+         quads_done += quads_todo;
+--- src/fireworks/efc/efc_cmds_hardware.cpp	2016-10-26 14:29:06.485445145 +0200
++++ src/fireworks/efc/efc_cmds_hardware.cpp	2016-10-26 14:41:05.518455995 +0200
+@@ -126,7 +126,7 @@
+     
+     debugOutput(DEBUG_LEVEL_NORMAL, "EFC HW CAPS info:\n");
+     debugOutput(DEBUG_LEVEL_NORMAL, " Flags   : 0x%08X\n", m_flags);
+-    debugOutput(DEBUG_LEVEL_NORMAL, " GUID    : %016"PRIX64"\n", m_guid);
++    debugOutput(DEBUG_LEVEL_NORMAL, " GUID    : %016" PRIX64 "\n", m_guid);
+     debugOutput(DEBUG_LEVEL_NORMAL, " HwType  : 0x%08X\n", m_type);
+     debugOutput(DEBUG_LEVEL_NORMAL, " Version : %u\n", m_version);
+     debugOutput(DEBUG_LEVEL_NORMAL, " Vendor  : %s\n", m_vendor_name);
+--- src/dice/dice_eap.cpp	2016-10-26 14:29:06.477445245 +0200
++++ src/dice/dice_eap.cpp	2016-10-26 14:42:46.387194962 +0200
+@@ -1118,7 +1118,7 @@
+ 
+     // out-of-range check
+     if(length > maxlen) {
+-        debugError("requested length too large: %zd > %"PRIu64"\n", length, maxlen);
++        debugError("requested length too large: %zd > %" PRIu64 "\n", length, maxlen);
+         return DICE_INVALID_OFFSET;
+     }
+     return DICE_EAP_BASE + addr + offset;
+--- src/dice/dice_avdevice.cpp	2016-10-26 14:29:06.476445257 +0200
++++ src/dice/dice_avdevice.cpp	2016-10-26 14:47:52.731365133 +0200
+@@ -460,20 +460,20 @@
+     quadlet_t clock_caps;
+     readGlobalReg(DICE_REGISTER_GLOBAL_CLOCKCAPABILITIES, &clock_caps);
+     uint16_t clocks_supported = (clock_caps >> 16) & 0xFFFF;
+-    debugOutput(DEBUG_LEVEL_VERBOSE," Clock caps: 0x%08"PRIX32", supported=0x%04X\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE," Clock caps: 0x%08" PRIX32 ", supported=0x%04X\n",
+                                     clock_caps, clocks_supported);
+ 
+     quadlet_t clock_select;
+     readGlobalReg(DICE_REGISTER_GLOBAL_CLOCK_SELECT, &clock_select);
+     byte_t clock_selected = (clock_select) & 0xFF;
+-    debugOutput(DEBUG_LEVEL_VERBOSE," Clock select: 0x%08"PRIX32", selected=0x%04X\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE," Clock select: 0x%08" PRIX32 ", selected=0x%04X\n",
+                                     clock_select, clock_selected);
+     quadlet_t extended_status;
+     readGlobalReg(DICE_REGISTER_GLOBAL_EXTENDED_STATUS, &extended_status);
+     #ifdef DEBUG
+     uint16_t clock_status = (extended_status) & 0xFFFF;
+     uint16_t clock_slipping = (extended_status >> 16) & 0xFFFF;
+-    debugOutput(DEBUG_LEVEL_VERBOSE," Clock status: 0x%08"PRIX32", status=0x%04X, slip=0x%04X\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE," Clock status: 0x%08" PRIX32 ", status=0x%04X, slip=0x%04X\n",
+                                     extended_status, clock_status, clock_slipping);
+     #endif
+ 
+@@ -624,20 +624,20 @@
+     quadlet_t clock_caps;
+     readGlobalReg(DICE_REGISTER_GLOBAL_CLOCKCAPABILITIES, &clock_caps);
+     uint16_t clocks_supported = (clock_caps >> 16) & 0xFFFF;
+-    debugOutput(DEBUG_LEVEL_VERBOSE," Clock caps: 0x%08"PRIX32", supported=0x%04X\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE," Clock caps: 0x%08" PRIX32 ", supported=0x%04X\n",
+                                     clock_caps, clocks_supported);
+ 
+     quadlet_t clock_select;
+     readGlobalReg(DICE_REGISTER_GLOBAL_CLOCK_SELECT, &clock_select);
+     byte_t id = (clock_select) & 0xFF;
+-    debugOutput(DEBUG_LEVEL_VERBOSE," Clock select: 0x%08"PRIX32", selected=0x%04X\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE," Clock select: 0x%08" PRIX32 ", selected=0x%04X\n",
+                                     clock_select, id);
+     quadlet_t extended_status;
+     readGlobalReg(DICE_REGISTER_GLOBAL_EXTENDED_STATUS, &extended_status);
+     #ifdef DEBUG
+     uint16_t clock_status = (extended_status) & 0xFFFF;
+     uint16_t clock_slipping = (extended_status >> 16) & 0xFFFF;
+-    debugOutput(DEBUG_LEVEL_VERBOSE," Clock status: 0x%08"PRIX32", status=0x%04X, slip=0x%04X\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE," Clock status: 0x%08" PRIX32 ", status=0x%04X, slip=0x%04X\n",
+                                     extended_status, clock_status, clock_slipping);
+     #endif
+ 
+@@ -722,10 +722,10 @@
+     printMessage(" Global param space:\n");
+ 
+     readGlobalRegBlock(DICE_REGISTER_GLOBAL_OWNER, reinterpret_cast<fb_quadlet_t *>(&tmp_octlet), sizeof(fb_octlet_t));
+-    printMessage("  Owner            : 0x%016"PRIX64"\n",tmp_octlet);
++    printMessage("  Owner            : 0x%016" PRIX64 "\n",tmp_octlet);
+ 
+     readGlobalReg(DICE_REGISTER_GLOBAL_NOTIFICATION, &tmp_quadlet);
+-    printMessage("  Notification     : 0x%08"PRIX32"\n",tmp_quadlet);
++    printMessage("  Notification     : 0x%08" PRIX32 "\n",tmp_quadlet);
+ 
+     readGlobalReg(DICE_REGISTER_GLOBAL_NOTIFICATION, &tmp_quadlet);
+     printMessage("  Nick name        : %s\n",getNickname().c_str());
+@@ -743,16 +743,16 @@
+         (tmp_quadlet&0x1?"locked":"not locked"), (tmp_quadlet>>8) & 0xFF);
+ 
+     readGlobalReg(DICE_REGISTER_GLOBAL_EXTENDED_STATUS, &tmp_quadlet);
+-    printMessage("  Extended Status  : 0x%08"PRIX32"\n", tmp_quadlet);
++    printMessage("  Extended Status  : 0x%08" PRIX32 "\n", tmp_quadlet);
+ 
+     readGlobalReg(DICE_REGISTER_GLOBAL_SAMPLE_RATE, &tmp_quadlet);
+-    printMessage("  Samplerate       : 0x%08"PRIX32" (%"PRIu32")\n", tmp_quadlet, tmp_quadlet);
++    printMessage("  Samplerate       : 0x%08" PRIX32 " (%" PRIu32 ")\n", tmp_quadlet, tmp_quadlet);
+ 
+     readGlobalRegBlock(DICE_REGISTER_GLOBAL_VERSION, reinterpret_cast<fb_quadlet_t *>(&tmp_quadlet), sizeof(fb_quadlet_t));
+-    printMessage("  Version          : 0x%08"PRIX32"\n", tmp_quadlet);
++    printMessage("  Version          : 0x%08" PRIX32 "\n", tmp_quadlet);
+     
+     readGlobalReg(DICE_REGISTER_GLOBAL_VERSION, &tmp_quadlet);
+-    printMessage("  Version          : 0x%08"PRIX32" (%u.%u.%u.%u)\n",
++    printMessage("  Version          : 0x%08" PRIX32 " (%u.%u.%u.%u)\n",
+         tmp_quadlet,
+         DICE_DRIVER_SPEC_VERSION_NUMBER_GET_A(tmp_quadlet),
+         DICE_DRIVER_SPEC_VERSION_NUMBER_GET_B(tmp_quadlet),
+@@ -761,7 +761,7 @@
+         );
+ 
+     readGlobalReg(DICE_REGISTER_GLOBAL_CLOCKCAPABILITIES, &tmp_quadlet);
+-    printMessage("  Clock caps       : 0x%08"PRIX32"\n", tmp_quadlet);
++    printMessage("  Clock caps       : 0x%08" PRIX32 "\n", tmp_quadlet);
+ 
+     stringlist names=getClockSourceNameString();
+     printMessage("  Clock sources    :\n");
+@@ -789,9 +789,9 @@
+         printMessage("   Nb midi channels  : %3d\n", tmp_quadlet);
+ 
+         readTxReg(i, DICE_REGISTER_TX_AC3_CAPABILITIES_BASE, &tmp_quadlet);
+-        printMessage("   AC3 caps          : 0x%08"PRIX32"\n", tmp_quadlet);
++        printMessage("   AC3 caps          : 0x%08" PRIX32 "\n", tmp_quadlet);
+         readTxReg(i, DICE_REGISTER_TX_AC3_ENABLE_BASE, &tmp_quadlet);
+-        printMessage("   AC3 enable        : 0x%08"PRIX32"\n", tmp_quadlet);
++        printMessage("   AC3 enable        : 0x%08" PRIX32 "\n", tmp_quadlet);
+ 
+         stringlist channel_names=getTxNameString(i);
+         printMessage("   Channel names     :\n");
+@@ -819,9 +819,9 @@
+         printMessage("   Nb midi channels  : %3d\n", tmp_quadlet);
+ 
+         readRxReg(i, DICE_REGISTER_RX_AC3_CAPABILITIES_BASE, &tmp_quadlet);
+-        printMessage("   AC3 caps          : 0x%08"PRIX32"\n", tmp_quadlet);
++        printMessage("   AC3 caps          : 0x%08" PRIX32 "\n", tmp_quadlet);
+         readRxReg(i, DICE_REGISTER_RX_AC3_ENABLE_BASE, &tmp_quadlet);
+-        printMessage("   AC3 enable        : 0x%08"PRIX32"\n", tmp_quadlet);
++        printMessage("   AC3 enable        : 0x%08" PRIX32 "\n", tmp_quadlet);
+ 
+         stringlist channel_names = getRxNameString(i);
+         printMessage("   Channel names     :\n");
+@@ -1192,7 +1192,7 @@
+         }
+     
+         if (result != DICE_OWNER_NO_OWNER && result != swap_value) {
+-            debugWarning("Unexpected GLOBAL_OWNER register value: 0x%016"PRIX64"\n", result);
++            debugWarning("Unexpected GLOBAL_OWNER register value: 0x%016" PRIX64 "\n", result);
+             fprintf(stderr, "Could not register ourselves as owner of %s.\n", getNickname().c_str());
+             fprintf(stderr, "If the snd-dice kernel driver is present, "
+                             "either use the device via ALSA instead of FFADO, "
+@@ -1378,7 +1378,7 @@
+                 return false;
+             }
+             if(reg_isoch != 0xFFFFFFFFUL) {
+-                debugWarning("ISO_CHANNEL register != 0xFFFFFFFF (=0x%08"PRIX32") for A%s %d\n", reg_isoch, dir, n);
++                debugWarning("ISO_CHANNEL register != 0xFFFFFFFF (=0x%08" PRIX32 ") for A%s %d\n", reg_isoch, dir, n);
+                 /* The ISO channel has already been registered, probably
+                  * because the device was running before and jackd just
+                  * crashed. Let's simply reuse the previously selected
+@@ -1395,7 +1395,7 @@
+                  */
+                 // ask the IRM to use this channel
+                 if (get1394Service().allocateFixedIsoChannelGeneric(reg_isoch,p->getMaxPacketSize()) < 0) {
+-                    debugError("Cannot allocate iso channel (0x%08"PRIX32") for ATX %d\n", reg_isoch, n); 
++                    debugError("Cannot allocate iso channel (0x%08" PRIX32 ") for ATX %d\n", reg_isoch, n); 
+                 }
+ #endif
+                 isochannel=reg_isoch;
+@@ -1423,7 +1423,7 @@
+                 return false;
+             }
+             if(reg_isoch != isochannel) {
+-                debugError("ISO_CHANNEL register != 0x%08"PRIX32" (=0x%08"PRIX32") for A%s %d\n", isochannel, reg_isoch, dir, n);
++                debugError("ISO_CHANNEL register != 0x%08" PRIX32 " (=0x%08" PRIX32 ") for A%s %d\n", isochannel, reg_isoch, dir, n);
+                 return false;
+             }
+ 
+@@ -1737,10 +1737,10 @@
+ 
+ bool
+ Device::readReg(fb_nodeaddr_t offset, fb_quadlet_t *result) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading base register offset 0x%08"PRIX64"\n", offset);
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading base register offset 0x%08" PRIX64 "\n", offset);
+ 
+     if(offset >= DICE_INVALID_OFFSET) {
+-        debugError("invalid offset: 0x%016"PRIX64"\n", offset);
++        debugError("invalid offset: 0x%016" PRIX64 "\n", offset);
+         return false;
+     }
+ 
+@@ -1748,24 +1748,24 @@
+     fb_nodeid_t nodeId = getNodeId() | 0xFFC0;
+ 
+     if(!get1394Service().read_quadlet( nodeId, addr, result ) ) {
+-        debugError("Could not read from node 0x%04X addr 0x%12"PRIX64"\n", nodeId, addr);
++        debugError("Could not read from node 0x%04X addr 0x%12" PRIX64 "\n", nodeId, addr);
+         return false;
+     }
+ 
+     *result = CondSwapFromBus32(*result);
+ 
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Read result: 0x%08"PRIX32"\n", *result);
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Read result: 0x%08" PRIX32 "\n", *result);
+ 
+     return true;
+ }
+ 
+ bool
+ Device::writeReg(fb_nodeaddr_t offset, fb_quadlet_t data) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing base register offset 0x%08"PRIX64", data: 0x%08"PRIX32"\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing base register offset 0x%08" PRIX64 ", data: 0x%08" PRIX32 "\n",
+         offset, data);
+ 
+     if(offset >= DICE_INVALID_OFFSET) {
+-        debugError("invalid offset: 0x%012"PRIX64"\n", offset);
++        debugError("invalid offset: 0x%012" PRIX64 "\n", offset);
+         return false;
+     }
+ 
+@@ -1773,7 +1773,7 @@
+     fb_nodeid_t nodeId = getNodeId() | 0xFFC0;
+ 
+     if(!get1394Service().write_quadlet( nodeId, addr, CondSwapToBus32(data) ) ) {
+-        debugError("Could not write to node 0x%04X addr 0x%12"PRIX64"\n", nodeId, addr);
++        debugError("Could not write to node 0x%04X addr 0x%12" PRIX64 "\n", nodeId, addr);
+         return false;
+     }
+     return true;
+@@ -1782,12 +1782,12 @@
+ bool
+ Device::readRegBlock(fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+     debugOutput(DEBUG_LEVEL_VERBOSE,
+-                "Reading base register offset 0x%08"PRIX64", length %zd, to %p\n",
++                "Reading base register offset 0x%08" PRIX64 ", length %zd, to %p\n",
+                 offset, length, data);
+     const int blocksize_quads = 512/4;
+ 
+     if(offset >= DICE_INVALID_OFFSET) {
+-        debugError("invalid offset: 0x%012"PRIX64"\n", offset);
++        debugError("invalid offset: 0x%012" PRIX64 "\n", offset);
+         return false;
+     }
+ 
+@@ -1800,7 +1800,7 @@
+         fb_nodeaddr_t curr_addr = addr + quads_done*4;
+         fb_quadlet_t *curr_data = data + quads_done;
+         int quads_todo = length_quads - quads_done;
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "reading addr: 0x%012"PRIX64", %d quads to %p\n", curr_addr, quads_todo, curr_data);
++        debugOutput(DEBUG_LEVEL_VERBOSE, "reading addr: 0x%012" PRIX64 ", %d quads to %p\n", curr_addr, quads_todo, curr_data);
+         
+         if (quads_todo > blocksize_quads) {
+             debugOutput(DEBUG_LEVEL_VERBOSE, "Truncating read from %d to %d quadlets\n", quads_todo, blocksize_quads);
+@@ -1813,7 +1813,7 @@
+         #endif
+ 
+         if(!get1394Service().read( nodeId, curr_addr, quads_todo, curr_data ) ) {
+-            debugError("Could not read %d quadlets from node 0x%04X addr 0x%012"PRIX64"\n", quads_todo, nodeId, curr_addr);
++            debugError("Could not read %d quadlets from node 0x%04X addr 0x%012" PRIX64 "\n", quads_todo, nodeId, curr_addr);
+             return false;
+         }
+         quads_done += quads_todo;
+@@ -1825,12 +1825,12 @@
+ 
+ bool
+ Device::writeRegBlock(fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing base register offset 0x%08"PRIX64", length: %zd\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing base register offset 0x%08" PRIX64 ", length: %zd\n",
+         offset, length);
+     const int blocksize_quads = 512/4;
+ 
+     if(offset >= DICE_INVALID_OFFSET) {
+-        debugError("invalid offset: 0x%012"PRIX64"\n", offset);
++        debugError("invalid offset: 0x%012" PRIX64 "\n", offset);
+         return false;
+     }
+ 
+@@ -1857,7 +1857,7 @@
+         #endif
+ 
+         if(!get1394Service().write( nodeId, addr, quads_todo, curr_data ) ) {
+-            debugError("Could not write %d quadlets to node 0x%04X addr 0x%012"PRIX64"\n", quads_todo, nodeId, curr_addr);
++            debugError("Could not write %d quadlets to node 0x%04X addr 0x%012" PRIX64 "\n", quads_todo, nodeId, curr_addr);
+             return false;
+         }
+         quads_done += quads_todo;
+@@ -1868,7 +1868,7 @@
+ 
+ bool
+ Device::readGlobalReg(fb_nodeaddr_t offset, fb_quadlet_t *result) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading global register offset 0x%04"PRIX64"\n", offset);
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading global register offset 0x%04" PRIX64 "\n", offset);
+ 
+     fb_nodeaddr_t offset_gl = globalOffsetGen(offset, sizeof(fb_quadlet_t));
+     return readReg(m_global_reg_offset + offset_gl, result);
+@@ -1876,7 +1876,7 @@
+ 
+ bool
+ Device::writeGlobalReg(fb_nodeaddr_t offset, fb_quadlet_t data) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing global register offset 0x%08"PRIX64", data: 0x%08"PRIX32"\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing global register offset 0x%08" PRIX64 ", data: 0x%08" PRIX32 "\n",
+         offset, data);
+ 
+     fb_nodeaddr_t offset_gl = globalOffsetGen(offset, sizeof(fb_quadlet_t));
+@@ -1885,7 +1885,7 @@
+ 
+ bool
+ Device::readGlobalRegBlock(fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading global register block offset 0x%04"PRIX64", length %zd bytes\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading global register block offset 0x%04" PRIX64 ", length %zd bytes\n",
+         offset, length);
+ 
+     fb_nodeaddr_t offset_gl = globalOffsetGen(offset, length);
+@@ -1894,7 +1894,7 @@
+ 
+ bool
+ Device::writeGlobalRegBlock(fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing global register block offset 0x%04"PRIX64", length: %zd bytes\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing global register block offset 0x%04" PRIX64 ", length: %zd bytes\n",
+         offset, length);
+ 
+     fb_nodeaddr_t offset_gl = globalOffsetGen(offset, length);
+@@ -1912,7 +1912,7 @@
+     }
+     // out-of-range check
+     if(offset+length > m_global_reg_offset+m_global_reg_size) {
+-        debugError("register offset+length too large: 0x%04"PRIX64"\n", offset + length);
++        debugError("register offset+length too large: 0x%04" PRIX64 "\n", offset + length);
+         return DICE_INVALID_OFFSET;
+     }
+ 
+@@ -1921,7 +1921,7 @@
+ 
+ bool
+ Device::readTxReg(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t *result) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "Reading tx %d register offset 0x%04"PRIX64"\n", i, offset);
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "Reading tx %d register offset 0x%04" PRIX64 "\n", i, offset);
+ 
+     fb_nodeaddr_t offset_tx = txOffsetGen(i, offset, sizeof(fb_quadlet_t));
+     return readReg(m_tx_reg_offset + offset_tx, result);
+@@ -1929,7 +1929,7 @@
+ 
+ bool
+ Device::writeTxReg(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t data) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing tx %d register offset 0x%08"PRIX64", data: 0x%08"PRIX32"\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing tx %d register offset 0x%08" PRIX64 ", data: 0x%08" PRIX32 "\n",
+         i, offset, data);
+ 
+     fb_nodeaddr_t offset_tx=txOffsetGen(i, offset, sizeof(fb_quadlet_t));
+@@ -1938,7 +1938,7 @@
+ 
+ bool
+ Device::readTxRegBlock(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading rx register block offset 0x%04"PRIX64", length: %zd bytes\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading rx register block offset 0x%04" PRIX64 ", length: %zd bytes\n",
+         offset, length);
+ 
+     fb_nodeaddr_t offset_tx=txOffsetGen(i, offset, length);
+@@ -1947,7 +1947,7 @@
+ 
+ bool
+ Device::writeTxRegBlock(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing rx register block offset 0x%04"PRIX64", length: %zd bytes\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing rx register block offset 0x%04" PRIX64 ", length: %zd bytes\n",
+         offset, length);
+ 
+     fb_nodeaddr_t offset_tx=txOffsetGen(i, offset, length);
+@@ -1979,7 +1979,7 @@
+ 
+     // out-of-range check
+     if(offset_tx + length > m_tx_reg_offset+4+m_tx_reg_size*m_nb_tx) {
+-        debugError("register offset+length too large: 0x%04"PRIX64"\n", offset_tx + length);
++        debugError("register offset+length too large: 0x%04" PRIX64 "\n", offset_tx + length);
+         return DICE_INVALID_OFFSET;
+     }
+ 
+@@ -1988,7 +1988,7 @@
+ 
+ bool
+ Device::readRxReg(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t *result) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading rx %d register offset 0x%04"PRIX64"\n", i, offset);
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading rx %d register offset 0x%04" PRIX64 "\n", i, offset);
+ 
+     fb_nodeaddr_t offset_rx=rxOffsetGen(i, offset, sizeof(fb_quadlet_t));
+     return readReg(m_rx_reg_offset + offset_rx, result);
+@@ -1996,7 +1996,7 @@
+ 
+ bool
+ Device::writeRxReg(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t data) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing rx register offset 0x%08"PRIX64", data: 0x%08"PRIX32"\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing rx register offset 0x%08" PRIX64 ", data: 0x%08" PRIX32 "\n",
+         offset, data);
+ 
+     fb_nodeaddr_t offset_rx=rxOffsetGen(i, offset, sizeof(fb_quadlet_t));
+@@ -2005,7 +2005,7 @@
+ 
+ bool
+ Device::readRxRegBlock(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading rx register block offset 0x%04"PRIX64", length: %zd bytes\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Reading rx register block offset 0x%04" PRIX64 ", length: %zd bytes\n",
+         offset, length);
+ 
+     fb_nodeaddr_t offset_rx=rxOffsetGen(i, offset, length);
+@@ -2014,7 +2014,7 @@
+ 
+ bool
+ Device::writeRxRegBlock(unsigned int i, fb_nodeaddr_t offset, fb_quadlet_t *data, size_t length) {
+-    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing rx register block offset 0x%04"PRIX64", length: %zd bytes\n",
++    debugOutput(DEBUG_LEVEL_VERY_VERBOSE,"Writing rx register block offset 0x%04" PRIX64 ", length: %zd bytes\n",
+         offset, length);
+ 
+     fb_nodeaddr_t offset_rx=rxOffsetGen(i, offset, length);
+@@ -2046,7 +2046,7 @@
+ 
+     // out-of-range check
+     if(offset_rx + length > m_rx_reg_offset+4+m_rx_reg_size*m_nb_rx) {
+-        debugError("register offset+length too large: 0x%04"PRIX64"\n", offset_rx + length);
++        debugError("register offset+length too large: 0x%04" PRIX64 "\n", offset_rx + length);
+         return DICE_INVALID_OFFSET;
+     }
+     return offset_rx;
+--- src/debugmodule/debugmodule.cpp	2016-10-26 14:29:06.475445270 +0200
++++ src/debugmodule/debugmodule.cpp	2016-10-26 14:49:45.165959507 +0200
+@@ -187,7 +187,7 @@
+     // format the message such that it remains together
+     int chars_written=0;
+     int retval=0;
+-    retval = snprintf(msg, MB_BUFFERSIZE, "%011"PRIu64": %s (%s)[%4u] %s: ", 
++    retval = snprintf(msg, MB_BUFFERSIZE, "%011" PRIu64 ": %s (%s)[%4u] %s: ", 
+                       ts_usec, getPreSequence( level ),
+                       fname,  line,  function );
+     if (retval >= 0) chars_written += retval; // ignore errors
+--- src/bebob/focusrite/focusrite_saffire.cpp	2016-10-26 14:29:06.469445345 +0200
++++ src/bebob/focusrite/focusrite_saffire.cpp	2016-10-26 14:51:19.121784898 +0200
+@@ -47,11 +47,11 @@
+     int delaytime = 0;
+     if(config.getValueForDeviceSetting(getConfigRom().getNodeVendorId(), getConfigRom().getModelId(), "cmd_interval_time", delaytime)) {
+         m_cmd_time_interval = delaytime;
+-        debugOutput( DEBUG_LEVEL_VERBOSE, "Setting command interval time to %"PRIu64"\n",
++        debugOutput( DEBUG_LEVEL_VERBOSE, "Setting command interval time to %" PRIu64 "\n",
+                      m_cmd_time_interval );
+     } else {
+         m_cmd_time_interval = 10000;
+-        debugOutput( DEBUG_LEVEL_VERBOSE, "No command interval time setting found, defaulting to %"PRIu64"\n",
++        debugOutput( DEBUG_LEVEL_VERBOSE, "No command interval time setting found, defaulting to %" PRIu64 "\n",
+                      m_cmd_time_interval );
+     }
+ }
+--- src/bebob/focusrite/focusrite_generic.cpp	2016-10-26 14:29:06.469445345 +0200
++++ src/bebob/focusrite/focusrite_generic.cpp	2016-10-26 14:52:59.185533929 +0200
+@@ -68,7 +68,7 @@
+     ffado_microsecs_t now = Util::SystemTimeSource::getCurrentTimeAsUsecs();
+     if(m_cmd_time_interval && (m_earliest_next_cmd_time > now)) {
+         ffado_microsecs_t wait = m_earliest_next_cmd_time - now;
+-        debugOutput( DEBUG_LEVEL_VERBOSE, "Rate control... %"PRIu64"\n", wait );
++        debugOutput( DEBUG_LEVEL_VERBOSE, "Rate control... %" PRIu64 "\n", wait );
+         Util::SystemTimeSource::SleepUsecRelative(wait);
+     }
+     m_earliest_next_cmd_time = now + m_cmd_time_interval;
+@@ -93,7 +93,7 @@
+     ffado_microsecs_t now = Util::SystemTimeSource::getCurrentTimeAsUsecs();
+     if(m_cmd_time_interval && (m_earliest_next_cmd_time > now)) {
+         ffado_microsecs_t wait = m_earliest_next_cmd_time - now;
+-        debugOutput( DEBUG_LEVEL_VERBOSE, "Rate control... %"PRIu64"\n", wait );
++        debugOutput( DEBUG_LEVEL_VERBOSE, "Rate control... %" PRIu64 "\n", wait );
+         Util::SystemTimeSource::SleepUsecRelative(wait);
+     }
+     m_earliest_next_cmd_time = now + m_cmd_time_interval;
+@@ -168,7 +168,7 @@
+     fb_nodeid_t nodeId = getNodeId() | 0xFFC0;
+ 
+     if(!get1394Service().write_quadlet( nodeId, addr, CondSwapToBus32(data) ) ) {
+-        debugError("Could not write to node 0x%04X addr 0x%012"PRIX64"\n", nodeId, addr);
++        debugError("Could not write to node 0x%04X addr 0x%012" PRIX64 "\n", nodeId, addr);
+         return false;
+     }
+     return true;
+@@ -184,7 +184,7 @@
+     fb_nodeid_t nodeId = getNodeId() | 0xFFC0;
+ 
+     if(!get1394Service().read_quadlet( nodeId, addr, &result ) ) {
+-        debugError("Could not read from node 0x%04X addr 0x%012"PRIX64"\n", nodeId, addr);
++        debugError("Could not read from node 0x%04X addr 0x%012" PRIX64 "\n", nodeId, addr);
+         return false;
+     }
+ 
+@@ -384,7 +384,7 @@
+ bool
+ RegisterControl::setValue(uint64_t addr, uint64_t v)
+ {
+-    debugOutput(DEBUG_LEVEL_VERBOSE, "setValue for addr %"PRIu64" to %"PRIu64"\n",
++    debugOutput(DEBUG_LEVEL_VERBOSE, "setValue for addr %" PRIu64 " to %" PRIu64 "\n",
+                                      addr, v);
+ 
+     if ( !m_Parent.setSpecificValue(addr, v) ) {
+@@ -402,7 +402,7 @@
+         debugError( "getSpecificValue failed\n" );
+         return 0;
+     } else {
+-        debugOutput(DEBUG_LEVEL_VERBOSE, "getValue for %"PRIu64" = %u\n", 
++        debugOutput(DEBUG_LEVEL_VERBOSE, "getValue for %" PRIu64 " = %u\n", 
+                                          addr, val);
+         return val;
+     }
+--- src/bebob/bebob_avdevice.cpp	2016-10-26 14:29:06.464445407 +0200
++++ src/bebob/bebob_avdevice.cpp	2016-10-26 14:54:54.895087360 +0200
+@@ -835,7 +835,7 @@
+     std::string sDevicePath = getCachePath() + getConfigRom().getGuidString();
+ 
+     char* configId;
+-    asprintf(&configId, "%016"PRIx64"", getConfigurationId() );
++    asprintf(&configId, "%016" PRIx64 "", getConfigurationId() );
+     if ( !configId ) {
+         debugError( "could not create id string\n" );
+         return false;
+@@ -911,7 +911,7 @@
+ 
+     // come up with an unique file name for the current settings
+     char* configId;
+-    asprintf(&configId, "%016"PRIx64"", BeBoB::Device::getConfigurationId() );
++    asprintf(&configId, "%016" PRIx64 "", BeBoB::Device::getConfigurationId() );
+     if ( !configId ) {
+         debugError( "Could not create id string\n" );
+         return false;
+--- src/DeviceStringParser.cpp	2016-10-26 14:29:06.463445420 +0200
++++ src/DeviceStringParser.cpp	2016-10-26 14:56:22.167996299 +0200
+@@ -201,7 +201,7 @@
+             return retval;
+         case eGUID:
+             retval = m_guid && (m_guid == x.m_guid);
+-            debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "eGUID 0x%016"PRIX64" == 0x%016"PRIX64"? %d\n",
++            debugOutput(DEBUG_LEVEL_VERY_VERBOSE, "eGUID 0x%016" PRIX64 " == 0x%016" PRIX64 "? %d\n",
+                         m_guid, x.m_guid, retval);
+             return retval;
+         case eInvalid:
+@@ -223,7 +223,7 @@
+             break;
+         case eGUID:
+             debugOutput(DEBUG_LEVEL_INFO, "type: eGUID\n");
+-            debugOutput(DEBUG_LEVEL_INFO, " GUID: %016"PRIX64"\n", m_guid);
++            debugOutput(DEBUG_LEVEL_INFO, " GUID: %016" PRIX64 "\n", m_guid);
+             break;
+         case eInvalid:
+         default:

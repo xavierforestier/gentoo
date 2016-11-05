@@ -1,0 +1,3432 @@
+diff -ru SConstruct SConstruct
+--- SConstruct	2016-10-27 14:26:11.521932412 +0200
++++ SConstruct	2016-10-27 14:42:29.114710820 +0200
+@@ -393,18 +393,18 @@
+ 
+ # PyQT checks
+ if env['BUILD_MIXER'] != 'false':
+-    if conf.CheckForApp( 'which pyuic4' ) and conf.CheckForPyModule( 'dbus' ) and conf.CheckForPyModule( 'PyQt4' ) and conf.CheckForPyModule( 'dbus.mainloop.qt' ):
++    if conf.CheckForApp( 'which pyuic5' ) and conf.CheckForPyModule( 'dbus' ) and conf.CheckForPyModule( 'PyQt5' ) and conf.CheckForPyModule( 'dbus.mainloop.qt' ):
+         env['BUILD_MIXER'] = 'true'
+     elif not env.GetOption('clean'):
+         if env['BUILD_MIXER'] == 'auto':
+             env['BUILD_MIXER'] = 'false'
+             print """
+-The prerequisites ('pyuic4' and the python-modules 'dbus' and 'PyQt4', the
++The prerequisites ('pyuic5' and the python-modules 'dbus' and 'PyQt5', the
+ packages could be named like dbus-python and PyQt) to build the mixer were not
+ found. Therefore the qt4 mixer will not be installed."""
+         else: # env['BUILD_MIXER'] == 'true'
+             print """
+-The prerequisites ('pyuic4' and the python-modules 'dbus' and 'PyQt4', the
++The prerequisites ('pyuic5' and the python-modules 'dbus' and 'PyQt5', the
+ packages could be named like dbus-python and PyQt) to build the mixer were not
+ found, but BUILD_MIXER was requested."""
+             Exit( 1 )
+diff -ru admin/pyuic4.py admin/pyuic4.py
+--- admin/pyuic4.py	2016-10-27 14:26:11.266935600 +0200
++++ admin/pyuic4.py	2016-10-27 14:42:29.139710508 +0200
+@@ -30,7 +30,7 @@
+ def pyuic4_string( target, source, env ):
+ 	return "building '%s' from '%s'" % ( str(target[0]), str( source[0] ) )
+ 
+-def PyQt4Check( context ):
++def PyQt5Check( context ):
+ 	context.Message( "Checking for pyuic4 (by checking for the python module pyqtconfig) " )
+ 	ret = True
+ 	try:
+@@ -42,7 +42,7 @@
+ 
+ def generate( env, **kw ):
+ 	env['BUILDERS']['PyUIC4'] = env.Builder( action=pyuic4_action, src_suffix=".ui", single_source=True )
+-	env['PYUIC4_TESTS'] = { "PyQt4Check" : PyQt4Check }
++	env['PYUIC4_TESTS'] = { "PyQt5Check" : PyQt5Check }
+ 
+ 
+ def exists( env ):
+diff -ur support/mixer-qt4/ffado/config.py.in support/mixer-qt4/ffado/config.py.in
+--- support/mixer-qt4/ffado/config.py.in        2016-10-28 11:34:47.770573382 +0200
++++ support/mixer-qt4/ffado/config.py.in        2016-10-28 11:33:32.780510887 +0200
+@@ -18,6 +18,8 @@
+ SYSTEM_CONFIG_FILE = "$SYSTEM_CONFIG_FILE"
+ 
+ DEBUG = $DEBUG
++#If set true it will open all mixer
++DEBUG_BYPASSDBUS = False 
+ 
+ UIDIR = PYTHONDIR
+ import os.path
+@@ -27,7 +29,7 @@
+     UIDIR = "."
+ 
+ import os.path
+-from PyQt4 import uic
++from PyQt5 import uic
+ def uicLoad(file, object):
+     if not file.endswith(".ui"):
+         file += ".ui"
+diff -ru support/tools/ffado-diag-static support/tools/ffado-diag-static
+--- support/tools/ffado-diag-static	2016-10-27 14:26:11.373934262 +0200
++++ support/tools/ffado-diag-static	2016-10-27 14:42:29.199709758 +0200
+@@ -75,7 +75,7 @@
+     # check libraries
+     print("   gcc ............... %s" % get_version_first_line('gcc --version'))
+     print("   g++ ............... %s" % get_version_first_line('g++ --version'))
+-    print("   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version'))
++    print("   PyQt5 (by pyuic5) . %s" % get_version_first_line('pyuic5 --version'))
+     print("   jackd ............. %s" % get_version_first_line('jackd --version'))
+     print("     path ............ %s" % get_command_path('jackd'))
+     print("     flags ........... %s" % get_package_flags("jack"))
+diff -ru support/tools/ffado-diag.in support/tools/ffado-diag.in
+--- support/tools/ffado-diag.in	2016-10-27 14:26:11.450933300 +0200
++++ support/tools/ffado-diag.in	2016-10-27 14:42:29.201709733 +0200
+@@ -120,7 +120,7 @@
+     print( " Prerequisites (dynamic at run-time)...")
+     print( "   gcc ............... %s" % get_version_first_line('gcc --version'))
+     print( "   g++ ............... %s" % get_version_first_line('g++ --version'))
+-    print( "   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version'))
++    print( "   PyQt5 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version'))
+     print( "   jackd ............. %s" % get_version_first_line('jackd --version'))
+     print( "     path ............ %s" % get_command_path('jackd'))
+     print( "     flags ........... %s" % get_package_flags("jack"))
+diff -ur support/mixer-qt4/ffado/configuration.py support/mixer-qt4/ffado/configuration.py
+--- support/mixer-qt4/ffado/configuration.py	2016-10-29 10:36:06.099310750 +0200
++++ support/mixer-qt4/ffado/configuration.py	2016-10-28 12:12:35.849218000 +0200
+@@ -55,9 +55,12 @@
+     def getDeviceById( self, vendor, model ):
+         log.debug("DeviceList::getDeviceById( %s, %s )" % (vendor, model ))
+         for dev in self.devices:
+-            if int("%s" % dev['vendorid'], 0) == int("%s" % vendor, 0) and \
+-               int("%s" % dev['modelid'], 0) == int("%s" % model, 0):
+-                return dev
++            try :
++                if int("%s" % dev['vendorid'], 0) == int("%s" % vendor, 0) and \
++                    int("%s" % dev['modelid'], 0) == int("%s" % model, 0):
++                    return dev
++            except :
++                print(dev)
+         tmp = dict()
+         self.devices.append( tmp )
+         return tmp
+diff -ur support/mixer-qt4/ffado/dbus_util.py support/mixer-qt4/ffado/dbus_util.py
+--- support/mixer-qt4/ffado/dbus_util.py	2016-10-29 10:36:05.610316864 +0200
++++ support/mixer-qt4/ffado/dbus_util.py	2016-10-28 16:30:36.760680471 +0200
+@@ -21,6 +21,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
++from ffado.config import * #FFADO_VERSION, FFADO_DBUS_SERVER, FFADO_DBUS_BASEPATH
++from ffado.configuration import *
+ import dbus
+ import dbus.mainloop.qt
+ dbus.mainloop.qt.DBusQtMainLoop(set_as_default=True)
+@@ -32,11 +34,18 @@
+     def __init__(self, servername, basepath):
+         self.basepath=basepath
+         self.servername=servername
+-        self.bus=dbus.SessionBus()
++        if DEBUG_BYPASSDBUS :
++            self.devices = DeviceList( SYSTEM_CONFIG_FILE )
++            self.devices.updateFromFile( USER_CONFIG_FILE )
++        else :
++            self.bus=dbus.SessionBus()
+ 
+     def setContignuous(self, subpath, v, idx=None):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would set Continuous %s on server %s" % (path, self.servername))
++            return
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Continuous')
+             if idx == None:
+@@ -47,8 +56,11 @@
+             log.error("Failed to set Continuous %s on server %s" % (path, self.servername))
+ 
+     def getContignuous(self, subpath, idx=None):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would get Continuous %s on server %s" % (path, self.servername))
++            return 0
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Continuous')
+             if idx == None:
+@@ -60,8 +72,11 @@
+             return 0
+ 
+     def setDiscrete(self, subpath, v, idx=None):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would set Discrete %s on server %s" % (path, self.servername))
++            return
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Discrete')
+             if idx == None:
+@@ -72,8 +87,11 @@
+             log.error("Failed to set Discrete %s on server %s" % (path, self.servername))
+ 
+     def getDiscrete(self, subpath, idx=None):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would get Discrete %s on server %s" % (path, self.servername))
++            return 0
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Discrete')
+             if idx == None:
+@@ -85,8 +103,11 @@
+             return 0
+ 
+     def setText(self, subpath, v):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would set Text %s on server %s" % (path, self.servername))
++            return
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Text')
+             dev_cont.setValue(v)
+@@ -94,8 +115,11 @@
+             log.error("Failed to set Text %s on server %s" % (path, self.servername))
+ 
+     def getText(self, subpath):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would get get Text %s on server %s" % (path, self.servername))
++            return ""
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Text')
+             return dev_cont.getValue()
+@@ -104,8 +128,11 @@
+             return 0
+ 
+     def setMatrixMixerValue(self, subpath, row, col, v):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would set MatrixMixer %s on server %s" % (path, self.servername))
++            return
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.MatrixMixer')
+             dev_cont.setValue(row, col, v)
+@@ -113,8 +140,11 @@
+             log.error("Failed to set MatrixMixer %s on server %s" % (path, self.servername))
+ 
+     def getMatrixMixerValue(self, subpath, row, col):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would get MatrixMixer %s on server %s" % (path, self.servername))
++            return 0
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.MatrixMixer')
+             return dev_cont.getValue(row, col)
+@@ -123,8 +153,11 @@
+             return 0
+ 
+     def enumSelect(self, subpath, v):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would select %s on server %s" % (path, self.servername))
++            return
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Enum')
+             dev_cont.select(v)
+@@ -132,8 +165,11 @@
+             log.error("Failed to select %s on server %s" % (path, self.servername))
+ 
+     def enumSelected(self, subpath):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would get selected enum %s on server %s" % (path, self.servername))
++            return 0
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Enum')
+             return dev_cont.selected()
+@@ -142,8 +178,11 @@
+             return 0
+ 
+     def enumGetLabel(self, subpath, v):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would get enum label %s on server %s" % (path, self.servername))
++            return
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Enum')
+             return dev_cont.getEnumLabel(v)
+@@ -152,8 +191,11 @@
+             return 0
+ 
+     def enumCount(self, subpath):
++        path = self.basepath + subpath
++        if DEBUG_BYPASSDBUS :
++            log.info("DEBUG_BYPASSDBUS set, would get enum count %s on server %s" % (path, self.servername))
++            return 0
+         try:
+-            path = self.basepath + subpath
+             dev = self.bus.get_object(self.servername, path)
+             dev_cont = dbus.Interface(dev, dbus_interface='org.ffado.Control.Element.Enum')
+             return dev_cont.count()
+@@ -166,9 +208,13 @@
+     def __init__(self, servername, basepath):
+         self.basepath=basepath + '/DeviceManager'
+         self.servername=servername
+-        self.bus=dbus.SessionBus()
+-        self.dev = self.bus.get_object(self.servername, self.basepath)
+-        self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Container')
++        if DEBUG_BYPASSDBUS :
++            self.devices = DeviceList( SYSTEM_CONFIG_FILE )
++            self.devices.updateFromFile( USER_CONFIG_FILE )
++        else :
++            self.bus=dbus.SessionBus()
++            self.dev = self.bus.get_object(self.servername, self.basepath)
++            self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Container')
+ 
+         self.updateSignalHandlers = []
+         self.updateSignalHandlerArgs = {}
+@@ -179,6 +225,8 @@
+         self.destroyedSignalHandlers = []
+         self.destroyedSignalHandlerArgs = {}
+ 
++        if DEBUG_BYPASSDBUS :
++            return
+         # signal reception does not work yet since we need a mainloop for that
+         # and qt3 doesn't provide one for python/dbus
+         try:
+@@ -268,74 +316,132 @@
+                 log.error("Failed to execute handler %s" % handler)
+ 
+     def getNbDevices(self):
++        if DEBUG_BYPASSDBUS :
++            return len(self.devices.devices)
+         return self.iface.getNbElements()
+     def getDeviceName(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return str(idx)
+         return self.iface.getElementName(idx)
+ 
+ class ConfigRomInterface:
+     def __init__(self, servername, devicepath):
+         self.basepath=devicepath + '/ConfigRom'
+         self.servername=servername
+-        self.bus=dbus.SessionBus()
+-        self.dev = self.bus.get_object(self.servername, self.basepath)
+-        self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.ConfigRomX')
++        if DEBUG_BYPASSDBUS :
++            self.devices = DeviceList( SYSTEM_CONFIG_FILE )
++            self.devices.updateFromFile( USER_CONFIG_FILE )
++            self.idx = int(devicepath)
++        else :
++            self.bus=dbus.SessionBus()
++            self.dev = self.bus.get_object(self.servername, self.basepath)
++            self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.ConfigRomX')
+     def getGUID(self):
++        if DEBUG_BYPASSDBUS :
++            return str(self.idx)
+         return self.iface.getGUID()
+     def getVendorName(self):
++        if DEBUG_BYPASSDBUS :
++            return self.devices.devices[self.idx]['vendorname']
+         return self.iface.getVendorName()
+     def getModelName(self):
++        if DEBUG_BYPASSDBUS :
++            return self.devices.devices[self.idx]['modelname']
+         return self.iface.getModelName()
+     def getVendorId(self):
++        if DEBUG_BYPASSDBUS :
++            return int(self.devices.devices[self.idx]['vendorid'],16)
+         return self.iface.getVendorId()
+     def getModelId(self):
++        if DEBUG_BYPASSDBUS :
++            return int(self.devices.devices[self.idx]['modelid'],16)
+         return self.iface.getModelId()
+     def getUnitVersion(self):
++        if DEBUG_BYPASSDBUS :
++            return 0
+         return self.iface.getUnitVersion()
+ 
+ class ClockSelectInterface:
+     def __init__(self, servername, devicepath):
+         self.basepath=devicepath + '/Generic/ClockSelect'
+         self.servername=servername
+-        self.bus=dbus.SessionBus()
+-        self.dev = self.bus.get_object(self.servername, self.basepath)
+-        self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.AttributeEnum')
+-        self.iface_element = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Element')
++        if DEBUG_BYPASSDBUS :
++            self.devices = DeviceList( SYSTEM_CONFIG_FILE )
++            self.devices.updateFromFile( USER_CONFIG_FILE )
++            self.idx = devicepath
++        else :
++            self.bus=dbus.SessionBus()
++            self.dev = self.bus.get_object(self.servername, self.basepath)
++            self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.AttributeEnum')
++            self.iface_element = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Element')
+     def count(self):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         return self.iface.count()
+     def select(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         return self.iface.select(idx)
+     def selected(self):
++        if DEBUG_BYPASSDBUS :
++            return True
+         return self.iface.selected()
+     def getEnumLabel(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return "dummy"
+         return self.iface.getEnumLabel(idx)
+     def attributeCount(self):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         return self.iface.attributeCount()
+     def getAttributeValue(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         return self.iface.getAttributeValue(idx)
+     def getAttributeName(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return "dummy"
+         return self.iface.getAttributeName(idx)
+     def canChangeValue(self):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         return self.iface_element.canChangeValue()
+ 
+ class EnumInterface:
+     def __init__(self, servername, basepath):
+         self.basepath = basepath
+         self.servername = servername
+-        self.bus = dbus.SessionBus()
+-        self.dev = self.bus.get_object(self.servername, self.basepath)
+-        self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Enum')
+-        self.iface_element = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Element')
++        if DEBUG_BYPASSDBUS :
++            self.devices = DeviceList( SYSTEM_CONFIG_FILE )
++            self.devices.updateFromFile( USER_CONFIG_FILE )
++        else:
++            self.bus = dbus.SessionBus()
++            self.dev = self.bus.get_object(self.servername, self.basepath)
++            self.iface = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Enum')
++            self.iface_element = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Element')
+     def count(self):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         return self.iface.count()
+     def select(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         return self.iface.select(idx)
+     def selected(self):
++        if DEBUG_BYPASSDBUS :
++            return True
+         return self.iface.selected()
+     def getEnumLabel(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return "0"
+         return self.iface.getEnumLabel(idx)
+     def canChangeValue(self):
++        if DEBUG_BYPASSDBUS :
++            return True
+         return self.iface_element.canChangeValue()
+     def devConfigChanged(self, idx):
++        if DEBUG_BYPASSDBUS :
++            return True
+         return self.iface.devConfigChanged(idx)
+ 
+ class SamplerateSelectInterface(EnumInterface):
+@@ -350,15 +456,25 @@
+     def __init__(self, servername, basepath):
+         self.basepath=basepath
+         self.servername=servername
+-        self.bus=dbus.SessionBus()
+-        self.dev = self.bus.get_object( self.servername, self.basepath )
+-        self.iface = dbus.Interface( self.dev, dbus_interface="org.ffado.Control.Element.Text" )
+-        self.iface_element = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Element')
++        if DEBUG_BYPASSDBUS :
++            self.devices = DeviceList( SYSTEM_CONFIG_FILE )
++            self.devices.updateFromFile( USER_CONFIG_FILE )
++        else:
++            self.bus=dbus.SessionBus()
++            self.dev = self.bus.get_object( self.servername, self.basepath )
++            self.iface = dbus.Interface( self.dev, dbus_interface="org.ffado.Control.Element.Text" )
++            self.iface_element = dbus.Interface(self.dev, dbus_interface='org.ffado.Control.Element.Element')
+     def text(self):
++        if DEBUG_BYPASSDBUS :
++            return ""
+         return self.iface.getValue()
+     def setText(self,text):
++        if DEBUG_BYPASSDBUS :
++            return "dummy"
+         self.iface.setValue(text)
+     def canChangeValue(self):
++        if DEBUG_BYPASSDBUS :
++            return True
+         return self.iface_element.canChangeValue()
+ 
+ # vim: et
+diff -ur support/mixer-qt4/ffado/ffadowindow.py support/mixer-qt4/ffado/ffadowindow.py
+--- support/mixer-qt4/ffado/ffadowindow.py	2016-10-29 10:36:06.100310738 +0200
++++ support/mixer-qt4/ffado/ffadowindow.py	2016-10-28 13:59:49.044792485 +0200
+@@ -28,8 +28,9 @@
+ 
+ import subprocess
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject, QTimer, Qt
+-from PyQt4.QtGui import *
++from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, QTimer, Qt
++from PyQt5.QtGui import *
++from PyQt5.QtWidgets import QWidget, QMainWindow, QApplication, QDockWidget, QAction, QMessageBox, QStyleFactory
+ 
+ from ffado.dbus_util import *
+ 
+@@ -51,6 +52,7 @@
+ 
+ class FFADOWindow(QMainWindow):
+     def __init__(self, parent):
++        super().__init__()
+         QMainWindow.__init__(self, parent)
+ 
+         self.textlogger = QTextLogger(self)
+@@ -63,49 +65,72 @@
+         logging.getLogger('').addHandler(self.statuslogger)
+ 
+         self.manager = PanelManager(self)
+-        self.connect(self.manager, SIGNAL("connectionLost"), self.connectToDBUS)
+-
+-        filemenu = self.menuBar().addMenu("File")
+-        self.openaction = QAction("Open", self)
++        self.manager.connectionLost.connect(self.connectToDBUS)
++        #Menu File
++        filemenu = self.menuBar().addMenu("&File")
++        self.openaction = QAction(QIcon.fromTheme("document-open"),"&Open", self)
+         self.openaction.setShortcut(self.tr("Ctrl+O"))
+         self.openaction.setEnabled(False)
+-        self.connect(self.openaction, SIGNAL("triggered()"), self.manager.readSettings)
++        self.openaction.triggered.connect(self.manager.readSettings)
+         filemenu.addAction(self.openaction)
+-        self.saveaction = QAction("Save as...", self)
++        self.saveaction = QAction(QIcon.fromTheme("document-save-as"),"&Save as...", self)
+         self.saveaction.setShortcut(self.tr("Ctrl+S"))
+         self.saveaction.setEnabled(False)
+-        self.connect(self.saveaction, SIGNAL("triggered()"), self.manager.saveSettings)
++        self.saveaction.triggered.connect(self.manager.saveSettings)
+         filemenu.addAction(self.saveaction)
+-        quitaction = QAction("Quit", self)
+-        quitaction.setShortcut(self.tr("Ctrl+q"))
+-        self.connect(quitaction, SIGNAL("triggered()"), self, SLOT("close()"))
+-        filemenu.addAction(quitaction)
+-
+-        editmenu = self.menuBar().addMenu("Edit")
+-        self.updateaction = QAction("Update Mixer Panels", self)
++        self.quitaction = QAction(QIcon.fromTheme("application-exit"),"&Quit", self)
++        self.quitaction.setShortcut(self.tr("Ctrl+q"))
++        self.quitaction.triggered.connect(self.close)
++        filemenu.addAction(self.quitaction)
++        #Menu Edit
++        self.editmenu = self.menuBar().addMenu("&Devices")
++        self.updateaction = QAction(QIcon.fromTheme("view-refresh"),"&Update Mixer Panels", self)
+         self.updateaction.setEnabled(False)
+-        self.connect(self.updateaction, SIGNAL("triggered()"), self.manager.updatePanels)
+-        editmenu.addAction(self.updateaction)
+-        refreshaction = QAction("Refresh Current Panels", self)
+-        self.connect(refreshaction, SIGNAL("triggered()"), self.manager.refreshPanels)
+-        editmenu.addAction(refreshaction)
+-
+-        helpmenu = self.menuBar().addMenu( "Help" )
+-        aboutaction = QAction( "About FFADO", self )
+-        self.connect( aboutaction, SIGNAL( "triggered()" ), self.aboutFFADO )
+-        helpmenu.addAction( aboutaction )
+-        aboutqtaction = QAction( "About Qt", self )
+-        self.connect( aboutqtaction, SIGNAL( "triggered()" ), qApp, SLOT( "aboutQt()" ) )
+-        helpmenu.addAction( aboutqtaction )
++        self.updateaction.triggered.connect(self.manager.updatePanels)
++        self.editmenu.addAction(self.updateaction)
++        self.refreshaction = QAction(QIcon.fromTheme("view-refresh"),"&Refresh Current Panels", self)
++        self.refreshaction.triggered.connect(self.manager.refreshPanels)
++        self.editmenu.addAction( self.refreshaction)
++        self.editmenu.addSeparator()
++        self.devices = {}
++        #Menu Help
++        helpmenu = self.menuBar().addMenu( "&Help" )
++        themes = QStyleFactory.keys()
++        self.menuTheme = {}
++        for theme in themes:
++            self.menuTheme[theme] = QAction(QIcon.fromTheme("preferences-desktop-theme"), theme, self )
++            self.menuTheme[theme].setCheckable(True)
++            if self.style().objectName().lower() == theme.lower() :
++                self.menuTheme[theme].setDisabled(True)
++                self.menuTheme[theme].setChecked(True)
++            self.menuTheme[theme].triggered.connect(self.switchTheme )
++            helpmenu.addAction( self.menuTheme[theme] )
++        helpmenu.addSeparator()
++        self.aboutaction = QAction(QIcon.fromTheme("help-about"), "About &FFADO", self )
++        self.aboutaction.triggered.connect(self.aboutFFADO )
++        helpmenu.addAction( self.aboutaction )
++        self.aboutqtaction = QAction(QIcon.fromTheme("help-about"),  "About &Qt", self )
++        self.aboutqtaction.triggered.connect(QApplication.instance().aboutQt)
++        helpmenu.addAction( self.aboutqtaction )
+ 
+         log.info( "Starting up" )
+ 
+         QTimer.singleShot( 1, self.tryStartDBUSServer )
+-
++        
+     def __del__(self):
+         log.info("__del__")
+         del self.manager
+         log.info("__del__ finished")
++        
++    def switchTheme(self, checked) :
++        for theme in self.menuTheme :
++            if not self.menuTheme[theme].isEnabled() :
++                self.menuTheme[theme].setChecked(False)
++                self.menuTheme[theme].setDisabled(False)
++        for theme in self.menuTheme :
++            if self.menuTheme[theme].isChecked() :
++                self.menuTheme[theme].setDisabled(True)
++                QApplication.setStyle(QStyleFactory.create(theme))
+ 
+     def closeEvent(self, event):
+         log.info("closeEvent()")
+@@ -119,7 +144,7 @@
+             log.error("Could not communicate with the FFADO DBus service...")
+             if not hasattr(self,"retry"):
+                 self.retry = StartDialog(self)
+-                self.connect(self.retry.button, SIGNAL("clicked()"), self.tryStartDBUSServer)
++                self.retry.button.clicked.connect(self.tryStartDBUSServer)
+             if hasattr(self, "retry"):
+                 self.manager.setParent(None)
+                 self.setCentralWidget(self.retry)
+diff -ur support/mixer-qt4/ffado/logginghandler.py support/mixer-qt4/ffado/logginghandler.py
+--- support/mixer-qt4/ffado/logginghandler.py	2016-10-29 10:36:05.611316851 +0200
++++ support/mixer-qt4/ffado/logginghandler.py	2016-10-28 12:12:35.850218000 +0200
+@@ -20,21 +20,24 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtGui import QTextEdit, QAbstractSlider, QColor
+-from PyQt4.QtCore import QObject, SIGNAL, SLOT
++from PyQt5.QtGui     import QColor
++from PyQt5.QtWidgets import QTextEdit, QAbstractSlider
++from PyQt5.QtCore    import QObject, pyqtSignal, pyqtSlot
+ 
+ import logging
+ log = logging.getLogger('logginghandler')
+ 
+ class QStatusLogger( QObject, logging.Handler ):
++    logSig = pyqtSignal('QString',int, name='logSig')
++    
+     def __init__( self, parent, statusbar, level=logging.NOTSET ):
+         QObject.__init__( self, parent )
+         logging.Handler.__init__( self, level )
+         self.setFormatter( logging.Formatter( "%(name)s: %(message)s" ) )
+-        self.connect( self, SIGNAL("log(QString,int)"), statusbar, SLOT("showMessage(QString,int)") )
++        self.logSig.connect(statusbar.showMessage)
+ 
+     def emit( self, record ):
+-        QObject.emit( self, SIGNAL("log(QString,int)"), "%s: %s" % (record.name, record.getMessage()), 5000 )
++        self.logSig.emit("%s: %s" % (record.name, record.getMessage()), 5000 )
+ 
+ class QTextLogger( logging.Handler ):
+     def __init__( self, parent, level=logging.NOTSET ):
+Seulement dans support/mixer-qt4/ffado/mixer: __pycache__
+diff -ur support/mixer-qt4/ffado/mixer/audiofire.py support/mixer-qt4/ffado/mixer/audiofire.py
+--- support/mixer-qt4/ffado/mixer/audiofire.py	2016-10-29 10:36:05.666316164 +0200
++++ support/mixer-qt4/ffado/mixer/audiofire.py	2016-10-28 12:12:35.851218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject, Qt, QTimer
+-from PyQt4.QtGui import QWidget, QHBoxLayout, QVBoxLayout, \
++from PyQt5.QtCore import  QObject, Qt, QTimer
++from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, \
+                         QGroupBox, QTabWidget, QLabel, \
+                         QPushButton, QToolButton, QSpacerItem, QSizePolicy
+ from ffado.config import *
+@@ -146,7 +146,7 @@
+             state += 1
+         log.debug("set %s to %d" % (
+             self.DigIfaceControls[sender][0], state))
+-	self.hw.setDiscrete(self.DigIfaceControls[sender][0], state)
++        self.hw.setDiscrete(self.DigIfaceControls[sender][0], state)
+ 
+     def updatePlbkRouteControl(self, src):
+         sender = self.sender()
+@@ -179,7 +179,7 @@
+         outputtabs = QTabWidget(self)
+         outputtabslayout.addWidget( outputtabs, 1 )
+ 
+-        for outpair in range(nb_pys_out/2):
++        for outpair in range(int(nb_pys_out/2)):
+             tab = QWidget( outputtabs )
+             tablayout = QHBoxLayout( tab )
+             
+@@ -200,7 +200,7 @@
+             grpMonitorLayout = QHBoxLayout()
+             grpMonitor.setLayout(grpMonitorLayout);
+             output_id = outpair * 2
+-            for inpair in range(nb_pys_in/2):
++            for inpair in range(int(nb_pys_in/2)):
+                 # create GUI elements
+                 strip = AfMonitorWidget( grpMonitor )
+                 grpMonitorLayout.addWidget( strip, 1 )
+@@ -349,7 +349,7 @@
+     def initValues(self):
+         log.debug("Init values")
+ 
+-        for ctrl, info in self.MatrixVolumeControls.iteritems():
++        for ctrl, info in self.MatrixVolumeControls.items():
+             vol = self.hw.getMatrixMixerValue(self.MatrixVolumeControls[ctrl][0],
+                                                 self.MatrixVolumeControls[ctrl][1],
+                                                 self.MatrixVolumeControls[ctrl][2])
+@@ -359,9 +359,9 @@
+             ctrl.setValue(vol)
+ 
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('valueChanged(int)'),self.updateMatrixVolume)
++            ctrl.valueChanged.connect(self.updateMatrixVolume)
+ 
+-        for ctrl, info in self.MatrixButtonControls.iteritems():
++        for ctrl, info in self.MatrixButtonControls.items():
+             state = self.hw.getMatrixMixerValue(self.MatrixButtonControls[ctrl][0],
+                                                 self.MatrixButtonControls[ctrl][1],
+                                                 self.MatrixButtonControls[ctrl][2])
+@@ -373,9 +373,9 @@
+                 ctrl.setChecked(False)
+ 
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('clicked(bool)'),self.updateMatrixButton)
++            ctrl.clicked.connect(self.updateMatrixButton)
+ 
+-        for ctrl, info in self.MatrixRotaryControls.iteritems():
++        for ctrl, info in self.MatrixRotaryControls.items():
+             vol = self.hw.getMatrixMixerValue(self.MatrixRotaryControls[ctrl][0],
+                                                 self.MatrixRotaryControls[ctrl][1],
+                                                 self.MatrixRotaryControls[ctrl][2])
+@@ -384,9 +384,9 @@
+             ctrl.setValue(vol)
+ 
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('valueChanged(int)'),self.updateMatrixRotary)
++            ctrl.valueChanged.connect(self.updateMatrixRotary)
+ 
+-        for ctrl, info in self.VolumeControls.iteritems():
++        for ctrl, info in self.VolumeControls.items():
+             vol = self.hw.getContignuous(self.VolumeControls[ctrl][0])
+ 
+             #vol = 0x01000000-vol
+@@ -394,9 +394,9 @@
+             ctrl.setValue(vol)
+ 
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('valueChanged(int)'),self.updateVolume)
++            ctrl.valueChanged.connect(self.updateVolume)
+ 
+-        for ctrl, info in self.SelectorControls.iteritems():
++        for ctrl, info in self.SelectorControls.items():
+             state = self.hw.getDiscrete(self.SelectorControls[ctrl][0])
+             log.debug("%s state is %d" % (ctrl.objectName() , state))
+             if state:
+@@ -405,13 +405,13 @@
+                 ctrl.setChecked(False)
+ 
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('clicked(bool)'),self.updateSelector)
++            ctrl.clicked.connect(self.updateSelector)
+ 
+-        for ctrl, info in self.TriggerControls.iteritems():
++        for ctrl, info in self.TriggerControls.items():
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('clicked()'),self.updateTrigger)
++            ctrl.clicked.connect(self.updateTrigger)
+ 
+-        for ctrl, info in self.SPDIFmodeControls.iteritems():
++        for ctrl, info in self.SPDIFmodeControls.items():
+             state = self.hw.getDiscrete(self.SPDIFmodeControls[ctrl][0])
+             log.debug("%s state is %d" % (ctrl.objectName() , state))
+             if state == self.SPDIFmodeControls[ctrl][1]:
+@@ -420,25 +420,25 @@
+                 ctrl.setChecked(False)
+ 
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('toggled(bool)'),self.updateSPDIFmodeControl)
++            ctrl.toggled.connect(self.updateSPDIFmodeControl)
+ 
+-        for ctrl, info in self.DigIfaceControls.iteritems():
++        for ctrl, info in self.DigIfaceControls.items():
+             state = self.hw.getDiscrete(self.DigIfaceControls[ctrl][0])
+             # 0/2/3 is available but GUI set 0/1/2
+             if state > 0:
+                 state -= 1
+             ctrl.setCurrentIndex(state)
+-            QObject.connect(ctrl, SIGNAL('activated(int)'), self.updateDigIfaceControl)
++            ctrl.activated.connect(self.updateDigIfaceControl)
+ 
+-        for ctrl, info in self.PlbkRouteControls.iteritems():
++        for ctrl, info in self.PlbkRouteControls.items():
+             sink = self.PlbkRouteControls[ctrl][1]
+             src = self.hw.getDiscrete(self.PlbkRouteControls[ctrl][0], sink)
+             ctrl.setCurrentIndex(src)
+             self.setStreamLabel(src, sink)
+-            QObject.connect(ctrl, SIGNAL('activated(int)'), self.updatePlbkRouteControl)
++            ctrl.activated.connect(self.updatePlbkRouteControl)
+ 
+         self.update_timer = QTimer(self)
+-        QObject.connect(self.update_timer, SIGNAL('timeout()'), self.polledUpdate)
++        self.update_timer.timeout.connect(self.polledUpdate)
+         self.update_timer.start(1000)
+         self.streaming_state = -1
+ 
+diff -ur support/mixer-qt4/ffado/mixer/bcoaudio5control.py support/mixer-qt4/ffado/mixer/bcoaudio5control.py
+--- support/mixer-qt4/ffado/mixer/bcoaudio5control.py	2016-10-29 10:36:05.667316151 +0200
++++ support/mixer-qt4/ffado/mixer/bcoaudio5control.py	2016-10-28 12:12:35.851218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import QObject
++from PyQt5.QtWidgets import QWidget
+ from ffado.config import *
+ import logging
+ log = logging.getLogger('bridgeco')
+@@ -85,12 +85,12 @@
+         self.hw.setDiscrete(self.ComboControls[name][0], state)
+ 
+     def initValues(self):
+-        for name, ctrl in self.VolumeControls.iteritems():
++        for name, ctrl in self.VolumeControls.items():
+             vol = self.hw.getContignuous(ctrl[0])
+             log.debug("%s volume is %d" % (name , vol))
+             ctrl[1].setValue(-vol)
+ 
+-        for name, ctrl in self.ComboControls.iteritems():
++        for name, ctrl in self.ComboControls.items():
+             state = self.hw.getDiscrete(ctrl[0])
+             log.debug("%s state is %d" % (name , state))
+             ctrl[1].setCurrentIndex( state )
+diff -ur support/mixer-qt4/ffado/mixer/dummy.py support/mixer-qt4/ffado/mixer/dummy.py
+--- support/mixer-qt4/ffado/mixer/dummy.py	2016-10-29 10:36:05.667316151 +0200
++++ support/mixer-qt4/ffado/mixer/dummy.py	2016-10-28 12:12:35.851218000 +0200
+@@ -20,9 +20,9 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
+-from ffado.config import *
++from PyQt5.QtCore    import pyqtSignal, pyqtSlot, QObject
++from PyQt5.QtWidgets import QWidget
++from ffado.config    import *
+ 
+ class Dummy(QWidget):
+     def __init__(self,parent = None):
+diff -ur support/mixer-qt4/ffado/mixer/edirolfa101control.py support/mixer-qt4/ffado/mixer/edirolfa101control.py
+--- support/mixer-qt4/ffado/mixer/edirolfa101control.py	2016-10-29 10:36:05.675316051 +0200
++++ support/mixer-qt4/ffado/mixer/edirolfa101control.py	2016-10-28 12:12:35.852218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import QObject
++from PyQt5.QtWidgets import QWidget
+ from ffado.config import *
+ 
+ import logging
+diff -ur support/mixer-qt4/ffado/mixer/edirolfa66control.py support/mixer-qt4/ffado/mixer/edirolfa66control.py
+--- support/mixer-qt4/ffado/mixer/edirolfa66control.py	2016-10-29 10:36:05.693315826 +0200
++++ support/mixer-qt4/ffado/mixer/edirolfa66control.py	2016-10-28 12:12:35.852218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import  QObject
++from PyQt5.QtWidgets import QWidget
+ from ffado.config import *
+ 
+ import logging
+@@ -91,7 +91,7 @@
+         self.hw.setContignuous(ctrl[0], val, idx = ctrl[1])
+ 
+     def initValues(self):
+-        for name, ctrl in self.VolumeControls.iteritems():
++        for name, ctrl in self.VolumeControls.items():
+             val = self.hw.getContignuous(ctrl[0], idx = ctrl[1])
+             log.debug("%s value is %d" % (name , val))
+ 
+diff -ur support/mixer-qt4/ffado/mixer/generic_dice_eap.py support/mixer-qt4/ffado/mixer/generic_dice_eap.py
+--- support/mixer-qt4/ffado/mixer/generic_dice_eap.py	2016-10-29 10:36:06.103310700 +0200
++++ support/mixer-qt4/ffado/mixer/generic_dice_eap.py	2016-10-28 12:12:35.852218000 +0200
+@@ -19,7 +19,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore, Qt
++from PyQt5 import QtGui, QtWidgets, QtCore, Qt
++from PyQt5.QtWidgets import QScrollArea
+ import dbus
+ 
+ from ffado.widgets.matrixmixer import MatrixMixer
+@@ -27,19 +28,19 @@
+ 
+ from ffado.config import *
+ 
+-class Generic_Dice_EAP(QtGui.QWidget):
++class Generic_Dice_EAP(QtWidgets.QWidget):
+     def __init__(self, parent=None):
+-        QtGui.QWidget.__init__(self, parent)
+-        self.layout = QtGui.QGridLayout(self)
++        QtWidgets.QWidget.__init__(self, parent)
++        self.layout = QtWidgets.QGridLayout(self)
+         self.setLayout(self.layout)
+-        self.tabs = QtGui.QTabWidget(self)
+-        self.tabs.setTabPosition(QtGui.QTabWidget.West)
++        self.tabs = QtWidgets.QTabWidget(self)
++        self.tabs.setTabPosition(QtWidgets.QTabWidget.West)
+         self.layout.addWidget(self.tabs)
+ 
+     def buildMixer(self):
+         #print( self.hw )
+         #print( self.hw.getText("/Generic/Nickname") )
+-        self.mixer = MatrixMixer(self.hw.servername, self.hw.basepath+"/EAP/MatrixMixer", self, "Columns_are_outputs", -1, None, None, False, QtGui.QTabWidget.North, QtGui.QTabWidget.Rounded)
++        self.mixer = MatrixMixer(self.hw.servername, self.hw.basepath+"/EAP/MatrixMixer", self, "Columns_are_outputs", -1, None, None, False, QtWidgets.QTabWidget.North, QtWidgets.QTabWidget.Rounded)
+         self.tabs.addTab(self.mixer, "Mixer")
+ 
+         self.router_scrollarea = self.buildRouter(self.hw.servername, self.hw.basepath+"/EAP/Router")
+@@ -47,8 +48,8 @@
+ 
+     def buildRouter(self, servername, path):
+         self.router = CrossbarRouter(servername, path, self)
+-        self.connect(self.router, QtCore.SIGNAL("MixerRoutingChanged"), self.mixer.updateRouting)
+-        scrollarea = QtGui.QScrollArea(self.tabs)
++        self.router.MixerRoutingChanged.connect(self.mixer.updateRouting)
++        scrollarea = QScrollArea(self.tabs)
+         scrollarea.setWidgetResizable(True)
+         scrollarea.setWidget(self.router)
+         return scrollarea
+diff -ur support/mixer-qt4/ffado/mixer/globalmixer.py support/mixer-qt4/ffado/mixer/globalmixer.py
+--- support/mixer-qt4/ffado/mixer/globalmixer.py	2016-10-29 10:36:06.103310700 +0200
++++ support/mixer-qt4/ffado/mixer/globalmixer.py	2016-10-28 12:12:35.853218000 +0200
+@@ -21,8 +21,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import QObject, pyqtSignature
+-from PyQt4.QtGui import QWidget, QMessageBox
++from PyQt5.QtCore import QObject
++from PyQt5.QtWidgets import QWidget, QMessageBox
+ from ffado.config import *
+ 
+ import logging
+@@ -41,7 +41,7 @@
+         else:
+             self.lblName.hide()
+ 
+-    @pyqtSignature("int")
++    #@pyqtSignature("int")
+     def on_clocksource_activated( self, clock ):
+         #log.debug("updateClockSource( " + str(clock) + " )")
+         if self.clockselect.canChangeValue():
+@@ -63,7 +63,7 @@
+                 QMessageBox.Ok )
+             self.clocksource.setCurrentIndex( selected )
+ 
+-    @pyqtSignature("int")
++    #@pyqtSignature("int")
+     def on_samplerate_activated( self, sr ):
+         log.debug("on_samplerate_activated( " + str(sr) + " )")
+         # If there's no clock, don't bother trying to set the sample rate
+@@ -91,7 +91,7 @@
+                 QMessageBox.Ok )
+             self.samplerate.setCurrentIndex( selected )
+ 
+-    @pyqtSignature("")
++    #@pyqtSignature("")
+     def on_txtNickname_returnPressed( self ):
+         if self.nickname.canChangeValue():
+             asciiData = self.txtNickname.text().toAscii()
+diff -ur support/mixer-qt4/ffado/mixer/globalmixer.ui support/mixer-qt4/ffado/mixer/globalmixer.ui
+--- support/mixer-qt4/ffado/mixer/globalmixer.ui	2016-10-29 10:36:05.694315814 +0200
++++ support/mixer-qt4/ffado/mixer/globalmixer.ui	2016-10-28 17:27:19.555139686 +0200
+@@ -1,4 +1,5 @@
+-<ui version="4.0" >
++<?xml version="1.0" encoding="UTF-8"?>
++<ui version="4.0">
+  <comment>Copyright (C) 2008 by Arnold Krille
+ 	
+ 	This file is part of FFADO
+@@ -17,80 +18,129 @@
+ 	GNU General Public License for more details.
+ </comment>
+  <class>GlobalMixerUi</class>
+- <widget class="QWidget" name="GlobalMixerUi" >
+-  <property name="geometry" >
++ <widget class="QWidget" name="GlobalMixerUi">
++  <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+-    <width>591</width>
+-    <height>79</height>
++    <width>334</width>
++    <height>111</height>
+    </rect>
+   </property>
+-  <property name="sizePolicy" >
+-   <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
++  <property name="sizePolicy">
++   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+-  <property name="windowTitle" >
++  <property name="windowTitle">
+    <string>Global Mixer Options</string>
+   </property>
+-  <layout class="QGridLayout" name="gridLayout" >
+-   <item row="0" column="0" colspan="2" >
+-    <widget class="QLabel" name="lblName" >
+-     <property name="font" >
++  <layout class="QGridLayout" name="gridLayout">
++   <property name="margin">
++    <number>3</number>
++   </property>
++   <property name="spacing">
++    <number>3</number>
++   </property>
++   <item row="0" column="0" rowspan="2">
++    <widget class="QLabel" name="lblName">
++     <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+-     <property name="text" >
+-      <string>TextLabel</string>
++     <property name="pixmap">
++      <pixmap>../../../../../../../../../../tmp/mackie.png</pixmap>
++     </property>
++     <property name="scaledContents">
++      <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+-   <item row="0" column="2" >
+-    <widget class="QLabel" name="textLabel2" >
+-     <property name="text" >
+-      <string>Clock Source:</string>
++   <item row="0" column="1">
++    <widget class="QLabel" name="textLabel2">
++     <property name="toolTip">
++      <string>Clock source</string>
++     </property>
++     <property name="text">
++      <string/>
++     </property>
++     <property name="pixmap">
++      <pixmap>../../../../../../../../../../usr/share/icons/breeze/actions/22/clock.svg</pixmap>
+      </property>
+-     <property name="wordWrap" >
++     <property name="alignment">
++      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
++     </property>
++     <property name="wordWrap">
+       <bool>false</bool>
+      </property>
+-     <property name="buddy" >
++     <property name="buddy">
+       <cstring>clocksource</cstring>
+      </property>
+     </widget>
+    </item>
+-   <item row="0" column="3" >
+-    <widget class="QComboBox" name="clocksource" >
+-     <property name="sizePolicy" >
+-      <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
++   <item row="0" column="2">
++    <widget class="QComboBox" name="clocksource">
++     <property name="sizePolicy">
++      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
++     <property name="toolTip">
++      <string>Clock source</string>
++     </property>
+     </widget>
+    </item>
+-   <item row="0" column="4" colspan="2" >
+-    <widget class="QLabel" name="label" >
+-     <property name="text" >
+-      <string>Stream Status</string>
++   <item row="0" column="3">
++    <widget class="QLabel" name="textLabel2_2">
++     <property name="toolTip">
++      <string>Sample rate</string>
++     </property>
++     <property name="text">
++      <string/>
+      </property>
+-     <property name="alignment" >
+-      <set>Qt::AlignCenter</set>
++     <property name="pixmap">
++      <pixmap>../../../../../../../../../../usr/share/icons/breeze/actions/22/filename-sample-rate.svg</pixmap>
++     </property>
++     <property name="alignment">
++      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
++     </property>
++     <property name="wordWrap">
++      <bool>false</bool>
++     </property>
++     <property name="buddy">
++      <cstring>samplerate</cstring>
+      </property>
+     </widget>
+    </item>
+-   <item rowspan="2" row="0" column="6" >
++   <item row="0" column="4">
++    <widget class="QComboBox" name="samplerate">
++     <property name="enabled">
++      <bool>true</bool>
++     </property>
++     <property name="sizePolicy">
++      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
++       <horstretch>1</horstretch>
++       <verstretch>0</verstretch>
++      </sizepolicy>
++     </property>
++     <property name="toolTip">
++      <string>Sample rate</string>
++     </property>
++    </widget>
++   </item>
++   <item row="0" column="5" rowspan="3">
+     <spacer>
+-     <property name="orientation" >
++     <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+-     <property name="sizeType" >
++     <property name="sizeType">
+       <enum>QSizePolicy::Expanding</enum>
+      </property>
+-     <property name="sizeHint" stdset="0" >
++     <property name="sizeHint" stdset="0">
+       <size>
+        <width>330</width>
+        <height>10</height>
+@@ -98,84 +148,80 @@
+      </property>
+     </spacer>
+    </item>
+-   <item row="1" column="0" >
+-    <widget class="QLabel" name="textLabel1" >
+-     <property name="text" >
+-      <string>Nickname:</string>
+-     </property>
+-     <property name="wordWrap" >
++   <item row="1" column="1" colspan="2">
++    <widget class="QCheckBox" name="chkStreamOut">
++     <property name="enabled">
+       <bool>false</bool>
+      </property>
+-     <property name="buddy" >
+-      <cstring>txtNickname</cstring>
++     <property name="toolTip">
++      <string>Outgoing stream</string>
+      </property>
+-    </widget>
+-   </item>
+-   <item row="1" column="1" >
+-    <widget class="QLineEdit" name="txtNickname" >
+-     <property name="minimumSize" >
+-      <size>
+-       <width>100</width>
+-       <height>0</height>
+-      </size>
++     <property name="layoutDirection">
++      <enum>Qt::LeftToRight</enum>
++     </property>
++     <property name="text">
++      <string/>
++     </property>
++     <property name="icon">
++      <iconset>
++       <normaloff>../../../../../../../../../../usr/share/icons/Adwaita/16x16/status/network-transmit-symbolic.symbolic.png</normaloff>../../../../../../../../../../usr/share/icons/Adwaita/16x16/status/network-transmit-symbolic.symbolic.png</iconset>
+      </property>
+     </widget>
+    </item>
+-   <item row="1" column="2" >
+-    <widget class="QLabel" name="textLabel2_2" >
+-     <property name="text" >
+-      <string>Sample Rate:</string>
+-     </property>
+-     <property name="wordWrap" >
++   <item row="1" column="3" colspan="2">
++    <widget class="QCheckBox" name="chkStreamIn">
++     <property name="enabled">
+       <bool>false</bool>
+      </property>
+-     <property name="buddy" >
+-      <cstring>samplerate</cstring>
++     <property name="toolTip">
++      <string>Incoming</string>
+      </property>
+-    </widget>
+-   </item>
+-   <item row="1" column="3" >
+-    <widget class="QComboBox" name="samplerate" >
+-     <property name="enabled" >
+-      <bool>true</bool>
++     <property name="text">
++      <string/>
+      </property>
+-     <property name="sizePolicy" >
+-      <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+-       <horstretch>1</horstretch>
+-       <verstretch>0</verstretch>
+-      </sizepolicy>
++     <property name="icon">
++      <iconset>
++       <normaloff>../../../../../../../../../../usr/share/icons/Adwaita/16x16/status/network-receive-symbolic.symbolic.png</normaloff>../../../../../../../../../../usr/share/icons/Adwaita/16x16/status/network-receive-symbolic.symbolic.png</iconset>
+      </property>
+     </widget>
+    </item>
+-   <item row="1" column="4" >
+-    <widget class="QCheckBox" name="chkStreamOut" >
+-     <property name="enabled" >
+-      <bool>false</bool>
++   <item row="2" column="0" colspan="5">
++    <widget class="QLineEdit" name="txtNickname">
++     <property name="sizePolicy">
++      <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
++       <horstretch>0</horstretch>
++       <verstretch>0</verstretch>
++      </sizepolicy>
+      </property>
+-     <property name="layoutDirection" >
+-      <enum>Qt::RightToLeft</enum>
++     <property name="minimumSize">
++      <size>
++       <width>120</width>
++       <height>0</height>
++      </size>
+      </property>
+-     <property name="text" >
+-      <string>Outgoing</string>
++     <property name="maximumSize">
++      <size>
++       <width>16777215</width>
++       <height>16</height>
++      </size>
+      </property>
+-    </widget>
+-   </item>
+-   <item row="1" column="5" >
+-    <widget class="QCheckBox" name="chkStreamIn" >
+-     <property name="enabled" >
+-      <bool>false</bool>
++     <property name="font">
++      <font>
++       <weight>75</weight>
++       <bold>true</bold>
++      </font>
+      </property>
+-     <property name="layoutDirection" >
+-      <enum>Qt::RightToLeft</enum>
++     <property name="alignment">
++      <set>Qt::AlignLeft</set>
+      </property>
+-     <property name="text" >
+-      <string>Incoming</string>
++     <property name="placeholderText">
++      <string>Model</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+- <layoutdefault spacing="6" margin="11" />
++ <layoutdefault spacing="2" margin="5"/>
+  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+  <resources/>
+  <connections/>
+diff -ur support/mixer-qt4/ffado/mixer/mackie_onyxmixer.py support/mixer-qt4/ffado/mixer/mackie_onyxmixer.py
+--- support/mixer-qt4/ffado/mixer/mackie_onyxmixer.py	2016-10-29 10:36:05.694315814 +0200
++++ support/mixer-qt4/ffado/mixer/mackie_onyxmixer.py	2016-10-28 13:28:52.499002502 +0200
+@@ -20,11 +20,11 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import QObject
++from PyQt5.QtWidgets import QWidget
+ from ffado.config import *
+ 
+-class MackieOnyx(QWidget):
++class Mackie_OnyxMixer(QWidget):
+     def __init__(self,parent = None):
+         QWidget.__init__(self,parent)
+         uicLoad("ffado/mixer/mackie_onyxmixer", self)
+diff -ur support/mixer-qt4/ffado/mixer/maudio_bebob.py support/mixer-qt4/ffado/mixer/maudio_bebob.py
+--- support/mixer-qt4/ffado/mixer/maudio_bebob.py	2016-10-29 10:36:05.696315789 +0200
++++ support/mixer-qt4/ffado/mixer/maudio_bebob.py	2016-10-28 12:12:35.853218000 +0200
+@@ -1,6 +1,5 @@
+-from PyQt4.QtCore import SIGNAL, QObject, Qt
+-from PyQt4.QtGui import QSizePolicy, QHBoxLayout, QVBoxLayout, QGroupBox
+-from PyQt4.QtGui import QWidget, QTabWidget, QLabel, QSlider, QToolButton
++from PyQt5.QtCore import QObject, Qt
++from PyQt5.QtWidgets import QWidget, QTabWidget, QLabel, QSlider, QToolButton, QSizePolicy, QHBoxLayout, QVBoxLayout, QGroupBox
+ from math import log10
+ from ffado.config import *
+ 
+@@ -542,8 +541,7 @@
+             if self.id != 3:
+                 self.Selectors[widget.cmb_src] = ("/Mixer/Selector_%d" % hp_id, )
+             else:
+-                QObject.connect(widget.cmb_src, SIGNAL('activated(int)'),
+-                                self.update410HP)
++                widget.cmb_src.activated.connect(self.update410HP)
+                 self.FW410HP = widget.cmb_src
+ 
+         layout.addStretch()
+@@ -553,7 +551,7 @@
+             path = params[0]
+             state = self.hw.getDiscrete(path)
+             ctl.setCurrentIndex(state)
+-            QObject.connect(ctl, SIGNAL('activated(int)'), self.updateSelector)
++            ctl.activated.connect(self.updateSelector)
+ 
+         #       Right - Center - Left
+         # 0x8000 - 0x0000 - 0x0001 - 0x7FFE
+@@ -564,8 +562,7 @@
+             curr = self.hw.getContignuous(path, idx)
+             state = -(curr / 0x7FFE) * 50 + 50
+             ctl.setValue(state)
+-            QObject.connect(ctl, SIGNAL('valueChanged(int)'),
+-                            self.updatePanning)
++            ctl.valueChanged.connect(self.updatePanning)
+ 
+         for ctl, params in list(self.Volumes.items()):
+             path = params[0]
+@@ -576,7 +573,7 @@
+             db = self.hw.getContignuous(path, idx)
+             vol = self.db2vol(db)
+             ctl.setValue(vol)
+-            QObject.connect(ctl, SIGNAL('valueChanged(int)'), self.updateVolume)
++            ctl.valueChanged.connect(self.updateVolume)
+ 
+             # to activate link button, a pair is checked twice, sign...
+             pair_db = self.hw.getContignuous(path, p_idx)
+@@ -584,7 +581,7 @@
+                 link.setChecked(True)
+ 
+         for ctl, params in list(self.Mutes.items()):
+-            QObject.connect(ctl, SIGNAL('clicked(bool)'), self.updateMute)
++            ctl.clicked.connect(self.updateMute)
+ 
+         for ctl, params in list(self.Mixers.items()):
+             path = params[0]
+@@ -601,7 +598,7 @@
+             else:
+                 state = False
+             ctl.setChecked(state)
+-            QObject.connect(ctl, SIGNAL('clicked(bool)'), self.updateMixer)
++            ctl.clicked.connect(self.updateMixer)
+ 
+         if self.id == 3:
+             self.read410HP()
+diff -ur support/mixer-qt4/ffado/mixer/motu.py support/mixer-qt4/ffado/mixer/motu.py
+--- support/mixer-qt4/ffado/mixer/motu.py	2016-10-29 10:36:05.706315664 +0200
++++ support/mixer-qt4/ffado/mixer/motu.py	2016-10-28 12:12:35.854218000 +0200
+@@ -21,8 +21,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject, Qt
+-from PyQt4.QtGui import QWidget, QApplication
++from PyQt5.QtCore import  QObject, Qt
++from PyQt5.QtWidgets import QWidget, QApplication
+ from ffado.config import *
+ 
+ import logging
+@@ -823,39 +823,39 @@
+ 
+         # Now fetch the current values into the respective controls.  Don't
+         # bother fetching controls which are disabled.
+-        for ctrl, info in self.ChannelFaders.iteritems():
++        for ctrl, info in self.ChannelFaders.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             vol = self.hw.getMatrixMixerValue(info[0], info[1], info[2])
+             log.debug("%s for mix %d channel %d is %d" % (info[0], info[1], info[2], vol))
+             ctrl.setValue(vol)
+-            QObject.connect(ctrl, SIGNAL('valueChanged(int)'), self.updateChannelFader)
++            ctrl.valueChanged.connect(self.updateChannelFader)
+ 
+-        for ctrl, info in self.Faders.iteritems():
++        for ctrl, info in self.Faders.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             vol = self.hw.getDiscrete(info[0])
+             log.debug("%s mix fader is %d" % (info[0] , vol))
+             ctrl.setValue(vol)
+-            QObject.connect(ctrl, SIGNAL('valueChanged(int)'), self.updateFader)
++            ctrl.valueChanged.connect( self.updateFader)
+ 
+-        for ctrl, info in self.ChannelControls.iteritems():
++        for ctrl, info in self.ChannelControls.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             pan = self.hw.getMatrixMixerValue(info[0], info[1], info[2])
+             log.debug("%s for mix %d channel %d is %d" % (info[0], info[1], info[2], pan))
+             ctrl.setValue(pan)
+-            QObject.connect(ctrl, SIGNAL('valueChanged(int)'), self.updateChannelControl)
++            ctrl.valueChanged.connect(self.updateChannelControl)
+ 
+-        for ctrl, info in self.Controls.iteritems():
++        for ctrl, info in self.Controls.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             pan = self.hw.getDiscrete(info[0])
+             log.debug("%s control is %d" % (info[0] , pan))
+             ctrl.setValue(pan)
+-            QObject.connect(ctrl, SIGNAL('valueChanged(int)'), self.updateControl)
++            ctrl.valueChanged.connect(self.updateControl)
+ 
+-        for ctrl, info in self.ChannelBinarySwitches.iteritems():
++        for ctrl, info in self.ChannelBinarySwitches.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             val = self.hw.getMatrixMixerValue(info[0], info[1], info[2])
+@@ -864,9 +864,9 @@
+                 ctrl.setChecked(True)
+             else:
+                 ctrl.setChecked(False)
+-            QObject.connect(ctrl, SIGNAL('toggled(bool)'), self.updateChannelBinarySwitch)
++            ctrl.toggled.connect(self.updateChannelBinarySwitch)
+ 
+-        for ctrl, info in self.BinarySwitches.iteritems():
++        for ctrl, info in self.BinarySwitches.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             val = self.hw.getDiscrete(info[0])
+@@ -875,15 +875,15 @@
+                 ctrl.setChecked(True)
+             else:
+                 ctrl.setChecked(False)
+-            QObject.connect(ctrl, SIGNAL('toggled(bool)'), self.updateBinarySwitch)
++            ctrl.toggled.connect(self.updateBinarySwitch)
+ 
+-        for ctrl, info in self.Selectors.iteritems():
++        for ctrl, info in self.Selectors.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             dest = self.hw.getDiscrete(info[0])
+             log.debug("%s selector is %d" % (info[0] , dest))
+             ctrl.setCurrentIndex(dest)
+-            QObject.connect(ctrl, SIGNAL('activated(int)'), self.updateSelector)
++            ctrl.activated.connect(self.updateSelector)
+ 
+         # We could enable/disable ADAT controls here depending on whether
+         # the optical port is set to ADAT or something else.  A disable
+diff -ur support/mixer-qt4/ffado/mixer/motu_mark3.py support/mixer-qt4/ffado/mixer/motu_mark3.py
+--- support/mixer-qt4/ffado/mixer/motu_mark3.py	2016-10-29 10:36:05.718315514 +0200
++++ support/mixer-qt4/ffado/mixer/motu_mark3.py	2016-10-28 12:12:35.854218000 +0200
+@@ -21,8 +21,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject, Qt
+-from PyQt4.QtGui import QWidget, QApplication
++from PyQt5.QtCore import  QObject, Qt
++from PyQt5.QtWidgets import QWidget, QApplication
+ from ffado.config import *
+ 
+ import logging
+diff -ur support/mixer-qt4/ffado/mixer/nodevice.py support/mixer-qt4/ffado/mixer/nodevice.py
+--- support/mixer-qt4/ffado/mixer/nodevice.py	2016-10-29 10:36:05.718315514 +0200
++++ support/mixer-qt4/ffado/mixer/nodevice.py	2016-10-28 12:12:35.855218000 +0200
+@@ -21,7 +21,7 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtWidgets import QWidget
+ from mixer_nodeviceui import Ui_NoDeviceMixerUI
+ 
+ class NoDevice(QWidget, Ui_NoDeviceMixerUI):
+diff -ur support/mixer-qt4/ffado/mixer/phase24control.py support/mixer-qt4/ffado/mixer/phase24control.py
+--- support/mixer-qt4/ffado/mixer/phase24control.py	2016-10-29 10:36:05.741315226 +0200
++++ support/mixer-qt4/ffado/mixer/phase24control.py	2016-10-28 12:12:35.855218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import  QObject
++from PyQt5.QtWidgets import QWidget
+ from ffado.config import *
+ 
+ import logging
+@@ -141,12 +141,12 @@
+                 else:
+                     self.cmbFrontLevel.setCurrentIndex(0)
+ 
+-            for name, ctrl in self.VolumeControls.iteritems():
++            for name, ctrl in self.VolumeControls.items():
+                 vol = self.hw.getContignuous(ctrl[0])
+                 log.debug("%s volume is %d" % (name , vol))
+                 ctrl[1].setValue(-vol)
+ 
+-            for name, ctrl in self.SelectorControls.iteritems():
++            for name, ctrl in self.SelectorControls.items():
+                 state = self.hw.getDiscrete(ctrl[0])
+                 log.debug("%s state is %d" % (name , state))
+                 ctrl[1].setCurrentIndex(state)
+diff -ur support/mixer-qt4/ffado/mixer/phase88control.py support/mixer-qt4/ffado/mixer/phase88control.py
+--- support/mixer-qt4/ffado/mixer/phase88control.py	2016-10-29 10:36:05.742315213 +0200
++++ support/mixer-qt4/ffado/mixer/phase88control.py	2016-10-28 12:12:35.855218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import QObject
++from PyQt5.QtWidgets import QWidget
+ from ffado.config import *
+ 
+ import logging
+@@ -99,12 +99,12 @@
+         self.hw.setDiscrete(self.SelectorControls[name][0], state)
+ 
+     def initValues(self):
+-        for name, ctrl in self.VolumeControls.iteritems():
++        for name, ctrl in self.VolumeControls.items():
+             vol = self.hw.getContignuous(ctrl[0])
+             log.debug("%s volume is %d" % (name , vol))
+             ctrl[1].setValue(-vol)
+ 
+-        for name, ctrl in self.SelectorControls.iteritems():
++        for name, ctrl in self.SelectorControls.items():
+             state = self.hw.getDiscrete(ctrl[0])
+             log.debug("%s state is %d" % (name , state))
+             ctrl[1].setCurrentIndex(state)
+diff -ur support/mixer-qt4/ffado/mixer/presonus_firebox.py support/mixer-qt4/ffado/mixer/presonus_firebox.py
+--- support/mixer-qt4/ffado/mixer/presonus_firebox.py	2016-10-29 10:36:05.743315201 +0200
++++ support/mixer-qt4/ffado/mixer/presonus_firebox.py	2016-10-28 12:12:35.856218000 +0200
+@@ -19,14 +19,13 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore
+-from PyQt4.QtCore import QObject, Qt, SIGNAL
+-from PyQt4.QtGui import QHBoxLayout, QVBoxLayout, QGridLayout
+-from PyQt4.QtGui import QWidget, QTabWidget, QGroupBox, QLabel, QSizePolicy, QToolButton, QSlider, QComboBox, QSpacerItem, QDial
++from PyQt5 import QtGui, QtCore
++from PyQt5.QtCore import QObject, Qt
++from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QWidget, QTabWidget, QGroupBox, QLabel, QSizePolicy, QToolButton, QSlider, QComboBox, QSpacerItem, QDial
+ from math import log10
+ from ffado.config import *
+ 
+-class Presonus_Firebox(QtGui.QWidget):
++class Presonus_Firebox(QWidget):
+     #name/feature_id/+12dB_id
+     inputs = [["Analog in 1/2",  5, 10],
+               ["Analog in 3/4",  6, 11],
+@@ -55,7 +54,7 @@
+                     "Stream in 5/6", "Stream in 7/8", "Mixer out 1/2"]]]
+ 
+     def __init__(self, parent=None):
+-        QtGui.QWidget.__init__(self, parent)
++        QWidget.__init__(self, parent)
+ 
+     def getDisplayTitle(self):
+         return 'Firebox'
+@@ -216,14 +215,14 @@
+             path = params[0]
+             state = self.hw.getDiscrete(path)
+             elm.setCurrentIndex(state)
+-            QObject.connect(elm, SIGNAL('activated(int)'), self.updateSelector)
++            elm.activated.connect(self.updateSelector)
+ 
+         for elm, params in self.MicBoosts.items():
+             path = params[0]
+             idx  = params[1]
+             value = self.hw.getContignuous(path, idx)
+             elm.setChecked(not value == 0)
+-            QObject.connect(elm, SIGNAL('clicked(bool)'), self.updateMicBoost)
++            elm.clicked.connect(self.updateMicBoost)
+ 
+         for elm, params in self.Volumes.items():
+             path = params[0]
+@@ -231,7 +230,7 @@
+             db   = self.hw.getContignuous(path, idx)
+             vol  = self.db2vol(db)
+             elm.setValue(vol)
+-            QObject.connect(elm, SIGNAL('valueChanged(int)'), self.updateVolume)
++            elm.valueChanged.connect(self.updateVolume)
+ 
+             if idx == 0:
+                 continue
+@@ -259,7 +258,7 @@
+                 elm.setChecked(True)
+                 l_elm.setDisabled(True)
+                 r_elm.setDisabled(True)
+-            QObject.connect(elm, SIGNAL('clicked(bool)'), self.updateMute)
++            elm.clicked.connect(self.updateMute)
+ 
+         for elm, params in self.Balances.items():
+             path = params[0]
+@@ -267,7 +266,7 @@
+             pan = self.hw.getContignuous(path, idx)
+             val = self.pan2val(pan)
+             elm.setValue(val)
+-            QObject.connect(elm, SIGNAL('valueChanged(int)'), self.updateBalance)
++            elm.valueChanged.connect(self.updateBalance)
+ 
+     # helper functions
+     def vol2db(self, vol):
+diff -ur support/mixer-qt4/ffado/mixer/presonus_fp10.py support/mixer-qt4/ffado/mixer/presonus_fp10.py
+--- support/mixer-qt4/ffado/mixer/presonus_fp10.py	2016-10-29 10:36:05.773314826 +0200
++++ support/mixer-qt4/ffado/mixer/presonus_fp10.py	2016-10-28 12:12:35.856218000 +0200
+@@ -19,21 +19,20 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore
+-from PyQt4.QtCore import QObject, Qt, SIGNAL
+-from PyQt4.QtGui import QGridLayout
+-from PyQt4.QtGui import QWidget, QLabel, QSizePolicy, QToolButton, QSlider, QDial
++from PyQt5 import QtGui, QtCore
++from PyQt5.QtCore import QObject, Qt
++from PyQt5.QtWidgets import QWidget, QLabel, QSizePolicy, QToolButton, QSlider, QDial, QGridLayout
+ from math import log10
+ from ffado.config import *
+ 
+-class Presonus_FP10(QtGui.QWidget):
++class Presonus_FP10(QWidget):
+     outputs = [["Analog Out 1/2", 1],
+                ["Analog Out 3/4", 2],
+                ["Analog Out 5/6", 3],
+                ["Analog Out 7/8", 4]]
+ 
+     def __init__(self, parent=None):
+-        QtGui.QWidget.__init__(self, parent)
++        QWidget.__init__(self, parent)
+ 
+     def getDisplayTitle(self):
+         return 'FP10'
+@@ -130,7 +129,7 @@
+            db = self.hw.getContignuous(path, idx)
+            vol = self.db2vol(db)
+            ctl.setValue(vol)
+-           QObject.connect(ctl, SIGNAL('valueChanged(int)'), self.updateVolume)
++           ctl.valueChanged.connect(self.updateVolume)
+ 
+            if vol == 0:
+                mute.setChecked(True)
+@@ -150,10 +149,10 @@
+             val = self.hw.getContignuous(path, idx)
+             state = -(val / 0x7FFE) * 50 + 50
+             ctl.setValue(state)
+-            QObject.connect(ctl, SIGNAL('valueChanged(int)'), self.updatePanning)
++            ctl.valueChanged.connect(self.updatePanning)
+ 
+         for ctl, params in self.Mutes.items():
+-            QObject.connect(ctl, SIGNAL('clicked(bool)'), self.updateMute)
++            ctl.clicked.connect(self.updateMute)
+ 
+         return
+ 
+diff -ur support/mixer-qt4/ffado/mixer/presonus_inspire1394.py support/mixer-qt4/ffado/mixer/presonus_inspire1394.py
+--- support/mixer-qt4/ffado/mixer/presonus_inspire1394.py	2016-10-29 10:36:05.774314813 +0200
++++ support/mixer-qt4/ffado/mixer/presonus_inspire1394.py	2016-10-28 12:12:35.857218000 +0200
+@@ -19,14 +19,13 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore
+-from PyQt4.QtCore import QObject, Qt, SIGNAL
+-from PyQt4.QtGui import QHBoxLayout, QVBoxLayout, QGridLayout
+-from PyQt4.QtGui import QGroupBox, QLabel, QSizePolicy, QSlider, QDial, QComboBox, QToolButton
++from PyQt5 import QtGui, QtCore
++from PyQt5.QtCore import QObject, Qt
++from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout, QGroupBox, QLabel, QSizePolicy, QSlider, QDial, QComboBox, QToolButton, QWidget
+ from math import log10
+ from ffado.config import *
+ 
+-class Presonus_Inspire1394(QtGui.QWidget):
++class Presonus_Inspire1394(QWidget):
+     # feature_id/name
+     inputs = [[1, "Analog in 1/2"],
+               [2, "Analog in 3/4"]]
+@@ -44,7 +43,7 @@
+     out_src = [1, ["Mixer out 1/2", "Stream in 1/2"]]
+ 
+     def __init__(self, parent=None):
+-        QtGui.QWidget.__init__(self, parent)
++        QWidget.__init__(self, parent)
+ 
+     def getDisplayTitle(self):
+         return 'Inspire1394'
+@@ -204,7 +203,7 @@
+            path = params[0]
+            state = self.hw.getDiscrete(path)
+            ctl.setCurrentIndex(state)
+-           QObject.connect(ctl, SIGNAL('activated(int)'), self.updateSelector)
++           ctl.activated.connect(self.updateSelector)
+ 
+         for ctl, params in self.Volumes.items():
+            path = params[0]
+@@ -216,7 +215,7 @@
+            db = self.hw.getContignuous(path, idx)
+            vol = self.db2vol(db)
+            ctl.setValue(vol)
+-           QObject.connect(ctl, SIGNAL('valueChanged(int)'), self.updateVolume)
++           ctl.valueChanged.connect(self.updateVolume)
+ 
+            if vol == 0:
+                mute.setChecked(True)
+@@ -233,8 +232,7 @@
+             vol = self.hw.getDiscrete(path, idx)
+             if vol > 0:
+                 ctl.setChecked(True)
+-
+-            QObject.connect(ctl, SIGNAL('clicked(bool)'), self.updatePreamps)
++            ctl.clicked.connect(self.updatePreamps)
+ 
+         #       Right - Center - Left
+         # 0x8000 - 0x0000 - 0x0001 - 0x7FFE
+@@ -246,10 +244,10 @@
+             val = self.hw.getContignuous(path, idx)
+             state = -(val / 0x7FFE) * 50 + 50
+             ctl.setValue(state)
+-            QObject.connect(ctl, SIGNAL('valueChanged(int)'), self.updatePanning)
++            ctl.valueChanged.connect(self.updatePanning)
+ 
+         for ctl, params in self.Mutes.items():
+-            QObject.connect(ctl, SIGNAL('clicked(bool)'), self.updateMute)
++            ctl.clicked.connect(self.updateMute)
+ 
+     # helper functions
+     def vol2db(self, vol):
+diff -ur support/mixer-qt4/ffado/mixer/profire2626.py support/mixer-qt4/ffado/mixer/profire2626.py
+--- support/mixer-qt4/ffado/mixer/profire2626.py	2016-10-29 10:36:06.102310713 +0200
++++ support/mixer-qt4/ffado/mixer/profire2626.py	2016-10-28 12:12:35.857218000 +0200
+@@ -18,9 +18,9 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore, Qt
++from PyQt5 import QtGui, QtCore, Qt
+ import dbus
+-
++from PyQt5.QtWidgets import QWidget, QScrollArea
+ from ffado.widgets.matrixmixer import MatrixMixer
+ from ffado.widgets.crossbarrouter import *
+ from ffado.mixer.generic_dice_eap import *
+@@ -29,6 +29,9 @@
+ 
+ class BooleanControl:
+     def __init__(self, hw, path):
++        if DEBUG_BYPASSDBUS :
++            self.value = False
++            return
+         self.iface = dbus.Interface(
+                 hw.bus.get_object(hw.servername, path),
+                 dbus_interface="org.ffado.Control.Element.Boolean")
+@@ -45,6 +48,9 @@
+ 
+ class DiscreteControl:
+     def __init__(self, hw, path):
++        if DEBUG_BYPASSDBUS :
++            self.value = 0
++            return
+         self.iface = dbus.Interface(
+                 hw.bus.get_object(hw.servername, path),
+                 dbus_interface="org.ffado.Control.Element.Discrete")
+@@ -67,11 +73,11 @@
+         #print( self.hw.getText("/Generic/Nickname") )
+         Generic_Dice_EAP.buildMixer(self)
+ 
+-        widget = QtGui.QWidget()
++        widget = QWidget()
+         uicLoad("ffado/mixer/profire2626_settings.ui", widget)
+ 
+         # Add Settings to ffado-mixer panels
+-        scrollarea = QtGui.QScrollArea(self.tabs)
++        scrollarea = QScrollArea(self.tabs)
+         scrollarea.setWidgetResizable(False)
+         scrollarea.setWidget(widget)
+         self.tabs.addTab(scrollarea, "Settings")
+@@ -93,7 +99,7 @@
+ 
+         for l in self.LineUnActivates:
+             l.widget.setChecked(l.Interface.selected())
+-            self.connect(l.widget, QtCore.SIGNAL("toggled(bool)"), l.Interface.select)
++            l.widget.toggled.connect(l.Interface.select)
+ 
+     def getDisplayTitle(self):
+         return "M-Audio Profire 2626 Mixer"
+diff -ur support/mixer-qt4/ffado/mixer/quatafire.py support/mixer-qt4/ffado/mixer/quatafire.py
+--- support/mixer-qt4/ffado/mixer/quatafire.py	2016-10-29 10:36:05.775314801 +0200
++++ support/mixer-qt4/ffado/mixer/quatafire.py	2016-10-28 12:12:35.857218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import  QObject
++from PyQt5.QtWidgets import QWidget
+ from ffado.config import *
+ 
+ import logging
+@@ -76,16 +76,16 @@
+         self.hw.setContignuous(self.PanControls[sender][0], -pan_right, 2)
+ 
+     def initValues(self):
+-        for ctrl, info in self.VolumeControls.iteritems():
++        for ctrl, info in self.VolumeControls.items():
+             vol = self.hw.getContignuous(self.VolumeControls[ctrl][0], self.VolumeControls[ctrl][1])
+             val = -vol
+             log.debug("%s volume is %d, set to %d" % (ctrl.objectName(), vol, val))
+             ctrl.setValue(val)
+ 
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('valueChanged(int)'),self.updateVolume)
++            ctrl.valueChanged.connect(self.updateVolume)
+ 
+-        for ctrl, info in self.PanControls.iteritems():
++        for ctrl, info in self.PanControls.items():
+             pan_left = self.hw.getContignuous(self.PanControls[ctrl][0], 1)
+             pan_right = self.hw.getContignuous(self.PanControls[ctrl][0], 2)
+ 
+@@ -99,6 +99,6 @@
+ 
+             ctrl.setValue(val)
+             # connect the UI element
+-            QObject.connect(ctrl,SIGNAL('valueChanged(int)'),self.updatePan)
++            ctrl.valueChanged.connect(self.updatePan)
+ 
+ # vim: et
+diff -ur support/mixer-qt4/ffado/mixer/rme.py support/mixer-qt4/ffado/mixer/rme.py
+--- support/mixer-qt4/ffado/mixer/rme.py	2016-10-29 10:36:06.102310713 +0200
++++ support/mixer-qt4/ffado/mixer/rme.py	2016-10-28 12:12:35.858218000 +0200
+@@ -20,10 +20,10 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui
++from PyQt5 import QtGui
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject, Qt, QTimer
+-from PyQt4.QtGui import QWidget, QApplication
++from PyQt5.QtCore import  QObject, Qt, QTimer
++from PyQt5.QtWidgets import QWidget, QApplication, QVBoxLayout
+ from ffado.config import *
+ 
+ from ffado.widgets.matrixmixer import MatrixMixer
+@@ -305,48 +305,47 @@
+     def setupSignals(self):
+ 
+         # Connect signal handlers for all command buttons
+-        for ctrl, info in self.CommandButtons.iteritems():
++        for ctrl, info in self.CommandButtons.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+-            QObject.connect(ctrl, SIGNAL('clicked(bool)'), self.sendCommand)
++            ctrl.clicked.connect(self.sendCommand)
+ 
+-        for ctrl, info in self.Combos.iteritems():
++        for ctrl, info in self.Combos.items():
+             if (not(ctrl.isEnabled())):
+                 continue;
+-            QObject.connect(ctrl, SIGNAL('currentIndexChanged(int)'), self.updateCombo)
+-
+-        QObject.connect(self.bandwidth_limit, SIGNAL('currentIndexChanged(int)'), self.updateBandwidthLimit)
++            ctrl.currentIndexChanged.connect(self.updateCombo)
++        self.bandwidth_limit.currentIndexChanged.connect(self.updateBandwidthLimit)
+ 
+         # Get current hardware values and connect GUI element signals to 
+         # their respective slots
+-        for ctrl, info in self.PhantomSwitches.iteritems():
++        for ctrl, info in self.PhantomSwitches.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+-            QObject.connect(ctrl, SIGNAL('toggled(bool)'), self.updatePhantomSwitch)
++            ctrl.toggled.connect(self.updatePhantomSwitch)
+ 
+-        for ctrl, info in self.Switches.iteritems():
++        for ctrl, info in self.Switches.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+-            QObject.connect(ctrl, SIGNAL('toggled(bool)'), self.updateSwitch)
++            ctrl.toggled.connect(self.updateSwitch)
+ 
+-        for ctrl, info in self.Radiobuttons.iteritems():
++        for ctrl, info in self.Radiobuttons.items():
+             if (not(ctrl.isEnabled())):
+                 continue;
+-            QObject.connect(ctrl, SIGNAL('toggled(bool)'), self.updateRadiobutton)
++            ctrl.toggled.connect(self.updateRadiobutton)
+ 
+-        for ctrl, info in self.Checkboxes.iteritems():
++        for ctrl, info in self.Checkboxes.items():
+             if (not(ctrl.isEnabled())):
+                 continue;
+-            QObject.connect(ctrl, SIGNAL('toggled(bool)'), self.updateCheckboxes)
++            ctrl.toggled.connect(self.updateCheckboxes)
+ 
+-        for ctrl, info in self.Gains.iteritems():
++        for ctrl, info in self.Gains.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+-            QObject.connect(ctrl, SIGNAL('valueChanged(int)'), self.updateGain)
++            ctrl.valueChanged.connect(self.updateGain)
+ 
+     # Obtain control values from the Fireface and make the GUI reflect these
+     def getValuesFromFF(self):
+-        for ctrl, info in self.Combos.iteritems():
++        for ctrl, info in self.Combos.items():
+             if (not(ctrl.isEnabled())):
+                 continue;
+             val = self.hw.getDiscrete(info[0])
+@@ -362,7 +361,7 @@
+         self.bandwidth_limit.setCurrentIndex(val);
+ 
+         # Get current hardware values
+-        for ctrl, info in self.PhantomSwitches.iteritems():
++        for ctrl, info in self.PhantomSwitches.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             val = (self.hw.getDiscrete(info[0]) >> info[1]) & 0x01
+@@ -372,7 +371,7 @@
+             else:
+                 ctrl.setChecked(False)
+ 
+-        for ctrl, info in self.Switches.iteritems():
++        for ctrl, info in self.Switches.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             val = self.hw.getDiscrete(info[0])
+@@ -382,7 +381,7 @@
+             else:
+                 ctrl.setChecked(False)
+ 
+-        for ctrl, info in self.Radiobuttons.iteritems():
++        for ctrl, info in self.Radiobuttons.items():
+             if (not(ctrl.isEnabled())):
+                 continue;
+             # This is a touch wasteful since it means we retrieve the control
+@@ -402,7 +401,7 @@
+         if (self.ff800_ch1_src.isEnabled()):
+             self.ch1_instr_limiter.setEnabled(1)
+ 
+-        for ctrl, info in self.Checkboxes.iteritems():
++        for ctrl, info in self.Checkboxes.items():
+             if (not(ctrl.isEnabled())):
+                 continue;
+             # This is a touch wasteful since it means we retrieve the control
+@@ -424,7 +423,7 @@
+         if (self.ff800_ch1_src.isEnabled()):
+             self.ch1_instr_limiter.setEnabled(ch1_src==0)
+ 
+-        for ctrl, info in self.Gains.iteritems():
++        for ctrl, info in self.Gains.items():
+             if (not(ctrl.isEnabled())):
+                 continue
+             val = self.hw.getMatrixMixerValue(info[0], 0, info[1])
+@@ -438,17 +437,17 @@
+         # print( self.hw.servername )
+         # print( self.hw.basepath )
+         self.inputmatrix = MatrixMixer(self.hw.servername, self.hw.basepath+"/Mixer/InputFaders", self, "Columns_are_inputs", 0x8000, self.hw.basepath+"/Mixer/InputMutes", self.hw.basepath+"/Mixer/InputInverts", True)
+-        layout = QtGui.QVBoxLayout()
++        layout = QVBoxLayout()
+         layout.addWidget(self.inputmatrix)
+         self.mixer.setLayout(layout)
+ 
+         self.playbackmatrix = MatrixMixer(self.hw.servername, self.hw.basepath+"/Mixer/PlaybackFaders", self, "Columns_are_inputs", 0x8000, self.hw.basepath+"/Mixer/PlaybackMutes", self.hw.basepath+"/Mixer/PlaybackInverts", True)
+-        layout = QtGui.QVBoxLayout()
++        layout = QVBoxLayout()
+         layout.addWidget(self.playbackmatrix)
+         self.playbackmixer.setLayout(layout)
+ 
+         self.outputmatrix = MatrixMixer(self.hw.servername, self.hw.basepath+"/Mixer/OutputFaders", self, "Columns_are_inputs", 0x8000, self.hw.basepath+"/Mixer/OutputMutes", None, True)
+-        layout = QtGui.QVBoxLayout()
++        layout = QVBoxLayout()
+ 
+         # This is a bit of a hack, but it works to ensure this single-row
+         # matrix mixer doesn't fill the entire screen but also doesn't end
+@@ -530,13 +529,13 @@
+         # it.  If getValuesFromFF() disabled it because the front input was
+         # not selected, setupSignals() would not have configured a handler.
+         if (not(self.ch1_instr_limiter.isEnabled())):
+-            QObject.connect(self.ch1_instr_limiter, SIGNAL('toggled(bool)'), self.updateCheckboxes)
++            self.ch1_instr_limiter.toggled.connect(self.updateCheckboxes)
+ 
+         self.updateStreamingState()
+         #log.debug("device streaming flag: %d" % (self.is_streaming))
+ 
+         self.update_timer = QTimer(self)
+-        QObject.connect(self.update_timer, SIGNAL('timeout()'), self.status_update)
++        self.update_timer.timeout.connect(self.status_update)
+         self.update_timer.start(1000)
+ 
+     def saveSettings(self, indent):
+diff -ur support/mixer-qt4/ffado/mixer/saffire.py support/mixer-qt4/ffado/mixer/saffire.py
+--- support/mixer-qt4/ffado/mixer/saffire.py	2016-10-29 10:36:05.777314776 +0200
++++ support/mixer-qt4/ffado/mixer/saffire.py	2016-10-28 12:12:35.858218000 +0200
+@@ -20,8 +20,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QWidget, QHBoxLayout
++from PyQt5.QtCore import  QObject
++from PyQt5.QtWidgets import QWidget, QHBoxLayout
+ from ffado.config import *
+ from ffado.mixer.saffire_base import SaffireMixerBase
+ 
+@@ -168,8 +168,8 @@
+         QWidget.__init__(self,parent)
+         uicLoad("ffado/mixer/saffire_stereo", self)
+         SaffireMixerBase.__init__(self)
+-        QObject.connect(self.btnRefresh, SIGNAL('clicked()'), self.updateValues)
+-        QObject.connect(self.btnSwitchStereoMode, SIGNAL('clicked()'), self.switchStereoMode)
++        self.btnRefresh.clicked.connect(self.updateValues)
++        self.btnSwitchStereoMode.clicked.connect(self.switchStereoMode)
+ 
+         self.VolumeControls={
+                 self.sldPC910Out910: ['/Mixer/MatrixMixerStereo', 0, 0],
+@@ -296,8 +296,8 @@
+         QWidget.__init__(self,parent)
+         uicLoad("ffado/mixer/saffire_mono", self)
+         SaffireMixerBase.__init__(self)
+-        QObject.connect(self.btnRefresh, SIGNAL('clicked()'), self.updateValues)
+-        QObject.connect(self.btnSwitchStereoMode, SIGNAL('clicked()'), self.switchStereoMode)
++        self.btnRefresh.clicked.connect(self.updateValues)
++        self.btnSwitchStereoMode.clicked.connect(self.switchStereoMode)
+ 
+         self.VolumeControls={
+                 self.sldIN1Out910: ['/Mixer/MatrixMixerMono', 0, 0],
+diff -ur support/mixer-qt4/ffado/mixer/saffire_base.py support/mixer-qt4/ffado/mixer/saffire_base.py
+--- support/mixer-qt4/ffado/mixer/saffire_base.py	2016-10-29 10:36:05.777314776 +0200
++++ support/mixer-qt4/ffado/mixer/saffire_base.py	2016-10-28 12:12:35.859218000 +0200
+@@ -20,7 +20,7 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
++from PyQt5.QtCore import  QObject
+ 
+ import logging
+ log = logging.getLogger('saffirebase')
+@@ -99,19 +99,19 @@
+         sender.setCurrentIndex( self.hw.enumSelected(path) )
+ 
+     def updateValues(self):
+-        for ctrl, info in self.VolumeControls.iteritems():
++        for ctrl, info in self.VolumeControls.items():
+             vol = self.hw.getMatrixMixerValue(self.VolumeControls[ctrl][0],
+                                               self.VolumeControls[ctrl][1],
+                                               self.VolumeControls[ctrl][2])
+             log.debug("%s volume is %d" % (ctrl.objectName() , vol))
+             ctrl.setValue(vol)
+-        for ctrl, info in self.VolumeControlsLowRes.iteritems():
++        for ctrl, info in self.VolumeControlsLowRes.items():
+             vol = self.hw.getDiscrete(self.VolumeControlsLowRes[ctrl][0])
+ 
+             log.debug("%s volume is %d" % (ctrl.objectName() , 127-vol))
+             ctrl.setValue(127 - vol)
+ 
+-        for ctrl, info in self.SelectorControls.iteritems():
++        for ctrl, info in self.SelectorControls.items():
+             state = self.hw.getDiscrete(self.SelectorControls[ctrl][0])
+             log.debug("%s state is %d" % (ctrl.objectName() , state))
+             if state:
+@@ -119,15 +119,15 @@
+             else:
+                 ctrl.setChecked(False)
+ 
+-        for ctrl, info in self.TriggerButtonControls.iteritems():
++        for ctrl, info in self.TriggerButtonControls.items():
+             pass
+ 
+-        for ctrl, info in self.TextControls.iteritems():
++        for ctrl, info in self.TextControls.items():
+             text = self.hw.getText(self.TextControls[ctrl][0])
+             log.debug("%s text is %s" % (ctrl.objectName() , text))
+             ctrl.setText(text)
+ 
+-        for ctrl, info in self.ComboControls.iteritems():
++        for ctrl, info in self.ComboControls.items():
+             self.initCombo(ctrl)
+ 
+     def polledUpdateVolumeLowRes(self, srcpath, ctrl, divider=1):
+@@ -137,22 +137,22 @@
+ 
+     def initValues(self):
+         self.updateValues()
+-        for ctrl, info in self.VolumeControls.iteritems():
+-            QObject.connect(ctrl,SIGNAL('valueChanged(int)'),self.updateMatrixVolume)
++        for ctrl, info in self.VolumeControls.items():
++            ctrl.valueChanged.connect(self.updateMatrixVolume)
+ 
+-        for ctrl, info in self.VolumeControlsLowRes.iteritems():
+-            QObject.connect(ctrl,SIGNAL('valueChanged(int)'),self.updateLowResVolume)
++        for ctrl, info in self.VolumeControlsLowRes.items():
++            ctrl.valueChanged.connect(self.updateLowResVolume)
+ 
+-        for ctrl, info in self.SelectorControls.iteritems():
+-            QObject.connect(ctrl,SIGNAL('stateChanged(int)'),self.updateSelector)
++        for ctrl, info in self.SelectorControls.items():
++            ctrl.stateChanged.connect(self.updateSelector)
+ 
+-        for ctrl, info in self.TriggerButtonControls.iteritems():
+-            QObject.connect(ctrl,SIGNAL('clicked()'),self.triggerButton)
++        for ctrl, info in self.TriggerButtonControls.items():
++            ctrl.clicked.connect(self.triggerButton)
+ 
+-        for ctrl, info in self.saveTextControls.iteritems():
+-            QObject.connect(ctrl,SIGNAL('clicked()'), self.saveText)
++        for ctrl, info in self.saveTextControls.items():
++            ctrl.clicked.connect(self.saveText)
+ 
+-        for ctrl, info in self.ComboControls.iteritems():
+-            QObject.connect(ctrl, SIGNAL('activated(int)'), self.selectCombo)
++        for ctrl, info in self.ComboControls.items():
++            ctrl.activated.connect(self.selectCombo)
+ 
+ # vim: et
+diff -ur support/mixer-qt4/ffado/mixer/saffire_dice.py support/mixer-qt4/ffado/mixer/saffire_dice.py
+--- support/mixer-qt4/ffado/mixer/saffire_dice.py	2016-10-29 10:36:06.101310725 +0200
++++ support/mixer-qt4/ffado/mixer/saffire_dice.py	2016-10-28 12:12:35.859218000 +0200
+@@ -18,8 +18,9 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore, Qt
++from PyQt5 import QtGui, QtCore, Qt
+ import dbus
++from PyQt5.QtWidgets import QWidget,QScrollArea
+ 
+ from ffado.widgets.matrixmixer import MatrixMixer
+ from ffado.widgets.crossbarrouter import *
+@@ -29,6 +30,9 @@
+ 
+ class BooleanControl:
+     def __init__(self, hw, path):
++        if DEBUG_BYPASSDBUS :
++            self.value = False
++            return
+         self.iface = dbus.Interface(
+                 hw.bus.get_object(hw.servername, path),
+                 dbus_interface="org.ffado.Control.Element.Boolean")
+@@ -38,6 +42,8 @@
+         return self.value
+ 
+     def select(self, n):
++        if DEBUG_BYPASSDBUS :
++            return False
+         if self.iface.select(n):
+             self.value = n
+             return True
+@@ -45,6 +51,9 @@
+ 
+ class DiscreteControl:
+     def __init__(self, hw, path):
++        if DEBUG_BYPASSDBUS :
++            self.value = 0
++            return
+         self.iface = dbus.Interface(
+                 hw.bus.get_object(hw.servername, path),
+                 dbus_interface="org.ffado.Control.Element.Discrete")
+@@ -67,7 +76,7 @@
+         #print( self.hw.getText("/Generic/Nickname") )
+         Generic_Dice_EAP.buildMixer(self)
+ 
+-        widget = QtGui.QWidget()
++        widget = QWidget()
+ 
+         ModelName = self.configrom.getModelName()
+         if  ModelName == "SAFFIRE_PRO_14":
+@@ -78,9 +87,10 @@
+             uicLoad("ffado/mixer/Saffire_Pro26_monitoring.ui", widget)
+         elif ModelName == "SAFFIRE_PRO_40":
+             uicLoad("ffado/mixer/Saffire_Pro40_monitoring.ui", widget)
+-
++        else :
++            uicLoad("ffado/mixer/Saffire_Pro40_monitoring.ui", widget)
+         # Add Monitoring to ffado-mixer panels
+-        scrollarea = QtGui.QScrollArea(self.tabs)
++        scrollarea = QScrollArea(self.tabs)
+         scrollarea.setWidgetResizable(False)
+         scrollarea.setWidget(widget)
+         self.tabs.addTab(scrollarea, "Monitoring")
+@@ -88,14 +98,14 @@
+         # Global settings
+         self.muteInterface = BooleanControl(self.hw, self.hw.basepath+"/EAP/Monitoring/GlobalMute/State")
+         widget.GlobalMute.setChecked(self.muteInterface.selected())
+-        self.connect(widget.GlobalMute, QtCore.SIGNAL("toggled(bool)"), self.muteToggle)
++        widget.GlobalMute.toggled.connect( self.muteToggle)
+ 
+         self.dimInterface = BooleanControl(self.hw, self.hw.basepath+"/EAP/Monitoring/GlobalDim/State")
+         widget.GlobalDim.setChecked(self.dimInterface.selected())
+-        self.connect(widget.GlobalDim, QtCore.SIGNAL("toggled(bool)"), self.dimToggle)
++        widget.GlobalDim.toggled.connect(self.dimToggle)
+         self.dimLevelInterface = DiscreteControl(self.hw, self.hw.basepath+"/EAP/Monitoring/GlobalDim/Level")
+         widget.DimLevel.setValue(self.dimLevelInterface.getvalue())
+-        self.connect(widget.DimLevel, QtCore.SIGNAL("valueChanged(int)"), self.dimLevelChanged)
++        widget.DimLevel.valueChanged.connect(self.dimLevelChanged)
+         self.DimLevel = widget.DimLevel
+         widget.DimLevel.setEnabled(self.dimInterface.selected())
+ 
+@@ -256,7 +266,7 @@
+             # Adat/Spdif switch control from interface for Pro40
+             self.adatSpdifInterface = BooleanControl(self.hw, self.hw.basepath+"/EAP/Monitoring/AdatSpdif/State")
+             widget.AdatSpdif.setChecked(self.adatSpdifInterface.selected())
+-            self.connect(widget.AdatSpdif, QtCore.SIGNAL("toggled(bool)"), self.adatSpdifToggle)
++            widget.AdatSpdif.toggled.connect(self.adatSpdifToggle)
+ 
+         if ModelName in ("SAFFIRE_PRO_14", "SAFFIRE_PRO_24"):
+             # Line/Inst and Hi/Lo switches for Pro14 and 24
+@@ -272,7 +282,7 @@
+             self.LineInSwitches.append(p)
+             for i in range(4):
+                 self.LineInSwitches[i].widget.setChecked(self.LineInSwitches[i].Interface.selected())
+-                self.connect(self.LineInSwitches[i].widget, QtCore.SIGNAL("toggled(bool)"), self.LineInSwitches[i].Interface.select)
++                self.LineInSwitches[i].widget.toggled.connect(self.LineInSwitches[i].Interface.select)
+             widget.LineInSwitchLine_1.setChecked(not self.LineInSwitches[0].Interface.selected())
+             widget.LineInSwitchLine_2.setChecked(not self.LineInSwitches[1].Interface.selected())
+             widget.LineInSwitchLo_3.setChecked(not self.LineInSwitches[2].Interface.selected())
+@@ -280,26 +290,26 @@
+ 
+         # Mono/Stereo Switch
+         if ModelName != "SAFFIRE_PRO26":
+-            for i in range(self.nbLines/2):
++            for i in range(int(self.nbLines/2)):
+                 self.LineMonos[i].widget.setChecked(self.LineMonos[i].Interface.selected())
+-                self.connect(self.LineMonos[i].widget, QtCore.SIGNAL("toggled(bool)"), self.LineMonos[i].Interface.select)
++                self.LineMonos[i].widget.toggled.connect(self.LineMonos[i].Interface.select)
+ 
+ 
+         for i in range(self.nbLines):
+             self.LineUnActivates[i].widget.setChecked(self.LineUnActivates[i].Interface.selected())
+-            self.connect(self.LineUnActivates[i].widget, QtCore.SIGNAL("toggled(bool)"), self.LineUnActivates[i].Interface.select)
++            self.LineUnActivates[i].widget.toggled.connect(self.LineUnActivates[i].Interface.select)
+             self.LineMutes[i].widget.setChecked(self.LineMutes[i].Interface.selected())
+-            self.connect(self.LineMutes[i].widget, QtCore.SIGNAL("toggled(bool)"), self.LineMutes[i].Interface.select)
++            self.LineMutes[i].widget.toggled.connect(self.LineMutes[i].Interface.select)
+             self.LineGMutes[i].widget.setChecked(self.LineGMutes[i].Interface.selected())
+-            self.connect(self.LineGMutes[i].widget, QtCore.SIGNAL("toggled(bool)"), self.LineGMutes[i].Interface.select)
++            self.LineGMutes[i].widget.toggled.connect(self.LineGMutes[i].Interface.select)
+             self.LineGDims[i].widget.setChecked(self.LineGDims[i].Interface.selected())
+-            self.connect(self.LineGDims[i].widget, QtCore.SIGNAL("toggled(bool)"), self.LineGDims[i].Interface.select)
++            self.LineGDims[i].widget.toggled.connect(self.LineGDims[i].Interface.select)
+             self.LineVolumes[i].widget.setValue(self.LineVolumes[i].Interface.getvalue())
+-            self.connect(self.LineVolumes[i].widget, QtCore.SIGNAL("valueChanged(int)"), self.LineVolumes[i].Interface.setvalue)
++            self.LineVolumes[i].widget.valueChanged.connect(self.LineVolumes[i].Interface.setvalue)
+  
+         # HW switch controls the possibility of monitoring each output separatly 
+         widget.HWSwitch.setChecked(self.HWselected())
+-        self.connect(widget.HWSwitch, QtCore.SIGNAL("toggled(bool)"), self.HWToggle)
++        widget.HWSwitch.toggled.connect(self.HWToggle)
+ 
+         # Line Out monitoring enabling depends on H/W switch
+         self.LineOut = widget.LineOut
+diff -ur support/mixer-qt4/ffado/mixer/saffirepro.py support/mixer-qt4/ffado/mixer/saffirepro.py
+--- support/mixer-qt4/ffado/mixer/saffirepro.py	2016-10-29 10:36:05.815314301 +0200
++++ support/mixer-qt4/ffado/mixer/saffirepro.py	2016-10-28 12:12:35.859218000 +0200
+@@ -20,7 +20,7 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtGui import QWidget, QHBoxLayout, QMessageBox
++from PyQt5.QtWidgets import QWidget, QHBoxLayout, QMessageBox
+ from ffado.config import *
+ from ffado.mixer.saffire_base import SaffireMixerBase
+ 
+diff -ur support/mixer-qt4/ffado/mixer/yamahago.py support/mixer-qt4/ffado/mixer/yamahago.py
+--- support/mixer-qt4/ffado/mixer/yamahago.py	2016-10-29 10:36:05.820314238 +0200
++++ support/mixer-qt4/ffado/mixer/yamahago.py	2016-10-28 12:12:35.860218000 +0200
+@@ -21,8 +21,8 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, QObject
+-from PyQt4.QtGui import QWidget
++from PyQt5.QtCore import QObject
++from PyQt5.QtWidgets import QWidget
+ from math import log10
+ from ffado.config import *
+ 
+@@ -150,18 +150,17 @@
+             if pvol == vol:
+                 link.setChecked(True)
+ 
+-            QObject.connect(ctl, SIGNAL('valueChanged(int)'), self.updateVolume)
++            ctl.valueChanged.connect(self.updateVolume)
+ 
+         # source selector for jack output
+         for ctl, param in list(self.JackSourceSelectors.items()):
+             state = self.hw.getDiscrete(param)
+             ctl.setCurrentIndex(state)
+ 
+-            QObject.connect(ctl, SIGNAL('activated(int)'), self.updateSelector)
++            ctl.activated.connect(self.updateSelector)
+ 
+         if not self.is46:
+-            QObject.connect(self.cmb_ana_in_12_level, SIGNAL('activated(int)'),
+-                            self.updateMicLevel)
++            self.cmb_ana_in_12_level.activated.connect(self.updateMicLevel)
+ 
+     # helper functions
+     def vol2db(self, vol):
+diff -ur support/mixer-qt4/ffado/panelmanager.py support/mixer-qt4/ffado/panelmanager.py
+--- support/mixer-qt4/ffado/panelmanager.py	2016-10-29 10:36:06.100310738 +0200
++++ support/mixer-qt4/ffado/panelmanager.py	2016-10-28 17:43:03.732335847 +0200
+@@ -24,8 +24,9 @@
+ 
+ from ffado.config import * #FFADO_VERSION, FFADO_DBUS_SERVER, FFADO_DBUS_BASEPATH
+ 
+-from PyQt4.QtGui import QFrame, QWidget, QTabWidget, QVBoxLayout, QMainWindow, QIcon, QAction, qApp, QStyleOptionTabWidgetFrame, QFileDialog
+-from PyQt4.QtCore import QTimer
++from PyQt5.QtGui     import QIcon, QPixmap
++from PyQt5.QtWidgets import QFrame, QWidget, QTabWidget, QVBoxLayout, QMainWindow, QAction, qApp, QStyleOptionTabWidgetFrame, QFileDialog
++from PyQt5.QtCore    import QTimer
+ 
+ from ffado.dbus_util import *
+ from ffado.registration import *
+@@ -34,7 +35,7 @@
+ 
+ from ffado.mixer.globalmixer import GlobalMixer
+ from ffado.mixer.dummy import Dummy
+-
++import sys
+ import time
+ 
+ import logging
+@@ -82,8 +83,10 @@
+         else:
+             self.tabBar().show()
+ 
+-class PanelManager(QWidget):
++class PanelManager(QWidget): 
++    connectionLost = pyqtSignal()
+     def __init__(self, parent, devmgr=None):
++        self.polltimer = QTimer()
+         QWidget.__init__(self, parent)
+         self.setObjectName("PanelManager")
+         self.parent = parent
+@@ -121,8 +124,7 @@
+         self.devmgr.registerUpdateCallback(self.devlistUpdate)
+         self.devmgr.registerDestroyedCallback(self.devmgrDestroyed)
+         # create a timer to poll the panels
+-        self.polltimer = QTimer()
+-        self.connect( self.polltimer, SIGNAL('timeout()'), self.pollPanels )
++        self.polltimer.timeout.connect(self.pollPanels )
+         self.polltimer.start( POLL_SLEEP_TIME_MSEC )
+ 
+         # create a timer to initialize the panel after the main form is shown
+@@ -131,7 +133,7 @@
+ 
+         # live check timer
+         self.alivetimer = QTimer()
+-        QObject.connect( self.alivetimer, SIGNAL('timeout()'), self.commCheck )
++        self.alivetimer.timeout.connect(self.commCheck )
+         self.alivetimer.start( 2000 )
+ 
+     def count(self):
+@@ -211,7 +213,7 @@
+                 w = self.panels[panel]
+                 del self.panels[panel]
+                 w.deleteLater()
+-            self.emit(SIGNAL("connectionLost"))
++            self.connectionLost.emit()
+ 
+     def removePanel(self, guid):
+         print( "Removing widget for device" + guid )
+@@ -220,12 +222,16 @@
+         idx = self.tabs.indexOf(w)
+         self.tabs.removeTab(idx)
+         w.deleteLater()
++        self.parent.editmenu.removeAction(self.parent.devices[guid])
++        self.parent.devices.pop(guid, None)
+ 
+     def addPanel(self, idx):
+         path = self.devmgr.getDeviceName(idx)
+         log.debug("Adding device %d: %s" % (idx, path))
+-
+-        cfgrom = ConfigRomInterface(FFADO_DBUS_SERVER, FFADO_DBUS_BASEPATH+'/DeviceManager/'+path)
++        if DEBUG_BYPASSDBUS : 
++            cfgrom = ConfigRomInterface(FFADO_DBUS_SERVER, path)
++        else :
++            cfgrom = ConfigRomInterface(FFADO_DBUS_SERVER, FFADO_DBUS_BASEPATH+'/DeviceManager/'+path)
+         vendorId = cfgrom.getVendorId()
+         modelId = cfgrom.getModelId()
+         unitVersion = cfgrom.getUnitVersion()
+@@ -235,10 +241,11 @@
+         log.debug(" Found (%s, %X, %X) %s %s" % (str(guid), vendorId, modelId, vendorName, modelName))
+ 
+         # check whether this has already been registered at ffado.org
+-        reg = ffado_registration(FFADO_VERSION, int(guid, 16),
++        if not DEBUG_BYPASSDBUS : 
++            reg = ffado_registration(FFADO_VERSION, int(guid, 16),
+                                      vendorId, modelId,
+                                      vendorName, modelName)
+-        reg.check_for_registration()
++            reg.check_for_registration()
+ 
+         # The MOTU devices use unitVersion to differentiate models.  For the
+         # moment though we don't need to know precisely which model we're
+@@ -295,9 +302,10 @@
+         #
+         if 'mixer' in dev and dev['mixer'] != None:
+             mixerapp = dev['mixer']
++            global mixerwidget
+             exec( """
+ import ffado.mixer.%s
+-mixerwidget = ffado.mixer.%s.%s( w )
++globals()["mixerwidget"] = ffado.mixer.%s.%s( w )
+ """ % (mixerapp.lower(), mixerapp.lower(), mixerapp) )
+         else:
+             mixerwidget = Dummy( w )
+@@ -321,8 +329,13 @@
+             title = mixerwidget.getDisplayTitle()
+         else:
+             title = mixerapp
+-
+-        globalmixer.setName(title)
++        if os.path.exists(UIDIR + '/ffado/mixer/' + vendorName.replace(" ", "_").lower() + '.png') :
++            globalmixer.lblName.setPixmap(QPixmap(UIDIR + '/ffado/mixer/' + vendorName.replace(" ", "_").lower() + '.png'))
++            globalmixer.lblName.setToolTip(title)
++            globalmixer.lblName.show()
++        else :
++            globalmixer.setName(title)
++        globalmixer.txtNickname.setPlaceholderText(title)
+         self.tabs.addTab( w, title )
+         self.panels[guid] = w
+ 
+@@ -339,7 +352,15 @@
+         if 'readSettings' in dir(mixerwidget):
+           w.smixReadSetgs = mixerwidget.readSettings
+           self.parent.openaction.setEnabled(True)
+-
++        self.parent.devices[guid] = QAction(QIcon.fromTheme("audio-card"), str(title), self.parent)
++        self.parent.devices[guid].setData(guid)
++        self.parent.editmenu.addAction(self.parent.devices[guid])
++        self.parent.devices[guid].triggered.connect(self.setTabVisible)
++    
++    def setTabVisible(self) :
++        action = self.sender()
++        self.tabs.setCurrentIndex(self.tabs.indexOf(self.panels[action.data()]))
++        
+     def displayPanels(self):
+         # if there is no panel, add the no-device message
+         # else make sure it is not present
+@@ -380,7 +401,10 @@
+         guid_indexes = {}
+         for idx in range(nbDevices):
+             path = self.devmgr.getDeviceName(idx)
+-            cfgrom = ConfigRomInterface(FFADO_DBUS_SERVER, FFADO_DBUS_BASEPATH+'/DeviceManager/'+path)
++            if DEBUG_BYPASSDBUS : 
++                cfgrom = ConfigRomInterface(FFADO_DBUS_SERVER, path)
++            else :
++                cfgrom = ConfigRomInterface(FFADO_DBUS_SERVER, FFADO_DBUS_BASEPATH+'/DeviceManager/'+path)
+             guid = cfgrom.getGUID()
+             guids_present.append(guid)
+             guid_indexes[guid] = idx
+diff -ur support/mixer-qt4/ffado/regdialog.py support/mixer-qt4/ffado/regdialog.py
+--- support/mixer-qt4/ffado/regdialog.py	2016-10-29 10:36:05.611316851 +0200
++++ support/mixer-qt4/ffado/regdialog.py	2016-10-28 12:12:35.861218000 +0200
+@@ -21,9 +21,9 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4.QtCore import SIGNAL, SLOT, QObject
+-from PyQt4.QtGui import QDialog
+-from ffado.config import *
++from PyQt5.QtCore    import pyqtSignal, pyqtSlot, QObject
++from PyQt5.QtWidgets import QDialog
++from ffado.config    import *
+ 
+ import logging
+ log = logging.getLogger('registration')
+@@ -63,9 +63,9 @@
+         self.txtMessage.setHtml(REGISTRATION_MESSAGE)
+ 
+         self.choice = "nosend"
+-        QObject.connect(self.btnSend,SIGNAL('clicked()'),self.buttonPressed)
+-        QObject.connect(self.btnNoSend,SIGNAL('clicked()'),self.buttonPressed)
+-        QObject.connect(self.btnNeverSend,SIGNAL('clicked()'),self.buttonPressed)
++        self.btnSend.clicked.connect(self.buttonPressed)
++        self.btnNoSend.clicked.connect(self.buttonPressed)
++        self.btnNeverSend.clicked.connect(self.buttonPressed)
+ 
+     def buttonPressed(self):
+         sender = self.sender()
+diff -ur support/mixer-qt4/ffado/registration.py support/mixer-qt4/ffado/registration.py
+--- support/mixer-qt4/ffado/registration.py	2016-10-29 10:36:06.104310688 +0200
++++ support/mixer-qt4/ffado/registration.py	2016-10-28 12:12:35.861218000 +0200
+@@ -25,9 +25,9 @@
+ import configparser, os
+ import codecs
+ 
+-from ffado.config import REGISTER_URL, INI_FILE_PATH, FFADO_CONFIG_DIR
+-from PyQt4.QtGui import QMessageBox
+-from PyQt4.QtCore import QByteArray
++from ffado.config    import REGISTER_URL, INI_FILE_PATH, FFADO_CONFIG_DIR
++from PyQt5.QtWidgets import QMessageBox
++from PyQt5.QtCore    import QByteArray
+ 
+ from ffado.regdialog import *
+ 
+Seulement dans support/mixer-qt4/ffado/widgets: __pycache__
+diff -ur support/mixer-qt4/ffado/widgets/crossbarrouter.py support/mixer-qt4/ffado/widgets/crossbarrouter.py
+--- support/mixer-qt4/ffado/widgets/crossbarrouter.py	2016-10-29 10:36:06.101310725 +0200
++++ support/mixer-qt4/ffado/widgets/crossbarrouter.py	2016-10-28 12:12:35.861218000 +0200
+@@ -19,17 +19,19 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore
++from PyQt5 import QtGui, QtWidgets,QtCore
++from PyQt5.QtCore import pyqtSignal
+ import dbus, math
++from ffado.config import *
+ 
+ import logging
+ log = logging.getLogger("crossbarrouter")
+ 
+-class VuMeter(QtGui.QFrame):
++class VuMeter(QtWidgets.QFrame):
+     def __init__(self, interface, output, input=None, parent=None):
+-        QtGui.QFrame.__init__(self, parent)
++        QtWidgets.QFrame.__init__(self, parent)
+         self.setLineWidth(1)
+-        self.setFrameStyle(QtGui.QFrame.Panel|QtGui.QFrame.Sunken)
++        self.setFrameStyle(QtWidgets.QFrame.Panel|QtWidgets.QFrame.Sunken)
+         self.setMinimumSize(20, 20)
+ 
+         self.level = 0
+@@ -50,7 +52,7 @@
+         r.moveBottom(self.rect().height())
+         p.fillRect(r, self.palette().highlight())
+ 
+-class OutputSwitcher(QtGui.QFrame):
++class OutputSwitcher(QtWidgets.QFrame):
+     """
+ The name is a bit misleading. This widget selectes sources for a specified
+ destination.
+@@ -58,19 +60,20 @@
+ In mixer-usage this widget is at the top of the input-channel. Because the input
+ of the mixer is an available output from the routers point.
+ """
++    MixerRoutingChanged = pyqtSignal()
+     def __init__(self, interface, outname, parent):
+-        QtGui.QFrame.__init__(self, parent)
++        QtWidgets.QFrame.__init__(self, parent)
+         self.interface = interface
+         self.outname = outname
+         self.lastin = ""
+ 
+         self.setLineWidth(1)
+-        self.setFrameStyle(QtGui.QFrame.Sunken|QtGui.QFrame.Panel)
++        self.setFrameStyle(QtWidgets.QFrame.Sunken|QtWidgets.QFrame.Panel)
+ 
+-        self.layout = QtGui.QGridLayout(self)
++        self.layout = QtWidgets.QGridLayout(self)
+         self.setLayout(self.layout)
+ 
+-        self.lbl = QtGui.QLabel(self.outname, self)
++        self.lbl = QtWidgets.QLabel(self.outname, self)
+         self.lbl.setToolTip("The name of the destination that is to be controlled here.")
+         self.layout.addWidget(self.lbl, 0, 0)
+ 
+@@ -79,7 +82,7 @@
+ 
+         sources = self.interface.getSourceNames()
+ 
+-        self.combo = QtGui.QComboBox(self)
++        self.combo = QtWidgets.QComboBox(self)
+         self.combo.setToolTip("<qt>Select the source for this destination.<br>Each destination can only receive sound from one source at a time. But one source can send sound to multiple destinations.</qt>")
+         self.layout.addWidget(self.combo, 1, 0, 1, 2)
+         self.combo.addItem("Disconnected")
+@@ -90,7 +93,7 @@
+             self.combo.setCurrentIndex(self.combo.findText(src))
+         else:
+             self.combo.setCurrentIndex(0)
+-        self.connect(self.combo, QtCore.SIGNAL("activated(QString)"), self.comboCurrentChanged)
++        self.combo.activated.connect(self.comboCurrentChanged)
+ 
+ 
+     def peakValue(self, value):
+@@ -107,7 +110,8 @@
+         if inname != "Disconnected":
+             if self.interface.setConnectionState(str(inname), self.outname, True):
+                 if self.outname[:5] == "Mixer" or self.lastin[:5] == "Mixer" or str(inname)[:5] == "Mixer":
+-                    self.emit(QtCore.SIGNAL("MixerRoutingChanged"))
++                    
++                    self.MixerRoutingChanged.emit()
+                 self.lastin = str(inname)
+             else:
+                 log.warning(" Failed to connect %s to %s" % (inname, self.outname))
+@@ -115,34 +119,37 @@
+             self.lastin = ""
+ 
+ 
+-class CrossbarRouter(QtGui.QWidget):
++class CrossbarRouter(QtWidgets.QWidget):
++    MixerRoutingChanged = pyqtSignal()
+     def __init__(self, servername, basepath, parent=None):
+-        QtGui.QWidget.__init__(self, parent);
+-        self.bus = dbus.SessionBus()
+-        self.dev = self.bus.get_object(servername, basepath)
+-        self.interface = dbus.Interface(self.dev, dbus_interface="org.ffado.Control.Element.CrossbarRouter")
+-
++        QtWidgets.QWidget.__init__(self, parent);
++        if not DEBUG_BYPASSDBUS :
++            self.bus = dbus.SessionBus()
++            self.dev = self.bus.get_object(servername, basepath)
++            self.interface = dbus.Interface(self.dev, dbus_interface="org.ffado.Control.Element.CrossbarRouter")
++            self.destinations = self.interface.getDestinationNames()
++        else : 
++            self.destinations = []
+         self.settings = QtCore.QSettings(self)
+ 
+-        self.destinations = self.interface.getDestinationNames()
+         self.outgroups = []
+         for ch in self.destinations:
+             tmp = str(ch).split(":")[0]
+             if not tmp in self.outgroups:
+                 self.outgroups.append(tmp)
+ 
+-        self.biglayout = QtGui.QVBoxLayout(self)
++        self.biglayout = QtWidgets.QVBoxLayout(self)
+         self.setLayout(self.biglayout)
+ 
+-        self.toplayout = QtGui.QHBoxLayout()
++        self.toplayout = QtWidgets.QHBoxLayout()
+         self.biglayout.addLayout(self.toplayout)
+ 
+-        self.vubtn = QtGui.QPushButton("Switch peak meters", self)
++        self.vubtn = QtWidgets.QPushButton("Switch peak meters", self)
+         self.vubtn.setCheckable(True)
+-        self.connect(self.vubtn, QtCore.SIGNAL("toggled(bool)"), self.runVu)
++        self.vubtn.toggled.connect(self.runVu)
+         self.toplayout.addWidget(self.vubtn)
+ 
+-        self.layout = QtGui.QGridLayout()
++        self.layout = QtWidgets.QGridLayout()
+         self.biglayout.addLayout(self.layout)
+ 
+         self.switchers = {}
+@@ -150,13 +157,13 @@
+             btn = OutputSwitcher(self.interface, out, self)
+             self.layout.addWidget(btn, int(out.split(":")[-1]) + 1, self.outgroups.index(out.split(":")[0]))
+             self.switchers[out] = btn
+-            self.connect(btn, QtCore.SIGNAL("MixerRoutingChanged"), self.updateMixerRouting)
++            self.switchers[out].MixerRoutingChanged.connect(self.updateMixerRouting)
+ 
+         self.timer = QtCore.QTimer(self)
+         self.timer.setInterval(200)
+-        self.connect(self.timer, QtCore.SIGNAL("timeout()"), self.updateLevels)
++        self.timer.timeout.connect(self.updateLevels)
+ 
+-        self.vubtn.setChecked(self.settings.value("crossbarrouter/runvu", False).toBool())
++        self.vubtn.setChecked(self.settings.value("crossbarrouter/runvu", False))
+ 
+     def __del__(self):
+         print( "CrossbarRouter.__del__()" )
+@@ -173,6 +180,8 @@
+ 
+     def updateLevels(self):
+         #log.debug("CrossbarRouter.updateLevels()")
++        if DEBUG_BYPASSDBUS :
++            return
+         peakvalues = self.interface.getPeakValues()
+         #log.debug("Got %i peaks" % len(peakvalues))
+         for peak in peakvalues:
+@@ -181,7 +190,7 @@
+                 self.switchers[peak[0]].peakValue(peak[1])
+ 
+     def updateMixerRouting(self):
+-        self.emit(QtCore.SIGNAL("MixerRoutingChanged"))
++        self.MixerRoutingChanged.emit()
+ 
+     def saveSettings(self, indent):
+         routerSaveString = []
+diff -ur support/mixer-qt4/ffado/widgets/matrixmixer.py support/mixer-qt4/ffado/widgets/matrixmixer.py
+--- support/mixer-qt4/ffado/widgets/matrixmixer.py	2016-10-29 10:36:06.101310725 +0200
++++ support/mixer-qt4/ffado/widgets/matrixmixer.py	2016-10-28 12:12:35.863218000 +0200
+@@ -20,11 +20,14 @@
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ 
+-from PyQt4 import QtGui, QtCore, Qt
++from PyQt5 import QtGui, Qt, QtCore
++from PyQt5.QtCore import pyqtSignal
++from PyQt5.QtWidgets import QWidget, QAbstractSlider, QWidgetAction, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLayout, QSlider, QTabWidget, QToolBar, QComboBox, QPushButton, QLineEdit, QAction, QDoubleSpinBox, QScrollArea, QSizePolicy
+ import dbus, math, decimal
+ 
+ import logging
+ log = logging.getLogger("matrixmixer")
++from ffado.config import *
+ 
+ def toDBvalue(value):
+     n = int(value)
+@@ -65,8 +68,7 @@
+ 
+     def getColor(self, n):
+         #print( "ColorForNumber.getColor( %g )" % (n) )
+-        keys = self.colors.keys()
+-        keys.sort()
++        keys = sorted(self.colors.keys())
+         low = keys[-1]
+         high = keys[-1]
+         for i in range(len(keys)-1):
+@@ -99,9 +101,9 @@
+         else:
+             return QtGui.QColor(0, 0, 0)
+     
+-class MixerNode(QtGui.QAbstractSlider):
++class MixerNode(QAbstractSlider):
+     def __init__(self, input, output, value, max, muted, inverted, parent, matrix_obj):
+-        QtGui.QAbstractSlider.__init__(self, parent)
++        QAbstractSlider.__init__(self, parent)
+         #log.debug("MixerNode.__init__( %i, %i, %i, %i, %s )" % (input, output, value, max, str(parent)) )
+ 
+         # Store a direct link back to the underlying matrix object so the mute
+@@ -118,7 +120,7 @@
+             max = pow(2, 16)-1
+         self.setRange(0, max)
+         self.setValue(value)
+-        self.connect(self, QtCore.SIGNAL("valueChanged(int)"), self.internalValueChanged)
++        self.valueChanged.connect(self.internalValueChanged)
+ 
+         self.setSmall(False)
+ 
+@@ -126,35 +128,34 @@
+ 
+         self.setContextMenuPolicy(Qt.Qt.ActionsContextMenu)
+         self.mapper = QtCore.QSignalMapper(self)
+-        self.connect(self.mapper, QtCore.SIGNAL("mapped(const QString&)"), self.directValues)
++        self.mapper.mapped.connect(self.directValues)
+ 
+-        self.spinbox = QtGui.QDoubleSpinBox(self)
++        self.spinbox = QDoubleSpinBox(self)
+         self.spinbox.setRange(-40, 12)
+         self.spinbox.setSuffix(" dB")
+         if value != 0:
+             self.spinbox.setValue(toDBvalue(value))            
+-
+-        self.connect(self.spinbox, QtCore.SIGNAL("valueChanged(const QString&)"), self.directValues)
+-        action = QtGui.QWidgetAction(self)
++        self.spinbox.valueChanged.connect(self.directValues)
++        action = QWidgetAction(self)
+         action.setDefaultWidget(self.spinbox)
+         self.addAction(action)
+ 
+         for text in ["3 dB", "0 dB", "-3 dB", "-20 dB", "-inf dB"]:
+-            action = QtGui.QAction(text, self)
+-            self.connect(action, QtCore.SIGNAL("triggered()"), self.mapper, QtCore.SLOT("map()"))
++            action = QAction(text, self)
++            action.triggered.connect(self.mapper.map)
+             self.mapper.setMapping(action, text)
+             self.addAction(action)
+ 
+         # Only show the mute menu item if a value has been supplied
+         self.mute_action = None
+         if (muted != None):
+-            action = QtGui.QAction(text, self)
++            action = QAction(text, self)
+             action.setSeparator(True)
+             self.addAction(action)
+-            self.mute_action = QtGui.QAction("Mute", self)
++            self.mute_action = QAction("Mute", self)
+             self.mute_action.setCheckable(True)
+             self.mute_action.setChecked(muted)
+-            self.connect(self.mute_action, QtCore.SIGNAL("triggered()"), self.mapper, QtCore.SLOT("map()"))
++            self.mute_action.triggered.connect(self.mapper.map)
+             self.mapper.setMapping(self.mute_action, "Mute")
+             self.addAction(self.mute_action)
+ 
+@@ -162,13 +163,13 @@
+         self.inv_action = None
+         if (inverted != None):
+             if (muted == None):
+-                action = QtGui.QAction(text, self)
++                action = QAction(text, self)
+                 action.setSeparator(True)
+                 self.addAction(action)
+-            self.inv_action = QtGui.QAction("Invert", self)
++            self.inv_action = QAction("Invert", self)
+             self.inv_action.setCheckable(True)
+             self.inv_action.setChecked(inverted)
+-            self.connect(self.inv_action, QtCore.SIGNAL("triggered()"), self.mapper, QtCore.SLOT("map()"))
++            self.inv_action.triggered.connect(self.mapper.map)
+             self.mapper.setMapping(self.inv_action, "Invert")
+             self.addAction(self.inv_action)
+ 
+@@ -247,9 +248,9 @@
+         if v == 0:
+             symb_inf = u"\u221E"
+             text = "-" + symb_inf + " dB"
+-        p.drawText(rect, Qt.Qt.AlignCenter, QtCore.QString.fromUtf8(text))
++        p.drawText(rect, Qt.Qt.AlignCenter,text)### TODO QString.fromUtf8
+         if (self.inv_action!=None and self.inv_action.isChecked()):
+-            p.drawText(rect, Qt.Qt.AlignLeft|Qt.Qt.AlignTop, QtCore.QString.fromUtf8(" ϕ"))
++            p.drawText(rect, Qt.Qt.AlignLeft|Qt.Qt.AlignTop, " ϕ")
+ 
+     def internalValueChanged(self, value):
+         #log.debug("MixerNode.internalValueChanged( %i )" % value)
+@@ -257,7 +258,7 @@
+             dB = toDBvalue(value)
+             if self.spinbox.value() is not dB:
+                 self.spinbox.setValue(dB)
+-        self.emit(QtCore.SIGNAL("valueChanged"), (self.input, self.output, value) )
++        ###FIXME TODO self.valueChanged.emit(self.input, self.output, value)
+         self.update()
+ 
+     def setSmall(self, small):
+@@ -269,13 +270,14 @@
+             self.setMinimumSize(fontmetrics.boundingRect("-0.0 dB").size()*1.1)
+         self.update()
+ 
+-class MixerChannel(QtGui.QWidget):
++class MixerChannel(QWidget):
++    hide = pyqtSignal(int, bool)
+     def __init__(self, number, parent=None, name="", smallFont=False):
+-        QtGui.QWidget.__init__(self, parent)
+-        layout = QtGui.QGridLayout(self)
++        QWidget.__init__(self, parent)
++        layout = QGridLayout(self)
+         self.number = number
+         self.name = name
+-        self.lbl = QtGui.QLabel(self)
++        self.lbl = QLabel(self)
+         self.lbl.setAlignment(Qt.Qt.AlignCenter)
+         if (smallFont):
+             font = self.lbl.font()
+@@ -286,9 +288,9 @@
+ 
+         self.setContextMenuPolicy(Qt.Qt.ActionsContextMenu)
+ 
+-        action = QtGui.QAction("Make this channel small", self)
++        action = QAction("Make this channel small", self)
+         action.setCheckable(True)
+-        self.connect(action, QtCore.SIGNAL("triggered(bool)"), self.hideChannel)
++        action.triggered.connect(self.hideChannel)
+         self.addAction(action)
+ 
+     def hideChannel(self, hide):
+@@ -296,46 +298,56 @@
+             self.lbl.setText("%i" % (self.number+1));
+         else:
+             self.lbl.setText(self.name)
+-        self.emit(QtCore.SIGNAL("hide"), self.number, hide)
++        self.hide.emit(self.number, hide)
+         self.update()
+ 
+ # Matrix view widget
+-class MatrixControlView(QtGui.QWidget):
++class MatrixControlView(QWidget):
++    valueChanged = pyqtSignal([dict])
+     def __init__(self, servername, basepath, parent=None, sliderMaxValue=-1, mutespath=None, invertspath=None, smallFont=False, shortname=False, shortcolname="Ch", shortrowname="Ch", transpose=False):
+-        QtGui.QWidget.__init__(self, parent)
++        QWidget.__init__(self, parent)
+ 
+-        self.bus = dbus.SessionBus()
+-        self.dev = self.bus.get_object(servername, basepath)
+-        self.interface = dbus.Interface(self.dev, dbus_interface="org.ffado.Control.Element.MatrixMixer")
++        if not DEBUG_BYPASSDBUS :
++            self.bus = dbus.SessionBus()
++            self.dev = self.bus.get_object(servername, basepath)
++            self.interface = dbus.Interface(self.dev, dbus_interface="org.ffado.Control.Element.MatrixMixer")
+ 
+         self.transpose = transpose
+         if (transpose):
+             self.shortcolname = shortrowname
+             self.shortrowname = shortcolname
+-            self.cols = self.interface.getRowCount()
+-            self.rows = self.interface.getColCount()
++            if DEBUG_BYPASSDBUS :
++                self.cols = 2
++                self.rows = 2
++            else:
++                self.cols = self.interface.getRowCount()
++                self.rows = self.interface.getColCount()
+         else:
+             self.shortcolname = shortcolname
+             self.shortrowname = shortrowname
+-            self.cols = self.interface.getColCount()
+-            self.rows = self.interface.getRowCount()
++            if DEBUG_BYPASSDBUS :
++                self.cols = 2
++                self.rows = 2
++            else:
++                self.cols = self.interface.getColCount()
++                self.rows = self.interface.getRowCount()
+ 
+         log.debug("Mixer has %i rows and %i columns" % (self.rows, self.cols))
+ 
+         self.mutes_dev = None
+         self.mutes_interface = None
+-        if (mutespath != None):
++        if not DEBUG_BYPASSDBUS and (mutespath != None):
+             self.mutes_dev = self.bus.get_object(servername, mutespath)
+             self.mutes_interface = dbus.Interface(self.mutes_dev, dbus_interface="org.ffado.Control.Element.MatrixMixer")
+ 
+         self.inverts_dev = None
+         self.inverts_interface = None
+-        if (invertspath != None):
++        if not DEBUG_BYPASSDBUS and (invertspath != None):
+             self.inverts_dev = self.bus.get_object(servername, invertspath)
+             self.inverts_interface = dbus.Interface(self.inverts_dev, dbus_interface="org.ffado.Control.Element.MatrixMixer")
+ 
+-        layout = QtGui.QGridLayout(self)
+-        layout.setSizeConstraint(QtGui.QLayout.SetNoConstraint);
++        layout = QGridLayout(self)
++        layout.setSizeConstraint(QLayout.SetNoConstraint);
+         self.setLayout(layout)
+ 
+         self.rowHeaders = []
+@@ -348,7 +360,7 @@
+         if (self.cols > 1):
+             for i in range(self.cols):
+                 ch = MixerChannel(i, self, self.getColName(i, self.shortname), smallFont)
+-                self.connect(ch, QtCore.SIGNAL("hide"), self.hideColumn)
++                ch.hide.connect(self.hideColumn)
+                 layout.addWidget(ch, 0, i+1)
+                 self.columnHeaders.append( ch )
+             layout.setRowStretch(0, 0)
+@@ -356,7 +368,7 @@
+         if (self.rows > 1):
+             for i in range(self.rows):
+                 ch = MixerChannel(i, self, self.getRowName(i, self.shortname), smallFont)
+-                self.connect(ch, QtCore.SIGNAL("hide"), self.hideRow)
++                ch.hide.connect(self.hideRow)
+                 layout.addWidget(ch, i+1, 0)
+                 self.rowHeaders.append( ch )
+ 
+@@ -379,7 +391,11 @@
+                     inv_value = None
+                     if (self.inverts_interface != None):
+                         inv_value = self.inverts_interface.getValue(i,j)
+-                    node = MixerNode(j, i, self.interface.getValue(i,j), sliderMaxValue, mute_value, inv_value, self, self)
++                    if DEBUG_BYPASSDBUS:
++                        val = 0
++                    else:
++                        val = self.interface.getValue(i,j)
++                    node = MixerNode(j, i, val, sliderMaxValue, mute_value, inv_value, self, self)
+                 if (smallFont):
+                     font = node.font()
+                     font.setPointSize(font.pointSize()/1.5)
+@@ -392,10 +408,10 @@
+         self.hiddenCols = []
+ 
+     def nodeConnect(self, node):
+-        self.connect(node, QtCore.SIGNAL("valueChanged"), self.valueChanged)
++        node.valueChanged.connect(self.setValue)
+ 
+     def nodeDisconnect(self, node):
+-        self.disconnect(node, QtCore.SIGNAL("valueChanged"), self.valueChanged)
++        node.valueChanged.disconnect(self.setValue)
+ 
+     def checkVisibilities(self):
+         for x in range(len(self.items)):
+@@ -421,6 +437,8 @@
+ 
+     # Columns and rows
+     def getColName(self, i, shortname):
++        if DEBUG_BYPASSDBUS :
++            return "dummy"
+         if (self.transpose):
+             name = self.interface.getRowName(i)
+         else:
+@@ -432,6 +450,8 @@
+         return name
+ 
+     def getRowName(self, j, shortname):
++        if DEBUG_BYPASSDBUS :
++            return "dummy"
+         if (self.transpose):
+             name = self.interface.getColName(j)
+         else:
+@@ -442,11 +462,10 @@
+             name = self.shortrowname + number
+         return name
+ 
+-    def valueChanged(self, n):
++    def setValue(self, n):
+         #log.debug("MatrixNode.valueChanged( %s )" % str(n))
+         self.interface.setValue(n[1], n[0], n[2])
+-        self.emit(QtCore.SIGNAL("valueChanged"), n)
+-        
++        self.valueChanged.emit(n)
+     # Update when routing is modified
+     def updateRouting(self):
+         if (self.cols > 1):
+@@ -639,11 +658,11 @@
+         self.refreshValues()
+         return True
+ 
+-class VolumeSlider(QtGui.QSlider):
++class VolumeSlider(QSlider):
+     def __init__(self, In, Out, value, parent):
+-        QtGui.QSlider.__init__(self, QtCore.Qt.Vertical, parent)
++        QSlider.__init__(self, QtCore.Qt.Vertical, parent)
+ 
+-        self.setTickPosition(QtGui.QSlider.TicksBothSides)
++        self.setTickPosition(QSlider.TicksBothSides)
+         v_min = 10.0*toDBvalue(0)
+         v_max = 10.0*toDBvalue(65536)
+         self.setTickInterval((v_max-v_min)/10)
+@@ -653,7 +672,7 @@
+         self.sliderSetValue(value)
+         self.In = In
+         self.Out = Out
+-        self.connect(self, QtCore.SIGNAL("valueChanged(int)"), self.sliderValueChanged)
++        self.valueChanged.connect(self.sliderValueChanged)
+ 
+     def sliderSetValue(self, value):
+         #log.debug("Volume slider value changed( %i )" % value)
+@@ -668,13 +687,13 @@
+     # Emit signal for further use, especially for matrix view
+     def sliderValueChanged(self, value):
+         value = fromDBvalue(0.1*value)
+-        self.emit(QtCore.SIGNAL("valueChanged"), (self.In, self.Out, value))
++        self.valueChanged.emit(self.In, self.Out, value)
+         self.update()
+ 
+ 
+-class VolumeSliderValueInfo(QtGui.QLineEdit):
++class VolumeSliderValueInfo(QLineEdit):
+     def __init__(self, In, Out, value, parent):
+-        QtGui.QLineEdit.__init__(self, parent)
++        QLineEdit.__init__(self, parent)
+ 
+         self.setReadOnly(True)
+         self.setAlignment(Qt.Qt.AlignCenter)
+@@ -707,13 +726,13 @@
+ 
+         self.setText(text)
+         
+-class BalanceSlider(QtGui.QSlider):
++class BalanceSlider(QSlider):
+     def __init__(self, In, Out, value, parent):
+-        QtGui.QSlider.__init__(self, QtCore.Qt.Horizontal, parent)
++        QSlider.__init__(self, QtCore.Qt.Horizontal, parent)
+ 
+         v_min = -50
+         v_max = 50
+-        self.setTickPosition(QtGui.QSlider.TicksBothSides)
++        self.setTickPosition(QSlider.TicksBothSides)
+         self.setTickInterval((v_max-v_min)/2)
+         self.setMinimum(v_min)
+         self.setMaximum(v_max)
+@@ -721,7 +740,7 @@
+         self.In = In
+         self.Out = Out
+         self.sliderSetValue(value)
+-        self.connect(self, QtCore.SIGNAL("valueChanged(int)"), self.sliderValueChanged)
++        self.valueChanged.connect(self.sliderValueChanged)
+ 
+     def sliderSetValue(self, value):
+         #log.debug("Balance fader value set( %d, %d, %f )" % (self.In, self.Out, value))
+@@ -734,16 +753,18 @@
+     def sliderValueChanged(self, value):
+         value = float(round(self.value()/50.0, 2))
+         #log.debug("Balance fader value changed( %d, %d, %f )" % (self.In, self.Out, value))
+-        self.emit(QtCore.SIGNAL("valueChanged"), (self.In, self.Out, value))
++        self.valueChanged.emit(self.In, self.Out, value)
+ 
+ # Slider view widget
+-class SliderControlView(QtGui.QWidget):
++class SliderControlView(QWidget):
++    valueChanged = pyqtSignal(list)
+     def __init__(self, parent, servername, basepath, rule="Columns_are_inputs", shortname=False, shortinname="Ch", shortoutname="Ch", stereochannels = []):
+-        QtGui.QWidget.__init__(self, parent)
++        QWidget.__init__(self, parent)
+ 
+-        self.bus = dbus.SessionBus()
+-        self.dev = self.bus.get_object(servername, basepath)
+-        self.interface = dbus.Interface(self.dev, dbus_interface="org.ffado.Control.Element.MatrixMixer")
++        if not DEBUG_BYPASSDBUS :
++            self.bus = dbus.SessionBus()
++            self.dev = self.bus.get_object(servername, basepath)
++            self.interface = dbus.Interface(self.dev, dbus_interface="org.ffado.Control.Element.MatrixMixer")
+ 
+         self.rule = rule
+         self.shortname = shortname
+@@ -759,8 +780,8 @@
+ 
+         k = 0
+         for i in range(self.nbOut):
+-            widget = QtGui.QWidget(parent)
+-            v_layout = QtGui.QVBoxLayout(widget)
++            widget = QWidget(parent)
++            v_layout = QVBoxLayout(widget)
+             v_layout.setAlignment(Qt.Qt.AlignCenter)
+             widget.setLayout(v_layout)
+             self.out.append(widget)
+@@ -778,14 +799,14 @@
+ 
+             # Mixer/Out info label
+             if (self.nbOut > 1):
+-                lbl = QtGui.QLabel(widget)
++                lbl = QLabel(widget)
+                 lbl.setText(self.getOutName(i, self.shortname))
+                 lbl.setAlignment(Qt.Qt.AlignCenter)
+                 v_layout.addWidget(lbl)
+                 self.out[i].lbl.append(lbl)
+ 
+-            h_layout_wid = QtGui.QWidget(widget)
+-            h_layout = QtGui.QHBoxLayout(h_layout_wid)
++            h_layout_wid = QWidget(widget)
++            h_layout = QHBoxLayout(h_layout_wid)
+             h_layout.setAlignment(Qt.Qt.AlignCenter)
+             h_layout_wid.setLayout(h_layout)
+             v_layout.addWidget(h_layout_wid)
+@@ -794,22 +815,22 @@
+             self.out[i].balance = []
+ 
+             for j in range(self.nbIn):
+-                h_v_layout_wid = QtGui.QWidget(h_layout_wid)
+-                h_v_layout = QtGui.QVBoxLayout(h_v_layout_wid)
++                h_v_layout_wid = QWidget(h_layout_wid)
++                h_v_layout = QVBoxLayout(h_v_layout_wid)
+                 h_v_layout.setAlignment(Qt.Qt.AlignCenter)
+                 h_v_layout_wid.setLayout(h_v_layout)
+                 h_layout.addWidget(h_v_layout_wid)
+ 
+                 # Mixer/In info label
+                 if (self.nbIn > 1):
+-                    lbl = QtGui.QLabel(h_v_layout_wid)
++                    lbl = QLabel(h_v_layout_wid)
+                     lbl.setText(self.getInName(j, self.shortname))
+                     lbl.setAlignment(Qt.Qt.AlignCenter)
+                     h_v_layout.addWidget(lbl)
+                     self.out[i].lbl.append(lbl)
+ 
+-                h_v_h_layout_wid = QtGui.QWidget(h_v_layout_wid)
+-                h_v_h_layout = QtGui.QHBoxLayout(h_v_h_layout_wid)
++                h_v_h_layout_wid = QWidget(h_v_layout_wid)
++                h_v_h_layout = QHBoxLayout(h_v_h_layout_wid)
+                 h_v_h_layout.setAlignment(Qt.Qt.AlignCenter)
+                 h_v_h_layout_wid.setLayout(h_v_h_layout)
+                 h_v_layout.addWidget(h_v_h_layout_wid)
+@@ -835,24 +856,28 @@
+                 k += 1
+ 
+     def volumeConnect(self, volume):
+-        self.connect(volume, QtCore.SIGNAL("valueChanged"), self.valueChangedVolume)
++        volume.valueChanged.connect(self.valueChangedVolume)
+ 
+     def volumeDisconnect(self, volume):
+-        self.disconnect(volume, QtCore.SIGNAL("valueChanged"), self.valueChangedVolume)
++        volume.valueChanged.disconnect(self.valueChangedVolume)
+ 
+     def balanceConnect(self, balance):
+-        self.connect(balance, QtCore.SIGNAL("valueChanged"), self.valueChangedBalance)
++        balance.valueChanged.connect(self.valueChangedBalance)
+ 
+     def balanceDisconnect(self, balance):
+-        self.disconnect(balance, QtCore.SIGNAL("valueChanged"), self.valueChangedBalance)
++        balance.valueChanged.disconnect(self.valueChangedBalance)
+ 
+     def getNbIn(self):
++        if DEBUG_BYPASSDBUS :
++            return 2
+         if (self.rule == "Columns_are_inputs"):
+             return self.interface.getColCount()
+         else:
+             return self.interface.getRowCount()
+         
+     def getNbOut(self):
++        if DEBUG_BYPASSDBUS :
++            return 2
+         if (self.rule == "Columns_are_inputs"):
+             nbout = self.interface.getRowCount()
+         else:
+@@ -860,6 +885,8 @@
+         return nbout-len(self.stereochannels)
+         
+     def getVolumeValue(self, In, i):
++        if DEBUG_BYPASSDBUS :
++            return 1
+         Out = self.out[i].out_1
+         if (self.rule == "Columns_are_inputs"):
+             vl = self.interface.getValue(Out, In)           
+@@ -876,6 +903,8 @@
+ 
+     def getBalanceValue(self, In, i):
+         Out = self.out[i].out_1
++        if DEBUG_BYPASSDBUS :
++            return 0.5
+         if (self.rule == "Columns_are_inputs"):
+             vl = self.interface.getValue(Out, In)           
+             vr = self.interface.getValue(Out+1, In)           
+@@ -885,6 +914,8 @@
+         return getStereoBalance(vl, vr)
+ 
+     def setValue(self, In, Out, val):
++        if DEBUG_BYPASSDBUS :
++            return
+         if (self.rule == "Columns_are_inputs"):
+             return self.interface.setValue(Out, In, val)           
+         else:
+@@ -928,11 +959,11 @@
+             vr = int(getVolumeRight(v, b))
+             self.setValue(n[0], n2, vr)
+             n_t = (n[0], n1, vl, n[0], n2, vr)
+-            self.emit(QtCore.SIGNAL("valueChanged"), n_t)
++            self.valueChanged.emit(n_t)
+         else:
+             self.setValue(n[0], n1, v)
+             n_t = (n[0], n1, v)
+-            self.emit(QtCore.SIGNAL("valueChanged"), n_t)
++            self.valueChanged.emit(n_t)
+         self.out[n[1]].svl[n[0]].sliderSetValue(v)
+ 
+     def valueChangedBalance(self, n):
+@@ -946,7 +977,7 @@
+         vr = int(getVolumeRight(v, b))
+         self.setValue(n[0], n2, vr)
+         n_t = (n[0], n1, vl, n[0], n2, vr)
+-        self.emit(QtCore.SIGNAL("valueChanged"), n_t)
++        self.valueChanged.emit(n_t)
+ 
+     def getOutName(self, i, shortname):
+         self.shortname = shortname
+@@ -959,6 +990,8 @@
+             name = self.shortoutname + number
+             return name
+         else:
++            if DEBUG_BYPASSDBUS :
++                return "dummy"
+             if (self.rule == "Columns_are_inputs"):                
+                 if (self.out[i].is_stereo):
+                     name = self.interface.getRowName(k).replace('\n','')+" + "+self.interface.getRowName(k+1).replace('\n','')
+@@ -979,6 +1012,8 @@
+             name = self.shortinname + number
+             return name
+         else:
++            if DEBUG_BYPASSDBUS :
++                return "dummy"
+             if (self.rule == "Columns_are_inputs"):
+                 return self.interface.getColName(j)            
+             else:
+@@ -1020,8 +1055,12 @@
+                     self.out[i].svl[n_in].sliderSetValue(v)
+ 
+     def saveSettings(self, indent):
+-        rows = self.interface.getRowCount()
+-        cols = self.interface.getColCount()
++        if DEBUG_BYPASSDBUS :
++            rows = 2
++            cols = 2
++        else:
++            rows = self.interface.getRowCount()
++            cols = self.interface.getColCount()
+         matrixSaveString = []
+         matrixSaveString.append('%s  <row_number>\n' % indent)
+         matrixSaveString.append('%s    %d\n' % (indent, rows))        
+@@ -1103,9 +1142,9 @@
+ 
+ from functools import partial
+ 
+-class MatrixMixer(QtGui.QWidget):
+-    def __init__(self, servername, basepath, parent=None, rule="Columns_are_inputs", sliderMaxValue=-1, mutespath=None, invertspath=None, smallFont=False, taborientation=QtGui.QTabWidget.West, tabshape=QtGui.QTabWidget.Triangular):
+-        QtGui.QWidget.__init__(self, parent)
++class MatrixMixer(QWidget):
++    def __init__(self, servername, basepath, parent=None, rule="Columns_are_inputs", sliderMaxValue=-1, mutespath=None, invertspath=None, smallFont=False, taborientation=QTabWidget.West, tabshape=QTabWidget.Triangular):
++        QWidget.__init__(self, parent)
+         self.servername = servername
+         self.basepath = basepath
+         self.sliderMaxValue = sliderMaxValue
+@@ -1113,20 +1152,20 @@
+         self.invertspath = invertspath
+         self.smallFont = smallFont
+ 
+-        self.layout = QtGui.QVBoxLayout(self)
++        self.layout = QVBoxLayout(self)
+         self.setLayout(self.layout)
+ 
+         # Mixer view Tool bar
+-        mxv_set = QtGui.QToolBar("View settings", self)
++        mxv_set = QToolBar("View settings", self)
+ 
+         # Here is a hack; the first action button appears to behaves strangely,
+         # possibly a PyQt bug (or an unsufficient fair implementation of it)
+         # Feel free to remove the next three lines at a time in the future
+-        hack = QtGui.QAction(" ", mxv_set)
++        hack = QAction(" ", mxv_set)
+         hack.setDisabled(True)
+         mxv_set.addAction(hack)
+ 
+-        transpose_matrix = QtGui.QAction("Transpose", mxv_set)
++        transpose_matrix = QAction("Transpose", mxv_set)
+         self.transpose = False
+         transpose_matrix.setShortcut('Ctrl+T')
+         transpose_matrix.setToolTip("Invert rows and columns in Matrix view")
+@@ -1134,29 +1173,29 @@
+         transpose_matrix.triggered.connect(self.transposeMatrixView)
+         mxv_set.addSeparator()
+ 
+-        self.hide_matrix = QtGui.QAction("Hide matrix", mxv_set)
++        self.hide_matrix = QAction("Hide matrix", mxv_set)
+         self.hide_matrix_bool = False
+         mxv_set.addAction(self.hide_matrix)
+         self.hide_matrix.triggered.connect(self.hideMatrixView)
+         mxv_set.addSeparator()
+ 
+-        self.hide_per_output = QtGui.QAction("Hide per Output", mxv_set)
++        self.hide_per_output = QAction("Hide per Output", mxv_set)
+         self.hide_per_output_bool = False
+         mxv_set.addAction(self.hide_per_output)
+         self.hide_per_output.triggered.connect(self.hidePerOutputView)
+         mxv_set.addSeparator()
+ 
+-        self.use_short_names = QtGui.QAction("Short names", mxv_set)
++        self.use_short_names = QAction("Short names", mxv_set)
+         self.short_names_bool = False
+         mxv_set.addAction(self.use_short_names)
+         self.use_short_names.setToolTip("Use short or full names for input and output channels")
+         self.use_short_names.triggered.connect(self.shortChannelNames)
+         mxv_set.addSeparator()
+ 
+-        font_switch_lbl = QtGui.QLabel(mxv_set)
++        font_switch_lbl = QLabel(mxv_set)
+         font_switch_lbl.setText("Font size ")
+         mxv_set.addWidget(font_switch_lbl)
+-        font_switch = QtGui.QComboBox(mxv_set)
++        font_switch = QComboBox(mxv_set)
+         font_switch.setToolTip("Labels font size")
+         font = font_switch.font()
+         for i in range(10):
+@@ -1164,14 +1203,14 @@
+         font_switch.setCurrentIndex(font_switch.findText(" %d " % font.pointSize()))
+         mxv_set.addWidget(font_switch)
+         mxv_set.addSeparator()
+-        self.connect(font_switch, QtCore.SIGNAL("activated(QString)"), self.changeFontSize)
++        font_switch.activated.connect(self.changeFontSize)
+ 
+         self.layout.addWidget(mxv_set)
+         self.mxv_set = mxv_set
+ 
+         # First tab is for matrix view
+         # Next are for "per Out" view
+-        self.tabs = QtGui.QTabWidget(self)
++        self.tabs = QTabWidget(self)
+         self.tabs.setTabPosition(taborientation)
+         self.tabs.setTabShape(tabshape)
+         self.layout.addWidget(self.tabs)
+@@ -1184,9 +1223,9 @@
+             self.matrix = MatrixControlView(servername, basepath, self, sliderMaxValue, mutespath, invertspath, smallFont, self.short_names_bool, "In", "Out", self.transpose)
+         else:
+             self.matrix = MatrixControlView(servername, basepath, self, sliderMaxValue, mutespath, invertspath, smallFont, self.short_names_bool, "Out", "In", self.transpose)
+-        self.connect(self.matrix, QtCore.SIGNAL("valueChanged"), self.matrixControlChanged)
++        self.matrix.valueChanged.connect(self.matrixControlChanged)
+ 
+-        self.scrollarea_matrix = QtGui.QScrollArea(self.tabs)
++        self.scrollarea_matrix = QScrollArea(self.tabs)
+         self.scrollarea_matrix.setWidgetResizable(True)
+         self.scrollarea_matrix.setWidget(self.matrix)
+         self.tabs.addTab(self.scrollarea_matrix, " Matrix ")
+@@ -1203,20 +1242,20 @@
+             else:
+                 nb_out_mono = self.matrix.cols
+ 
+-        stereo_switch_lbl = QtGui.QLabel(mxv_set)
++        stereo_switch_lbl = QLabel(mxv_set)
+         stereo_switch_lbl.setText("Stereo: ")
+         mxv_set.addWidget(stereo_switch_lbl)
+ 
+         self.stereo_channels = []
+ 
+         self.stereo_switch = []
+-        for i in range(nb_out_mono/2):
+-            stereo_switch = QtGui.QPushButton("%d+%d" % (2*i+1, 2*i+2), mxv_set)
++        for i in range(int(nb_out_mono/2)):
++            stereo_switch = QPushButton("%d+%d" % (2*i+1, 2*i+2), mxv_set)
+             stereo_switch.setToolTip("Set these output channels as stereo")
+             stereo_switch.setCheckable(True)
+             stereo_switch.clicked.connect(partial(self.switchStereoChannel, i))
+             stereo_switch.setMinimumSize(stereo_switch_lbl.fontMetrics().boundingRect("%d+%d" % (nb_out_mono, nb_out_mono)).size()*1.05)
+-            stereo_switch.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
++            stereo_switch.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+             stereo_switch.is_stereo = False
+             mxv_set.addWidget(stereo_switch)
+             self.stereo_switch.append(stereo_switch)
+@@ -1224,9 +1263,9 @@
+ 
+         # Per out view tabs
+         self.perOut = SliderControlView(self, servername, basepath, rule, self.short_names_bool, "In", "Out", self.stereo_channels)
+-        self.connect(self.perOut, QtCore.SIGNAL("valueChanged"), self.sliderControlChanged)
++        self.perOut.valueChanged.connect(self.sliderControlChanged)
+         for i in range(self.perOut.nbOut):
+-            self.perOut.out[i].scrollarea = QtGui.QScrollArea(self.tabs)
++            self.perOut.out[i].scrollarea = QScrollArea(self.tabs)
+             self.perOut.out[i].scrollarea.setWidgetResizable(True)
+             self.perOut.out[i].scrollarea.setWidget(self.perOut.out[i])
+             self.tabs.addTab(self.perOut.out[i].scrollarea, " %s " % self.perOut.out[i].outname)
+@@ -1239,9 +1278,9 @@
+             self.matrix = MatrixControlView(self.servername, self.basepath, self, self.sliderMaxValue, self.mutespath, self.invertspath, self.smallFont, self.short_names_bool, "In", "Out", self.transpose)
+         else:
+             self.matrix = MatrixControlView(self.servername, self.basepath, self, self.sliderMaxValue, self.mutespath, self.invertspath, self.smallFont, self.short_names_bool, "Out", "In", self.transpose)
+-        self.connect(self.matrix, QtCore.SIGNAL("valueChanged"), self.matrixControlChanged)
++        self.matrix.valueChanged.connect(self.matrixControlChanged)
+ 
+-        self.scrollarea_matrix = QtGui.QScrollArea(self.tabs)
++        self.scrollarea_matrix = QScrollArea(self.tabs)
+         self.scrollarea_matrix.setWidgetResizable(True)
+         self.scrollarea_matrix.setWidget(self.matrix)
+         self.tabs.insertTab(0, self.scrollarea_matrix, "Matrix")
+@@ -1379,10 +1418,10 @@
+             self.tabs.removeTab(index_0)
+         self.perOut.destroy()
+         self.perOut = SliderControlView(self, self.servername, self.basepath, self.rule, self.short_names_bool, "In", "Out", self.stereo_channels)
+-        self.connect(self.perOut, QtCore.SIGNAL("valueChanged"), self.sliderControlChanged)
++        self.perOut.valueChanged.connect(self.sliderControlChanged)
+         current = 0
+         for i in range(self.perOut.nbOut):
+-            self.perOut.out[i].scrollarea = QtGui.QScrollArea(self.tabs)
++            self.perOut.out[i].scrollarea = QScrollArea(self.tabs)
+             self.perOut.out[i].scrollarea.setWidgetResizable(True)
+             self.perOut.out[i].scrollarea.setWidget(self.perOut.out[i])
+             self.tabs.addTab(self.perOut.out[i].scrollarea, " %s " % self.perOut.out[i].outname)
