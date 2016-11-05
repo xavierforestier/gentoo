@@ -77,8 +77,9 @@ myescons() {
 		$(use_scons optimize ENABLE_OPTIMIZATIONS)
 		$(use_scons expat SERIALIZE_USE_EXPAT)
 		BUILD_MIXER="${mixer}"
-		BUILD_MIXER="${PYTHON_SITEDIR}"
-		PYPKGDIR=$(multilib_native_use_scons test-programs BUILD_TESTS)
+		PYPKGDIR="${PYTHON_SITEDIR}"
+		$(multilib_native_use_scons test-programs BUILD_TESTS)
+		
 	)
 	escons "${@}"
 }
