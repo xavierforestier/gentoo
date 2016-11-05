@@ -66,6 +66,7 @@ myescons() {
 	elif use qt4; then
 		mixer="true"
         fi
+        python_get_sitedir
 	myesconsargs=(
 		PREFIX="${EPREFIX}/usr"
 		LIBDIR="${EPREFIX}/usr/$(get_libdir)"
