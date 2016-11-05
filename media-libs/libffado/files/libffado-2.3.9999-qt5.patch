@@ -3430,8 +3430,8 @@ diff -ur support/mixer-qt4/ffado/widgets/matrixmixer.py support/mixer-qt4/ffado/
              self.perOut.out[i].scrollarea.setWidgetResizable(True)
              self.perOut.out[i].scrollarea.setWidget(self.perOut.out[i])
              self.tabs.addTab(self.perOut.out[i].scrollarea, " %s " % self.perOut.out[i].outname)
---- bin/ffado/qt5/new/configuration	2016-11-05 23:14:37.668451628 +0100
-+++ /usr/share/libffado/configuration	2016-11-05 19:14:02.226003000 +0100
+--- configuration	2016-11-05 23:14:37.668451628 +0100
++++ configuration	2016-11-05 19:14:02.226003000 +0100
 @@ -13,7 +13,7 @@
      vendorname  = "Mackie";
      modelname   = "Onyx Firewire";
