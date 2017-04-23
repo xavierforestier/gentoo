@@ -44,6 +44,11 @@ RDEPEND="
 "
 DEPEND="${RDEPEND}"
 
+src_prepare() {
+	[[ ${PATCHES[@]} ]] && EPATCH_SOURCE="${FILESDIR}" epatch "${PATCHES[@]}"
+}
+
+
 multilib_src_configure() {
 	local myconf=( ${EXTRA_LIBPOSTPROC_CONF} )
 	for i in $(get-flag march) $(get-flag mcpu) $(get-flag mtune) ; do
