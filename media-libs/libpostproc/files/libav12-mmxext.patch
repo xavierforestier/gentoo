@@ -1,13 +1,11 @@
---- libpostproc/postprocess.c	2017-04-23 11:21:51.300998416 +0200
-+++ libpostproc/postprocess.c	2017-04-23 11:22:07.154800216 +0200
-@@ -961,8 +961,8 @@
+--- libpostproc/postprocess.c.old	2017-04-23 15:01:29.522247979 +0200
++++ libpostproc/postprocess.c	2017-04-23 15:01:33.641196485 +0200
+@@ -961,7 +961,7 @@
  
          if (caps & AV_CPU_FLAG_MMX)
              cpuCaps |= PP_CPU_CAPS_MMX;
 -        if (caps & AV_CPU_FLAG_MMX2)
--            cpuCaps |= PP_CPU_CAPS_MMX2;
 +        if (caps & AV_CPU_FLAG_MMXEXT)
-+            cpuCaps |= PP_CPU_CAPS_MMXEXT;
+             cpuCaps |= PP_CPU_CAPS_MMX2;
          if (caps & AV_CPU_FLAG_3DNOW)
              cpuCaps |= PP_CPU_CAPS_3DNOW;
-         if (caps & AV_CPU_FLAG_ALTIVEC)
