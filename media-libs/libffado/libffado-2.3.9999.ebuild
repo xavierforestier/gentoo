@@ -21,7 +21,8 @@ else
 	SRC_URI="http://www.ffado.org/files/${P}.tgz"
 	KEYWORDS="~amd64 ~ppc ~x86"
 fi
-PATCHES=(libffado-2.3.9999-fix-python-3.patch libffado-2.3.9999-libxml3.0.patch libffado-2.3.9999-fix-gcc_warning.patch libffado-2.3.9999-gcc_auto_ptr.patch)
+#PATCHES=(libffado-2.3.9999-fix-python-3.patch libffado-2.3.9999-libxml3.0.patch libffado-2.3.9999-fix-gcc_warning.patch libffado-2.3.9999-gcc_auto_ptr.patch)
+PATCHES=(libffado-2.3.9999-svn2723_compile_failed.patch)
 LICENSE="GPL-2"
 SLOT="0"
 IUSE="debug optimize qt4 qt5 expat +test-programs"
@@ -96,7 +97,7 @@ src_unpack() {
 src_prepare() {
 	[[ ${PATCHES[@]} ]] && EPATCH_SOURCE="${FILESDIR}" epatch "${PATCHES[@]}"
         if use qt5; then
-            epatch "${FILESDIR}/${P}-qt5.patch"
+            #epatch "${FILESDIR}/${P}-qt5.patch"
             cp ${FILESDIR}/*.png ${WORKDIR}/${P}/support/mixer-qt4/ffado/mixer/
         fi
 	multilib_copy_sources	
