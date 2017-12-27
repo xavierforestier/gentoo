@@ -33,7 +33,7 @@ RDEPEND="dev-cpp/libxmlpp[${MULTILIB_USEDEP}]
 	dev-libs/libconfig[cxx,${MULTILIB_USEDEP}]
 	media-libs/alsa-lib
 	media-libs/libiec61883[${MULTILIB_USEDEP}]
-	media-sound/jack-audio-connection-kit[${MULTILIB_USEDEP}]
+	|| ( media-sound/jack2[${MULTILIB_USEDEP}] media-sound/jack-audio-connection-kit[${MULTILIB_USEDEP}] )
 	sys-apps/dbus
 	sys-libs/libraw1394[${MULTILIB_USEDEP}]
 	sys-libs/libavc1394[${MULTILIB_USEDEP}]
