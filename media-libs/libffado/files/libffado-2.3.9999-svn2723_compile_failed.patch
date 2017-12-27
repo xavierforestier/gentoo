@@ -1,0 +1,83 @@
+--- /var/tmp/portage/media-libs/libffado-2.3.9999/work/libffado-2.3.9999/SConstruct	2017-12-27 17:40:23.473896508 +0100
++++ SConstruct	2017-12-27 17:37:53.987765342 +0100
+@@ -395,10 +395,9 @@
+ 
+ # PyQT checks
+ if env['BUILD_MIXER'] != 'false':
+-    have_dbus = (conf.CheckForApp( 'which pyuic4' ) and conf.CheckForPyModule( 'dbus.mainloop.qt' ))
+-    have_pyqt4 = (conf.CheckForApp( 'which pyuic4' ) and conf.CheckForPyModule( 'PyQt4' ))
+-    have_pyqt5 = (conf.CheckForApp( 'which pyuic5' ) and conf.CheckForPyModule( 'PyQt5' ))
+-    if ((have_pyqt4 or have_pyqt5) and have_dbus):
++    have_pyqt4 = (conf.CheckForApp( 'which pyuic4' ) and conf.CheckForPyModule( 'PyQt4' ) and conf.CheckForPyModule( 'dbus.mainloop.qt' ))
++    have_pyqt5 = (conf.CheckForApp( 'which pyuic5' ) and conf.CheckForPyModule( 'PyQt5' ) and conf.CheckForPyModule( 'dbus.mainloop.pyqt5' ))
++    if (have_pyqt4 or have_pyqt5):
+         env['BUILD_MIXER'] = 'true'
+     elif not env.GetOption('clean'):
+         if env['BUILD_MIXER'] == 'auto':
+--- /var/tmp/portage/media-libs/libffado-2.3.9999/work/libffado-2.3.9999/support/tools/ffado-diag-static	2017-12-27 17:40:23.654894245 +0100
++++ ffado-diag-static	2017-12-27 17:37:47.332848540 +0100
+@@ -26,7 +26,6 @@
+ 
+ # Add the path of the installed dependent files
+ import os
+-import commands
+ import re
+ import logging
+ 
+@@ -55,11 +54,11 @@
+ ## main program
+ if __name__== '__main__':
+ 
+-    print welcome_msg
++    print( welcome_msg )
+ 
+     num_args = len(sys.argv)
+     if num_args not in [1,2]:
+-        print help
++        print( help )
+         sys.exit(0)
+ 
+     if num_args == 2:
+@@ -69,24 +68,24 @@
+         elif loglevel == 2:
+             logging.getLogger('staticdiag').setLevel(logging.DEBUG)
+ 
+-    print "=== CHECK ==="
++    print( "=== CHECK ===")
+ 
+     # check libraries
+-    print "   gcc ............... %s" % get_version_first_line('gcc --version')
+-    print "   g++ ............... %s" % get_version_first_line('g++ --version')
+-    print "   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version')
+-    print "   PyQt5 (by pyuic5) . %s" % get_version_first_line('pyuic5 --version')
+-    print "   jackd ............. %s" % get_version_first_line('jackd --version')
+-    print "     path ............ %s" % get_command_path('jackd')
+-    print "     flags ........... %s" % get_package_flags("jack")
+-    print "   libraw1394 ........ %s" % get_package_version("libraw1394")
+-    print "     flags ........... %s" % get_package_flags("libraw1394")
+-    print "   libavc1394 ........ %s" % get_package_version("libavc1394")
+-    print "     flags ........... %s" % get_package_flags("libavc1394")
+-    print "   libiec61883 ....... %s" % get_package_version("libiec61883")
+-    print "     flags ........... %s" % get_package_flags("libiec61883")
+-    print "   libxml++-2.6 ...... %s" % get_package_version("libxml++-2.6")
+-    print "     flags ........... %s" % get_package_flags("libxml++-2.6")
+-    print "   dbus-1 ............ %s" % get_package_version("dbus-1")
+-    print "     flags ........... %s" % get_package_flags("dbus-1")
++    print( "   gcc ............... %s" % get_version_first_line('gcc --version'))
++    print( "   g++ ............... %s" % get_version_first_line('g++ --version'))
++    print( "   PyQt4 (by pyuic4) . %s" % get_version_first_line('pyuic4 --version'))
++    print( "   PyQt5 (by pyuic5) . %s" % get_version_first_line('pyuic5 --version'))
++    print( "   jackd ............. %s" % get_version_first_line('jackd --version'))
++    print( "     path ............ %s" % get_command_path('jackd'))
++    print( "     flags ........... %s" % get_package_flags("jack"))
++    print( "   libraw1394 ........ %s" % get_package_version("libraw1394"))
++    print( "     flags ........... %s" % get_package_flags("libraw1394"))
++    print( "   libavc1394 ........ %s" % get_package_version("libavc1394"))
++    print( "     flags ........... %s" % get_package_flags("libavc1394"))
++    print( "   libiec61883 ....... %s" % get_package_version("libiec61883"))
++    print( "     flags ........... %s" % get_package_flags("libiec61883"))
++    print( "   libxml++-2.6 ...... %s" % get_package_version("libxml++-2.6"))
++    print( "     flags ........... %s" % get_package_flags("libxml++-2.6"))
++    print( "   dbus-1 ............ %s" % get_package_version("dbus-1"))
++    print( "     flags ........... %s" % get_package_flags("dbus-1"))
+ 
