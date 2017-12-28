@@ -7,7 +7,7 @@ eix-update</code>
 <h2>Overaly Update</h2>
 <code>layman -S</code>: Sync overlay(s) including this one<br>
 <code>eix-update</code>: Update eix database<br>
-<code>emerge -uva ...<code>: Update stuffs...
+<code>emerge -uva ...</code>: Update stuffs...
 
 <h2>Jack2 / ffado install</h2>
 <code>USE=-iee1394 emerge jack2</code>: Install Jack2 without ffado support : Jack2 (or jack-audio-connection-kit) is a pre-requisite for building ffado.<br>
