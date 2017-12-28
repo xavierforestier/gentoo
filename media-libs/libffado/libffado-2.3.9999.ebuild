@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-PYTHON_COMPAT=( python{3_1,3_2,3_3,3_4,3_5} )
+PYTHON_COMPAT=( python{3_1,3_2,3_3,3_4,3_5,3_6} )
 [[ "${PV}" == *9999 ]] && inherit subversion
 inherit subversion
 inherit eutils python-single-r1 scons-utils toolchain-funcs udev multilib-minimal
