@@ -15,8 +15,8 @@ eix-update</code>
 <code>USE=iee1394 emerge jack2</code>: Rebuild Jack2 with ffado support<br>
 
 <p><u>Note:</u> if you experience issue with multilibs, you may have to force 32bits supports in <code>/etc/portage/package.use</code><br>
-<code>media-sound/jack2 abi_x86_32<br>
-media-libs/libffado abi_x86_32</code></p>
+<code>media-sound/jack2 abi_x86_32</code><br>
+<code>media-libs/libffado abi_x86_32</code></p>
 
 <h2>Jack2 configuration</h2>
 <code>jack_control dl</code> : Make sure firewire (ffado) driver is listed<br>
