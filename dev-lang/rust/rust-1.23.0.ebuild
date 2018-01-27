@@ -120,7 +120,7 @@ src_compile() {
 }
 
 src_install() {
-	env DESTDIR="${D}" ./x.py install || die
+	env DESTDIR="${D}" ./x.py install ${MAKEOPTS} || die
 
 	mv "${D}/usr/bin/rustc" "${D}/usr/bin/rustc-${PV}" || die
 	mv "${D}/usr/bin/rustdoc" "${D}/usr/bin/rustdoc-${PV}" || die
