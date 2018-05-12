@@ -39,7 +39,8 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	sci-libs/opencascade:*[vtk(+)]
 	sci-libs/orocos_kdl
 	sys-libs/zlib
-	virtual/glu"
+	virtual/glu
+	sci-libs/libmed"
 RDEPEND="${COMMON_DEPEND}
 	dev-python/numpy[${PYTHON_USEDEP}]
 	dev-python/pivy[${PYTHON_USEDEP}]
@@ -50,7 +51,6 @@ DEPEND="${COMMON_DEPEND}
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-0.14.3702-install-paths.patch
-	"${FILESDIR}"/${P}-no-webkit.patch
 )
 
 # https://bugs.gentoo.org/show_bug.cgi?id=352435
