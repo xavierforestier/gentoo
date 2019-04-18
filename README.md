@@ -1,8 +1,8 @@
 # Gentoo
 My personal Gentoo Overlay
 <h2>Overlay First installation</h2>
-<code>layman -o https://raw.githubusercontent.com/xavierforestier/gentoo/master/overlay.xml  -f -a xavierforestier
-eix-update</code>
+<code>layman -o https://raw.githubusercontent.com/xavierforestier/gentoo/master/overlay.xml  -f -a xavierforestier</code>
+<codeeix-update</code>
 
 <h2>Overaly Update</h2>
 <code>layman -S</code>: Sync overlay(s) including this one<br>
