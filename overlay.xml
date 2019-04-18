@@ -9,8 +9,8 @@
         <email>xavier.forestier[at]free[dot]fr@remove.this.dummy.suffix.com</email>
         <name>Gentoo personal overlay</name>
         </owner>
-        <source type="git">https://github.com/xavierforestier/ffado.git</source>
-        <source type="git">git+ssh://git@github.com:xavierforestier/ffado.git</source>
+        <source type="git">https://github.com/xavierforestier/gentoo.git</source>
+        <source type="git">git+ssh://git@github.com:xavierforestier/gentoo.git</source>
         <feed>http://git.overlays.gentoo.org/gitweb/?p=proj/gnome.git;a=atom</feed>
         <feed>http://git.overlays.gentoo.org/gitweb/?p=proj/gnome.git;a=rss</feed>
     </repo>
