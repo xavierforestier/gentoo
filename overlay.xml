@@ -4,7 +4,7 @@
     <repo quality="experimental" status="official">
         <name>xavierforestier</name>
         <description>experimental gnome ebuilds</description>
-        <homepage>https://github.com/xavierforestier/ffado</homepage>
+        <homepage>https://github.com/xavierforestier/gentoo</homepage>
         <owner type="project">
         <email>xavier.forestier[at]free[dot]fr@remove.this.dummy.suffix.com</email>
         <name>Gentoo personal overlay</name>
