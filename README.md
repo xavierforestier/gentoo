@@ -2,6 +2,7 @@
 My personal Gentoo Overlay
 <h2>Overlay First installation</h2>
 <code>layman -o https://raw.githubusercontent.com/xavierforestier/gentoo/master/overlay.xml  -f -a xavierforestier</code>
+
 <code>eix-update</code>
 
 <h2>Overaly Update</h2>
