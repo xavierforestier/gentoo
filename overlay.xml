@@ -1,4 +1,4 @@
- <repositories encoding="unicode" version="1.1">
+<repositories encoding="unicode" version="1.1">
   <repo priority="50" quality="experimental">
     <name>xavierforestier</name>
     <description>My personal overlay</description>
