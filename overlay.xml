@@ -1,17 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE repositories SYSTEM "/dtd/repositories.dtd">
-<repositories xmlns="" version="1.0">
-    <repo quality="experimental" status="official">
-        <name>xavierforestier</name>
-        <description>experimental gnome ebuilds</description>
-        <homepage>https://github.com/xavierforestier/ffado</homepage>
-        <owner type="project">
-        <email>xavier.forestier[at]free[dot]fr@remove.this.dummy.suffix.com</email>
-        <name>Gentoo personal overlay</name>
-        </owner>
-        <source type="git">https://github.com/xavierforestier/ffado.git</source>
-        <source type="git">git+ssh://git@github.com:xavierforestier/ffado.git</source>
-        <feed>http://git.overlays.gentoo.org/gitweb/?p=proj/gnome.git;a=atom</feed>
-        <feed>http://git.overlays.gentoo.org/gitweb/?p=proj/gnome.git;a=rss</feed>
-    </repo>
+﻿<repositories encoding="unicode" version="1.1">
+  <repo priority="50" quality="experimental">
+    <name>xavierforestier</name>
+    <description>My personal overlay</description>
+    <homepage>https://github.com/xavierforestier/gentoo/</homepage>
+    <owner>
+      <email>xavier.forestier[at]free[dot]fr@remove.this.dummy.suffix.com</email>
+      <name>Xavier FORESTIER</name>
+    </owner>
+    <source type="git">https://github.com/xavierforestier/gentoo/</source>
+    <source type="git">git+ssh://git@github.com:xavierforestier/gentoo.git</source>
+  </repo>
 </repositories>
