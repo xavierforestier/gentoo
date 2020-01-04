@@ -43,9 +43,7 @@ RDEPEND="${COMMON_DEPEND}
 	!<media-sound/jack-audio-connection-kit-0.122.0:0
 	!<media-sound/jack-audio-connection-kit-1.9.9:2"
 
-PATCHES=(
-	"${FILESDIR}/${P}-python3-scons-fix.patch"
-)
+PATCHES=()
 
 myescons() {
 	local myesconsargs=(
