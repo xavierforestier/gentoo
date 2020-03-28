@@ -1,0 +1,11 @@
+--- a/Source/cmake/WebKitCommon.cmake	2019-06-26 18:25:02.000000000 +0200
++++ b/Source/cmake/WebKitCommon.cmake	2020-02-08 17:57:24.180913382 +0100
+@@ -26,7 +26,7 @@
+ 
+     find_package(PythonInterp 2.7.0 REQUIRED)
+     if (PYTHON_VERSION_MAJOR GREATER 2)
+-        message(FATAL_ERROR "Python 2 is required, but Python ${PYTHON_VERSION_MAJOR} was found.")
++        message(WARNING "Python 2 is required, but Python ${PYTHON_VERSION_MAJOR} was found.")
+     endif ()
+ 
+     # We cannot check for RUBY_FOUND because it is set only when the full package is installed and
