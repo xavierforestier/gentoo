@@ -27,4 +27,5 @@ src_compile() {
 }
 src_install() {
 	dobin arduino-cli
+	dodoc -r docs
 }
