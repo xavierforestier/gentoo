@@ -9,11 +9,12 @@ SRC_URI="
 	https://github.com/arduino/${PN}/archive/refs/tags/v${PV}.tar.gz 
 	https://github.com/xavierforestier/${PN}/releases/download/v${PV}/${P}-vendor.tar.xz
 "
-inherit go-module
+inherit go-module bash-completion-r1
 
 LICENSE="GPL-3.0"
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="bash-completion fish-completion zsh-completion"
 
 DEPEND=""
 RDEPEND="${DEPEND}
@@ -26,6 +27,9 @@ src_compile() {
 	task build
 }
 src_install() {
-	dobin arduino-cli
+	dobin ${PN}
 	dodoc -r docs
+	use bash-completion && ${PN} completion bash > ${PN}.bash && newbashcomp ${PN}.bash ${PN}
+	use fish-completion && ${PN} completion fish > ${PN}.fish && insinto /usr/share/fish/vendor_completions.d && doins completion/fish/${PN}.fish
+	use zsh-completion && ${PN} completion fish > _${PN} &&  insinto /usr/share/zsh/site-functions && doins completion/zsh/_${PN}
 }
