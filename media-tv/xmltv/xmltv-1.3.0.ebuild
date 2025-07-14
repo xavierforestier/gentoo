@@ -31,7 +31,6 @@ RDEPEND="
 	dev-perl/XML-Twig
 	dev-perl/XML-Writer
 	dev-perl/Unicode-String
-	virtual/perl-Memoize
 	virtual/perl-Storable
 	virtual/perl-IO-Compress
 	ch-search? (
