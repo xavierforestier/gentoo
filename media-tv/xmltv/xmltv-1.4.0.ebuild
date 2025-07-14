@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -13,9 +13,7 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm arm64 ~ppc x86 ~x86-linux"
 
-IUSE="ch-search eu-epgdata fi fi-sv fr
-huro is it it-dvb na-dd na-dtv na-tvmedia pt-meo pt-vodafone
-tv-check tv-combiner tv-pick-cgi uk-tvguide zz-sdjson zz-sdjson-sqlite"
+IUSE="ch-search fi fi-sv fr huro is it it-dvb na-dd na-tvmedia pt-vodafone tv-check tv-combiner tv-pick-cgi uk-freeview zz-sdjson zz-sdjson-sqlite"
 
 RDEPEND="
 	dev-perl/Date-Manip
@@ -33,7 +31,6 @@ RDEPEND="
 	dev-perl/XML-Twig
 	dev-perl/XML-Writer
 	dev-perl/Unicode-String
-	virtual/perl-Memoize
 	virtual/perl-Storable
 	virtual/perl-IO-Compress
 	ch-search? (
@@ -41,13 +38,6 @@ RDEPEND="
 		dev-perl/HTML-Parser
 		dev-perl/HTTP-Cookies
 		dev-perl/URI
-	)
-	eu-epgdata? (
-		dev-perl/Archive-Zip
-		dev-perl/DateTime
-		dev-perl/DateTime-Format-Strptime
-		dev-perl/HTML-Parser
-		dev-perl/HTTP-Message
 	)
 	fi? (
 		dev-perl/HTML-Tree
@@ -88,24 +78,8 @@ RDEPEND="
 		dev-perl/HTTP-Daemon
 		dev-perl/SOAP-Lite
 	)
-	na-dtv? (
-		dev-perl/DateTime
-		dev-perl/HTTP-Cookies
-		dev-perl/URI
-	)
-	pt-meo? (
-		dev-perl/DateTime
-		dev-perl/URI
-	)
 	pt-vodafone? (
 		dev-perl/DateTime
-		dev-perl/URI
-	)
-	uk-tvguide? (
-		dev-perl/DateTime
-		dev-perl/HTML-Tree
-		dev-perl/HTTP-Cache-Transparent
-		dev-perl/HTTP-Cookies
 		dev-perl/URI
 	)
 	zz-sdjson? (
@@ -163,8 +137,6 @@ src_configure() {
 		echo "no"
 		# Enable Switzerland Search
 		usex ch-search
-		# Enable EU epgdata.com including fanart
-		usex eu-epgdata
 		# Enable Finland
 		usex fi
 		# Enable Swedish listings in Finland
@@ -181,16 +153,12 @@ src_configure() {
 		usex it-dvb
 		# Enable North America - schedulesdirect.org
 		usex na-dd
-		# Enable North America (DirecTV)
-		usex na-dtv
 		# Enable North America  (TVMedia)
 		usex na-tvmedia
-		# Enable Portugal (MEO)
-		usex pt-meo
 		# Enable Portugal (Vodafone)
 		usex pt-vodafone
-		# Enable UK/Ireland - TV Guide Website
-		usex uk-tvguide
+		# Enable grabber for UK Freeview users
+		usex uk-freeview
 		# Enable Schedules Direct JSON
 		usex zz-sdjson
 		# Enable Schedules Direct JSON (SQLite version)
