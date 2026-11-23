@@ -7,8 +7,8 @@ DESCRIPTION="An Arduino Language Server based on Clangd to Arduino code autocomp
 HOMEPAGE="https://github.com/arduino/arduino-language-server"
 SRC_URI="
 	https://github.com/arduino/${PN}/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz
-	https://github.com/xavierforestier/${PN}/releases/download/v${PV}/${P}-vendor.tar.xz
-"
+	https://github.com/xavierforestier/${PN}/releases/download/v${PV}/${P}-vendor.tar.xz"
+
 inherit go-module
 
 LICENSE="AGPL-3.0"
