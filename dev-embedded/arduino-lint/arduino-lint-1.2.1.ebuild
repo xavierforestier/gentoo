@@ -7,8 +7,8 @@ DESCRIPTION="Tool to check for problems with Arduino projects"
 HOMEPAGE="https://arduino.github.io/arduino-lint/1.2/ https://github.com/arduino/arduino-lint"
 SRC_URI="
 	https://github.com/arduino/${PN}/archive/refs/tags/${PV}.tar.gz -> ${P}.tar.gz
-	https://github.com/xavierforestier/${PN}/releases/download/v${PV}/${P}-vendor.tar.xz
-"
+	https://github.com/xavierforestier/${PN}/releases/download/v${PV}/${P}-vendor.tar.xz"
+
 LICENSE="GPL-3.0"
 SLOT="0"
 KEYWORDS="~amd64"
